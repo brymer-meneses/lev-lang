@@ -84,6 +84,21 @@ auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
   return buildToken(getIdentifier(lexeme));
 }
 
+auto Scanner::scanString() -> std::expected<Token, ScannerError> {
+  while (peek() != '"' and not isAtEnd()) {
+    advance();
+  }
+
+  if (isAtEnd()) {
+    return std::unexpected(UnterminatedString(mSource.substr(mStart, mCurrent - mStart)));
+  }
+
+  // consume the '"'
+  advance();
+  using T = TokenType;
+  return buildToken(T::String);
+}
+
 
 auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
 
@@ -100,6 +115,8 @@ auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
       return buildToken(T::EndOfFile);
     case ':':
       return buildToken(T::Colon);
+    case '"':
+      return scanString();
     case '+':
       if (match('=')) {
         return buildToken(T::PlusEqual);
@@ -180,13 +197,14 @@ auto Scanner::printError(ScannerError error) -> void {
     auto operator()(const UnexpectedCharacter& err) const -> void {
       std::cerr << "Got an unexpected character: " << err.character << "\n";
     }
-
     auto operator()(const InvalidNumber& err) const -> void {
       std::cerr << "Got an invalid number: " << err.lexeme << "\n";
     }
-
     auto operator()(const InvalidString& err) const -> void {
-      std::cerr << "Got an invalid string: " << err.lexeme << "\b";
+      std::cerr << "Got an invalid string: " << err.lexeme << "\n";
+    }
+    auto operator()(const UnterminatedString& err) const -> void {
+      std::cerr << "Unterminated string: " << err.lexeme << "\n";
     }
   };
 

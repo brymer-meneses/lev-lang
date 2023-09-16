@@ -133,3 +133,31 @@ TEST(Scanner, Number) {
     EXPECT_EQ(token.lexeme, lexeme);
   }
 }
+
+TEST(Scanner, String) {
+  using T = lev::TokenType;
+  Scanner scanner("\" The quick brown fox jumped over the lazy cat! \" \" Hello there! \" ");
+
+  auto tokens = scanner.scan();
+
+  if (not tokens) {
+    Scanner::printError(tokens.error());
+  }
+
+  ASSERT_TRUE(tokens.has_value());
+
+  const auto lexemes = {
+    "\" The quick brown fox jumped over the lazy cat! \"",
+    "\" Hello there! \"",
+  };
+
+  const auto types = {
+    T::String,
+    T::String,
+  };
+
+  for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {
+    EXPECT_EQ(token.type, type);
+    EXPECT_EQ(token.lexeme, lexeme);
+  }
+}

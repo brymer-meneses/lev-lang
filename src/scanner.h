@@ -25,7 +25,12 @@ namespace lev::scanner {
     InvalidString(std::string_view lexeme): lexeme(lexeme) {};
   };
 
-  using ScannerError = std::variant<UnexpectedCharacter, InvalidNumber, InvalidString>;
+  struct UnterminatedString {
+    std::string_view lexeme;
+    UnterminatedString(std::string_view lexeme): lexeme(lexeme) {};
+  };
+
+  using ScannerError = std::variant<UnexpectedCharacter, InvalidNumber, InvalidString, UnterminatedString>;
 
   class Scanner {
     std::string_view mSource;

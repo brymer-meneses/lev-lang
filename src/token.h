@@ -12,6 +12,7 @@ namespace lev {
 
     Integer,
     Float,
+    String,
 
     For,
     While,
