@@ -34,14 +34,11 @@ auto Scanner::match(char c) -> bool {
 
 auto Scanner::buildToken(TokenType type) -> std::expected<Token, ScannerError> {
   auto substr = mSource.substr(mStart, mCurrent - mStart);
-  auto t = Token(type, substr);
-
   mStart = mCurrent;
-  return t;
+  return Token(type, substr);
 }
 
 auto Scanner::scanNumber() -> std::expected<Token, ScannerError> {
-  using T = TokenType;
 
   int decimalPoints = 0;
 
@@ -56,7 +53,7 @@ auto Scanner::scanNumber() -> std::expected<Token, ScannerError> {
     return std::unexpected(InvalidNumber(mSource.substr(mStart, mCurrent - mStart)));
   }
 
-  return buildToken(decimalPoints == 0 ? T::Integer : T::Float);
+  return buildToken(decimalPoints == 0 ? TokenType::Integer : TokenType::Float);
 }
 
 auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
@@ -65,19 +62,27 @@ auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
   }
 
   static constexpr auto getIdentifier = [](std::string_view lexeme) -> TokenType {
-    using T = TokenType;
     if (lexeme == "fn") {
-      return T::Function;
+      return TokenType::Function;
     } else if (lexeme == "pub") {
-      return T::Public;
+      return TokenType::Public;
     } else if (lexeme == "return") {
-      return T::Return;
+      return TokenType::Return;
     } else if (lexeme == "for") {
-      return T::For;
+      return TokenType::For;
     } else if (lexeme == "while") {
-      return T::While;
+      return TokenType::While;
+    } else if (lexeme == "if") {
+      return TokenType::If;
+    } else if (lexeme == "else") {
+      return TokenType::Else;
+    } else if (lexeme == "let") {
+      return TokenType::Let;
+    } else if (lexeme == "mut") {
+      return TokenType::Mutable;
     }
-    return T::Identifier;
+
+    return TokenType::Identifier;
   };
 
   auto lexeme = mSource.substr(mStart, mCurrent - mStart);
@@ -95,14 +100,12 @@ auto Scanner::scanString() -> std::expected<Token, ScannerError> {
 
   // consume the '"'
   advance();
-  using T = TokenType;
-  return buildToken(T::String);
+  return buildToken(TokenType::String);
 }
 
 
 auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
 
-  using T = TokenType;
   auto c = advance();
  
   while (c == ' ' or c == '\r') {
@@ -112,60 +115,60 @@ auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
 
   switch (c) {
     case '\0':
-      return buildToken(T::EndOfFile);
+      return buildToken(TokenType::EndOfFile);
     case ':':
-      return buildToken(T::Colon);
+      return buildToken(TokenType::Colon);
     case '"':
       return scanString();
     case '+':
       if (match('=')) {
-        return buildToken(T::PlusEqual);
+        return buildToken(TokenType::PlusEqual);
       } else {
-        return buildToken(T::Plus);
+        return buildToken(TokenType::Plus);
       }
     case '-':
       if (match('>')) {
-        return buildToken(T::RightArrow);
+        return buildToken(TokenType::RightArrow);
       } else if (match('=')) {
-        return buildToken(T::MinusEqual);
+        return buildToken(TokenType::MinusEqual);
       } else {
-        return buildToken(T::Minus);
+        return buildToken(TokenType::Minus);
       }
     case '*':
       if (match('=')) {
-        return buildToken(T::StarEqual);
+        return buildToken(TokenType::StarEqual);
       } else {
-        return buildToken(T::Star);
+        return buildToken(TokenType::Star);
       }
     case '/':
       if (match('=')) {
-        return buildToken(T::SlashEqual);
+        return buildToken(TokenType::SlashEqual);
       } else {
-        return buildToken(T::Slash);
+        return buildToken(TokenType::Slash);
       }
     case '=':
       if (match('=')) {
-        return buildToken(T::EqualEqual);
+        return buildToken(TokenType::EqualEqual);
       } else {
-        return buildToken(T::Equal);
+        return buildToken(TokenType::Equal);
       }
     case '>':
       if (match('=')) {
-        return buildToken(T::GreaterEqual);
+        return buildToken(TokenType::GreaterEqual);
       } else {
-        return buildToken(T::Greater);
+        return buildToken(TokenType::Greater);
       }
     case '<':
       if (match('=')) {
-        return buildToken(T::LessEqual);
+        return buildToken(TokenType::LessEqual);
       } else {
-        return buildToken(T::Less);
+        return buildToken(TokenType::Less);
       }
     case '!':
       if (match('=')) {
-        return buildToken(T::BangEqual);
+        return buildToken(TokenType::BangEqual);
       } else {
-        return buildToken(T::Bang);
+        return buildToken(TokenType::Bang);
       }
     default:
       if (std::isdigit(c)) {

@@ -17,6 +17,10 @@ namespace lev {
     For,
     While,
     Return,
+    If,
+    Else,
+    Let,
+    Mutable,
     
     Bang,
     BangEqual,

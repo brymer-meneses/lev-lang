@@ -3,9 +3,9 @@
 #include <ranges>
 
 using namespace lev::scanner;
+using lev::TokenType;
 
 TEST(Scanner, SingleCharacterTokens) {
-  using T = lev::TokenType;
   Scanner scanner("= + - * / > < : !");
 
   auto tokens = scanner.scan();
@@ -13,15 +13,15 @@ TEST(Scanner, SingleCharacterTokens) {
   ASSERT_TRUE(tokens.has_value());
 
   const auto types = {
-    T::Equal,
-    T::Plus,
-    T::Minus,
-    T::Star,
-    T::Slash,
-    T::Greater,
-    T::Less,
-    T::Colon,
-    T::Bang,
+    TokenType::Equal,
+    TokenType::Plus,
+    TokenType::Minus,
+    TokenType::Star,
+    TokenType::Slash,
+    TokenType::Greater,
+    TokenType::Less,
+    TokenType::Colon,
+    TokenType::Bang,
   };
 
   const auto lexemes = {
@@ -43,7 +43,6 @@ TEST(Scanner, SingleCharacterTokens) {
 }
 
 TEST(Scanner, MultipleCharacterTokens) {
-  using T = lev::TokenType;
   Scanner scanner("+= -= != /= >= <= *=");
 
   auto tokens = scanner.scan();
@@ -51,13 +50,13 @@ TEST(Scanner, MultipleCharacterTokens) {
   ASSERT_TRUE(tokens.has_value());
 
   const auto types = {
-    T::PlusEqual,
-    T::MinusEqual,
-    T::BangEqual,
-    T::SlashEqual,
-    T::GreaterEqual,
-    T::LessEqual,
-    T::StarEqual,
+    TokenType::PlusEqual,
+    TokenType::MinusEqual,
+    TokenType::BangEqual,
+    TokenType::SlashEqual,
+    TokenType::GreaterEqual,
+    TokenType::LessEqual,
+    TokenType::StarEqual,
   };
 
   const auto lexemes = {
@@ -77,25 +76,30 @@ TEST(Scanner, MultipleCharacterTokens) {
 }
 
 TEST(Scanner, BuiltInIdentifiers) {
-  using T = lev::TokenType;
-  Scanner scanner("fn pub while for");
+  Scanner scanner("fn pub while for return if else");
 
   auto tokens = scanner.scan();
 
   ASSERT_TRUE(tokens.has_value());
 
   const auto types = {
-    T::Function,
-    T::Public,
-    T::While,
-    T::For
+    TokenType::Function,
+    TokenType::Public,
+    TokenType::While,
+    TokenType::For,
+    TokenType::Return,
+    TokenType::If,
+    TokenType::Else
   };
 
   const auto lexemes = {
     "fn",
     "pub",
     "while",
-    "for"
+    "for",
+    "return",
+    "if",
+    "else",
   };
 
   for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {
@@ -105,7 +109,6 @@ TEST(Scanner, BuiltInIdentifiers) {
 }
 
 TEST(Scanner, Number) {
-  using T = lev::TokenType;
   Scanner scanner("12345 2.71828 3.14159");
 
   auto tokens = scanner.scan();
@@ -123,9 +126,9 @@ TEST(Scanner, Number) {
   };
 
   const auto types = {
-    T::Integer,
-    T::Float,
-    T::Float,
+    TokenType::Integer,
+    TokenType::Float,
+    TokenType::Float,
   };
 
   for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {
@@ -135,7 +138,6 @@ TEST(Scanner, Number) {
 }
 
 TEST(Scanner, String) {
-  using T = lev::TokenType;
   Scanner scanner("\" The quick brown fox jumped over the lazy cat! \" \" Hello there! \" ");
 
   auto tokens = scanner.scan();
@@ -152,8 +154,8 @@ TEST(Scanner, String) {
   };
 
   const auto types = {
-    T::String,
-    T::String,
+    TokenType::String,
+    TokenType::String,
   };
 
   for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {
