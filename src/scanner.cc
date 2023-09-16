@@ -1,9 +1,10 @@
 #include <cctype>
+#include <iostream>
 #include "scanner.h"
 
 using namespace lev::scanner;
 
-Scanner::Scanner(const std::string& source) : mSource(source) {};
+Scanner::Scanner(std::string_view source) : mSource(source) {};
 
 auto Scanner::advance() -> char {
   if (isAtEnd()) {
@@ -32,34 +33,35 @@ auto Scanner::match(char c) -> bool {
 }
 
 auto Scanner::buildToken(TokenType type) -> std::expected<Token, ScannerError> {
-  auto t = Token(type, mSource.substr(mStart, mStart - mCurrent));
+  auto substr = mSource.substr(mStart, mCurrent - mStart);
+  auto t = Token(type, substr);
+
   mStart = mCurrent;
   return t;
 }
 
 auto Scanner::scanNumber() -> std::expected<Token, ScannerError> {
   using T = TokenType;
-  auto c = advance();
-  bool isInteger = true;
-  while (std::isdigit(c) or c == '.') {
-    if (c == '.') {
-      if (isInteger) {
-        isInteger = false;
-      } else {
-        // we already found a dot, and another dot appeared again?
-        auto substr = mSource.substr(mStart, mStart - mCurrent);
-        return std::unexpected(InvalidNumber(substr));
-      }
-    }
 
-    c = advance();
+  int decimalPoints = 0;
+
+  while (std::isdigit(peek()) or peek() == '.') {
+    if (peek() == '.') {
+      decimalPoints ++;
+    }
+    advance();
   }
-  return buildToken(isInteger ? T::Integer : T::Float);
+
+  if (decimalPoints > 1) {
+    return std::unexpected(InvalidNumber(mSource.substr(mStart, mCurrent - mStart)));
+  }
+
+  return buildToken(decimalPoints == 0 ? T::Integer : T::Float);
 }
 
 auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
-  while (std::isalnum(advance())) {
-    mCurrent += 1;
+  while (std::isalnum(peek())) {
+    advance();
   }
 
   static constexpr auto getIdentifier = [](std::string_view lexeme) -> TokenType {
@@ -78,22 +80,26 @@ auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
     return T::Identifier;
   };
 
-  auto lexeme = mSource.substr(mStart, mStart-mCurrent);
+  auto lexeme = mSource.substr(mStart, mCurrent - mStart);
   return buildToken(getIdentifier(lexeme));
 }
 
 
 auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
+
   using T = TokenType;
   auto c = advance();
  
   while (c == ' ' or c == '\r') {
+    mStart = mCurrent;
     c = advance();
   }
 
   switch (c) {
     case '\0':
       return buildToken(T::EndOfFile);
+    case ':':
+      return buildToken(T::Colon);
     case '+':
       if (match('=')) {
         return buildToken(T::PlusEqual);
@@ -156,3 +162,34 @@ auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
   __builtin_unreachable();
 }
 
+auto Scanner::scan() -> std::expected<std::vector<Token>, ScannerError> {
+  std::vector<Token> tokens;
+  while (not isAtEnd()) {
+    auto tok = getNextToken();
+    if (not tok) {
+      return std::unexpected(tok.error());
+    }
+    tokens.push_back(tok.value());
+  }
+  return tokens;
+}
+
+
+auto Scanner::printError(ScannerError error) -> void {
+  struct ErrorVistor {
+    auto operator()(const UnexpectedCharacter& err) const -> void {
+      std::cerr << "Got an unexpected character: " << err.character << "\n";
+    }
+
+    auto operator()(const InvalidNumber& err) const -> void {
+      std::cerr << "Got an invalid number: " << err.lexeme << "\n";
+    }
+
+    auto operator()(const InvalidString& err) const -> void {
+      std::cerr << "Got an invalid string: " << err.lexeme << "\b";
+    }
+  };
+
+  static ErrorVistor visitor;
+  std::visit(visitor, error);
+}

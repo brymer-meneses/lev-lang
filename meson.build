@@ -1,19 +1,27 @@
 project('lev', 'cpp')
 
 sources = [
-  'src/main.cc',
   'src/scanner.cc'
 ]
 
 cpp_args = [
   '-std=c++2b',
   '-Wpedantic',
+  '-fno-exceptions',
 ]
 
-executable('lev', 
-            sources: sources, 
-            cpp_args: cpp_args, 
-          )
+liblev = shared_library(
+  'liblev',
+  sources: sources,
+  cpp_args: cpp_args,
+)
+
+executable(
+  'lev', 
+  sources: 'src/main.cc', 
+  cpp_args: cpp_args, 
+  link_with: liblev
+)
 
 gtest = subproject('gtest')
 gtest_dep = gtest.get_variable('gtest_dep')
@@ -30,8 +38,10 @@ test_runner = executable(
   dependencies: [
     gtest_dep,
     gmock_dep
-  ]
+  ],
+  cpp_args: cpp_args,
+  link_with: liblev,
+  include_directories: ['src'],
 )
 
 test('lev-tester', test_runner)
-

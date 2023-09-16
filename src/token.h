@@ -1,5 +1,5 @@
 #pragma once
-#include <string_view>
+#include <string>
 
 namespace lev {
 
@@ -8,6 +8,7 @@ namespace lev {
     Function,
     Public,
     Identifier,
+    Colon,
 
     Integer,
     Float,
@@ -38,12 +39,9 @@ namespace lev {
   };
 
   struct Token {
-
     TokenType type;
     std::string_view lexeme;
-
     Token(TokenType type, std::string_view lexeme) : type(type), lexeme(lexeme) {}
-
   };
 
 }
