@@ -1,4 +1,6 @@
 
+all: run
+
 setup:
 	@if [ ! -e build/compile_commands.json ]; then \
 		CXX=$(CXX) meson setup --wipe build; \

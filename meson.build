@@ -1,7 +1,9 @@
 project('lev', 'cpp')
 
 sources = [
-  'src/scanner.cc'
+  'src/scanner.cc',
+  'src/parser.cc',
+  'src/ast.cc'
 ]
 
 cpp_args = [
@@ -29,7 +31,8 @@ gmock_dep = gtest.get_variable('gmock_dep')
 
 test_sources = [
   'tests/test_runner.cc',
-  'tests/test_scanner.cc'
+  'tests/test_scanner.cc',
+  'tests/test_parser.cc',
 ]
 
 test_runner = executable(

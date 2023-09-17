@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace lev {
+namespace lev::token {
 
   enum class TokenType {
     RightArrow,
@@ -47,6 +47,24 @@ namespace lev {
     TokenType type;
     std::string_view lexeme;
     Token(TokenType type, std::string_view lexeme) : type(type), lexeme(lexeme) {}
+    Token() = default;
+  };
+
+  enum class Type {
+    UserDefined,
+
+    i8,
+    i16,
+    i32,
+    i64,
+
+    u8,
+    u16,
+    u32,
+    u64,
+
+    f32,
+    f64,
   };
 
 }

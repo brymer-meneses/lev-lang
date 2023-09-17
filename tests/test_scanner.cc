@@ -3,7 +3,7 @@
 #include <ranges>
 
 using namespace lev::scanner;
-using lev::TokenType;
+using namespace lev::token;
 
 TEST(Scanner, SingleCharacterTokens) {
   Scanner scanner("= + - * / > < : !");

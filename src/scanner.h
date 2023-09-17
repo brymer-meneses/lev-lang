@@ -9,6 +9,7 @@
 #include "token.h"
 
 namespace lev::scanner {
+  using namespace lev::token;
 
   struct UnexpectedCharacter {
     const char character;
