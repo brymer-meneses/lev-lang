@@ -321,6 +321,6 @@ fn main(
   };
 
   for (auto [token, type] : std::views::zip(tokens.value(), types)) {
-    EXPECT_EQ(token.type, type) << i << " got " << tokenTypeToString(token.type) << " expected " << tokenTypeToString(type);
+    EXPECT_EQ(token.type, type);
   }
 }
