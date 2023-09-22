@@ -1,6 +1,7 @@
 #include "codegen.h"
 #include "parser.h"
 #include "scanner.h"
+#include <string>
 
 using namespace lev::codegen;
 using namespace lev::parser;
@@ -28,7 +29,7 @@ Codegen::Codegen() {
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
 }
 
-auto Codegen::convertType(ast::Type type) -> llvm::Type* {
+auto Codegen::convertType(Type type) -> llvm::Type* {
   llvm::Type* llvmType = nullptr;
   switch (type) {
     case Type::i8:
@@ -83,8 +84,8 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
   auto* block = BasicBlock::Create(*mContext, "entry", mCurrentFunction);
   mBuilder->SetInsertPoint(block);
 
-  for (auto& stmts : f.body) {
-    stmts->visit(*this);
+  for (auto& stmt : f.body) {
+    stmt->visit(*this);
   }
 }
 
@@ -95,9 +96,26 @@ auto Codegen::visit(VariableDeclaration& v) -> void {
     gVar->setLinkage(GlobalValue::CommonLinkage);
     gVar->setAlignment(Align(4));
     return;
-  } else {
   }
+
+  // TODO: panic if variable already exists
+  mBuilder->SetInsertPoint(&mCurrentFunction->getEntryBlock());
+  mCurrentVariable = mBuilder->CreateAlloca(convertType(v.type), nullptr, v.identifier.lexeme);
+  v.value->visit(*this);
 }
+
+auto Codegen::visit(LiteralExpr& e) -> void {
+  Value* value;
+  if (e.token.type == TokenType::Integer) {
+    value = ConstantInt::get(mBuilder->getInt32Ty(), std::stoi(std::string(e.token.lexeme)));
+  } else {
+    value = ConstantInt::get(mBuilder->getFloatTy(), std::stod(std::string(e.token.lexeme)));
+  }
+  mBuilder->CreateStore(value, mCurrentVariable);
+};
+
+auto Codegen::visit(UnaryExpr& e) -> void {};
+auto Codegen::visit(BinaryExpr& e) -> void {};
 
 auto Codegen::dump() -> std::string {
   std::string str;
