@@ -4,6 +4,7 @@
 #include <variant>
 #include "visitor.h"
 #include <vector>
+#include <iostream>
 
 namespace lev::ast {
   using lev::token::Token;
@@ -25,6 +26,35 @@ namespace lev::ast {
     f64,
     
     Void,
+  };
+
+  constexpr auto typeToString(Type type) -> std::string_view {
+    switch (type) {
+      case Type::UserDefined:
+        return "UserDefined";
+      case Type::i8:
+        return "i8";
+      case Type::i16:
+        return "i16";
+      case Type::i32:
+        return "i32";
+      case Type::i64:
+        return "i64";
+      case Type::u8:
+        return "u8";
+      case Type::u16:
+        return "u16";
+      case Type::u32:
+        return "u32";
+      case Type::u64:
+        return "u64";
+      case Type::f32:
+        return "f32";
+      case Type::f64:
+        return "f64";
+      case Type::Void:
+        return "void";
+    }
   };
 
   struct Expr {

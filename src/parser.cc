@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <ranges>
+#include <format>
 #include <map>
 
 using namespace lev::parser;
@@ -20,6 +21,13 @@ Parser::Parser(std::string_view source) {
 };
 
 Parser::Parser(std::vector<Token> tokens) : mTokens(std::move(tokens)) {};
+
+auto Parser::advance() -> std::optional<Token> {
+  if (isAtEnd()) {
+    return std::nullopt;
+  }
+  return mTokens[mCurrent++];
+}
 
 auto Parser::isAtEnd() const -> bool {
   return mCurrent >= mTokens.size();
@@ -48,8 +56,7 @@ auto Parser::expect(TokenType type) -> std::optional<Token> {
   if (isAtEnd()) return std::nullopt;
 
   if (type == peek()->type) {
-    mCurrent += 1;
-    return peek().value();
+    return mTokens[mCurrent++];
   } else {
     return std::nullopt;
   }
@@ -78,13 +85,6 @@ auto Parser::parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserEr
   return parseStmt();
 }
 
-auto Parser::advance() -> std::optional<Token> {
-  if (not isAtEnd()) {
-    return std::nullopt;
-  }
-
-  return mTokens[mCurrent];
-}
 
 auto Parser::parseType() -> std::expected<Type, ParserError> {
 
@@ -175,5 +175,16 @@ auto Parser::parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserEr
     auto token = peekPrev().value();
     return std::make_unique<LiteralExpr>(token);
   }
+}
+
+auto Parser::printError(ParserError error) -> void {
+  struct ErrorVistor {
+    auto operator()(const UnexpectedToken& err) const -> void {
+      std::cerr << std::format("ERROR: Got an unexpected token `{}` expected `{}`\n", tokenTypeToString(err.found), tokenTypeToString(err.required));
+    }
+  };
+
+  static ErrorVistor visitor;
+  std::visit(visitor, error);
 }
 

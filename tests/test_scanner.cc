@@ -163,3 +163,30 @@ TEST(Scanner, String) {
     EXPECT_EQ(token.lexeme, lexeme);
   }
 }
+
+TEST(Scanner, Identifier) {
+  Scanner scanner("_this_is_a_variable variable");
+
+  auto tokens = scanner.scan();
+
+  if (not tokens) {
+    Scanner::printError(tokens.error());
+  }
+
+  ASSERT_TRUE(tokens.has_value());
+
+  const auto lexemes = {
+    "_this_is_a_variable",
+    "variable",
+  };
+
+  const auto types = {
+    TokenType::Identifier,
+    TokenType::Identifier,
+  };
+
+  for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {
+    EXPECT_EQ(token.type, type);
+    EXPECT_EQ(token.lexeme, lexeme);
+  }
+}

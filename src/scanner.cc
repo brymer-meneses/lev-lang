@@ -57,7 +57,7 @@ auto Scanner::scanNumber() -> std::expected<Token, ScannerError> {
 }
 
 auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
-  while (std::isalnum(peek())) {
+  while (std::isalnum(peek()) or peek() == '_') {
     advance();
   }
 
@@ -171,9 +171,9 @@ auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
         return buildToken(TokenType::Bang);
       }
     default:
-      if (std::isdigit(c)) {
+      if (std::isdigit(c) or c == '.') {
         return scanNumber();
-      } else if (std::isalnum(c)) {
+      } else if (std::isalnum(c) or c == '_') {
         return scanIdentifier();
       } else {
         return std::unexpected(UnexpectedCharacter(c));

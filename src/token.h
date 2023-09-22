@@ -43,6 +43,75 @@ namespace lev::token {
     EndOfFile,
   };
 
+  constexpr auto tokenTypeToString(TokenType type) -> std::string_view {
+    switch (type) {
+      case TokenType::Colon:
+        return ":";
+      case TokenType::EndOfFile:
+        return "eof";
+      case TokenType::Identifier:
+        return "identifier";
+      case TokenType::Mutable:
+        return "mutable";
+      case TokenType::String:
+        return "string";
+      case TokenType::Integer:
+        return "integer";
+      case TokenType::Float:
+        return "float";
+      case TokenType::Return:
+        return "return";
+      case TokenType::For:
+        return "for";
+      case TokenType::While:
+        return "while";
+      case TokenType::If:
+        return "if";
+      case TokenType::Else:
+        return "else";
+      case TokenType::Let:
+        return "let";
+      case TokenType::RightArrow:
+        return "->";
+      case TokenType::Function:
+        return "fn";
+      case TokenType::Public:
+        return "pub";
+      case TokenType::Plus:
+        return "+";
+      case TokenType::PlusEqual:
+        return "+=";
+      case TokenType::Star:
+        return "*";
+      case TokenType::StarEqual:
+        return "*=";
+      case TokenType::Slash:
+        return "/";
+      case TokenType::SlashEqual:
+        return "/=";
+      case TokenType::Minus:
+        return "-";
+      case TokenType::MinusEqual:
+        return "-=";
+      case TokenType::Bang:
+        return "!";
+      case TokenType::BangEqual:
+        return "!=";
+      case TokenType::Greater:
+        return "!";
+      case TokenType::GreaterEqual:
+        return "!=";
+      case TokenType::Less:
+        return "<";
+      case TokenType::LessEqual:
+        return "<=";
+      case TokenType::Equal:
+        return "=";
+      case TokenType::EqualEqual:
+        return "==";
+    }
+  };
+  
   struct Token {
     TokenType type;
     std::string_view lexeme;

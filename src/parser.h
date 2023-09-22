@@ -35,6 +35,7 @@ namespace lev::parser {
       Parser(std::string_view source);
 
       auto parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError>;
+      static auto printError(ParserError error) -> void;
 
     private:
       auto peek() const -> std::optional<Token>;
