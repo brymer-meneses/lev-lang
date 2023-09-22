@@ -3,7 +3,8 @@ project('lev', 'cpp')
 sources = [
   'src/scanner.cc',
   'src/parser.cc',
-  'src/ast.cc'
+  'src/ast.cc',
+  'src/codegen.cc',
 ]
 
 cpp_args = [
@@ -46,6 +47,7 @@ test_sources = [
   'tests/test_scanner.cc',
   'tests/test_parser.cc',
   'tests/test_ast.cc',
+  'tests/test_codegen.cc',
 ]
 
 test_runner = executable(
@@ -53,7 +55,8 @@ test_runner = executable(
   sources: test_sources,
   dependencies: [
     gtest_dep,
-    gmock_dep
+    gmock_dep,
+    llvm_dep,
   ],
   cpp_args: cpp_args,
   link_with: liblev,
