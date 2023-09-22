@@ -6,26 +6,16 @@
 
 using namespace lev::codegen;
 
-TEST(Codegen, Module) {
-
+TEST(Codegen, GlobalVariable) {
   Codegen codegen;
-
-  FunctionDeclaration func("main", {}, {}, lev::ast::Type::i8);
-
-  codegen.visit(func);
+  codegen.compile("let global_variable: i32 = 5");
 
   std::string_view result = 
 R"(; ModuleID = 'lev'
 source_filename = "lev"
 
-define i8 @main() {
-entry:
-  ret i8 0
-}
+@global_variable = common global i32, align 4
 )";
 
-  EXPECT_EQ(codegen.dump(), 
-              result
-            );
+  EXPECT_EQ(codegen.dump(), result);
 }
-

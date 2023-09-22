@@ -19,10 +19,12 @@ namespace lev::codegen {
 
     public:
       Codegen();
+      
+      auto compile(std::string_view) -> void;
 
       auto visit(FunctionDeclaration&) -> void final;
       auto visit(ExprStmt&) -> void final {};
-      auto visit(VariableDeclaration&) -> void final {};
+      auto visit(VariableDeclaration&) -> void final;
 
       auto dump() -> std::string;
 
