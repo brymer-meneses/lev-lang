@@ -12,22 +12,23 @@ cpp_args = [
   '-fno-exceptions',
 ]
 
-lev_dep = shared_library(
-  'lev',
-  sources: sources,
-  cpp_args: cpp_args,
-)
-
 llvm_dep = dependency(
   'llvm', 
-  static : true, 
-  required: true,
-  modules: ['core'],
+  version: '>=16.0.0',
 )
 
 if not llvm_dep.found()
   error('LLVM not found')
 endif
+
+liblev = shared_library(
+  'lev',
+  sources: sources,
+  cpp_args: cpp_args,
+  dependencies: [
+    llvm_dep,
+  ],
+)
 
 executable(
   'lev', 
@@ -55,7 +56,7 @@ test_runner = executable(
     gmock_dep
   ],
   cpp_args: cpp_args,
-  link_with: lev_dep,
+  link_with: liblev,
   include_directories: ['src'],
 )
 
