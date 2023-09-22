@@ -3,7 +3,8 @@ project('lev', 'cpp')
 sources = [
   'src/scanner.cc',
   'src/parser.cc',
-  'src/ast.cc'
+  'src/ast.cc',
+  'src/codegen.cc',
 ]
 
 cpp_args = [
@@ -12,28 +13,35 @@ cpp_args = [
   '-fno-exceptions',
 ]
 
-lev_dep = shared_library(
-  'lev',
-  sources: sources,
-  cpp_args: cpp_args,
-)
-
 llvm_dep = dependency(
-  'llvm', 
-  static : true, 
+  'llvm',
+  static: false,
   required: true,
   modules: ['core'],
+  version: '>=16.0.0',
 )
 
 if not llvm_dep.found()
   error('LLVM not found')
 endif
 
+liblev = shared_library(
+  'lev',
+  sources: sources,
+  cpp_args: cpp_args,
+  dependencies: [
+    llvm_dep,
+  ],
+)
+
 executable(
   'lev', 
   sources: 'src/main.cc', 
   cpp_args: cpp_args, 
-  link_with: liblev
+  link_with: liblev,
+  dependencies: [
+    llvm_dep,
+  ],
 )
 
 gtest = subproject('gtest')
@@ -45,6 +53,7 @@ test_sources = [
   'tests/test_scanner.cc',
   'tests/test_parser.cc',
   'tests/test_ast.cc',
+  'tests/test_codegen.cc',
 ]
 
 test_runner = executable(
@@ -52,10 +61,11 @@ test_runner = executable(
   sources: test_sources,
   dependencies: [
     gtest_dep,
-    gmock_dep
+    gmock_dep,
+    llvm_dep,
   ],
   cpp_args: cpp_args,
-  link_with: lev_dep,
+  link_with: liblev,
   include_directories: ['src'],
 )
 

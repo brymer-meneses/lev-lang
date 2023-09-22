@@ -1,4 +1,4 @@
-
+.PHONY: clean setup compile run test
 all: run
 
 setup:
