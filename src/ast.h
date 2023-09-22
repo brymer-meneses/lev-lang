@@ -212,10 +212,17 @@ namespace lev::ast {
 
     auto operator==(const Stmt& e) const -> bool final {
       if (const FunctionDeclaration* other = dynamic_cast<const FunctionDeclaration*>(&e)) {
+        if (other->body.size() != body.size()) return false;
+
+        for (int i = 0; i<body.size(); i++) {
+          if (*body[i] != *other->body[i]) {
+            return false;
+          }
+        }
+
         return other->functionName == functionName and 
                other->returnType == returnType and
-               other->args == args and 
-               other->body == body;
+               other->args == args;
       }
       return false;
     }
