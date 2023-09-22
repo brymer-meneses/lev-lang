@@ -48,6 +48,10 @@ namespace lev::token {
     std::string_view lexeme;
     Token(TokenType type, std::string_view lexeme) : type(type), lexeme(lexeme) {}
     Token() = default;
+
+    auto operator==(const Token& t) const -> bool {
+      return t.lexeme == lexeme and t.type == type;
+    }
   };
 
   enum class Type {
@@ -65,6 +69,8 @@ namespace lev::token {
 
     f32,
     f64,
+    
+    Void,
   };
 
 }
