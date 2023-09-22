@@ -66,6 +66,11 @@ namespace lev::ast {
     friend auto operator==(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Expr>e2) -> bool {
       return *e1 == *e2;
     }
+
+    template <typename T>
+    inline auto as() -> T {
+      return dynamic_cast<T>(this);
+    }
   };
 
   struct LiteralExpr : Expr {
@@ -132,6 +137,11 @@ namespace lev::ast {
     virtual auto visit(StmtVisitor&) -> void = 0;
     virtual ~Stmt() = default;
     virtual auto operator==(const Stmt& e) const -> bool = 0;
+    
+    template <typename T>
+    inline auto as() -> T {
+      return dynamic_cast<T>(this);
+    }
   };
 
   struct ExprStmt : Stmt {

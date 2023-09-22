@@ -17,7 +17,8 @@ TEST(Parser, VariableDeclaration) {
   ASSERT_TRUE(stmts.has_value());
   EXPECT_EQ(stmts->size(), 1);
 
-  auto result = dynamic_cast<VariableDeclaration*>(stmts.value()[0].get());
+  auto statement = std::move(stmts.value())[0].get();
+  auto result = statement->as<VariableDeclaration*>();
 
   auto expected = VariableDeclaration(
     Token(TokenType::Identifier, "num"),
