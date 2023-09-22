@@ -17,6 +17,8 @@ namespace lev::codegen {
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
 
+      llvm::Function* mCurrentFunction = nullptr;
+
     public:
       Codegen();
       
