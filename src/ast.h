@@ -138,6 +138,10 @@ namespace lev::ast {
     virtual ~Stmt() = default;
     virtual auto operator==(const Stmt& e) const -> bool = 0;
     
+    friend auto operator==(const std::unique_ptr<Stmt>& e1, const std::unique_ptr<Stmt>e2) -> bool {
+      return *e1 == *e2;
+    }
+
     template <typename T>
     inline auto as() -> T {
       return dynamic_cast<T>(this);
@@ -197,11 +201,11 @@ namespace lev::ast {
     std::string_view functionName;
     std::vector<FunctionArg> args;
     Type returnType;
-    std::vector<Stmt> body;
-    std::unique_ptr<Stmt> returnStmt;
+    std::vector<std::unique_ptr<Stmt>> body;
 
     FunctionDeclaration(std::string_view functionName,
-                        std::vector<FunctionArg> args, std::vector<Stmt> body,
+                        std::vector<FunctionArg> args,
+                        std::vector<std::unique_ptr<Stmt>> body,
                         Type returnType)
         : functionName(functionName), args(std::move(args)),
           returnType(returnType), body(std::move(body)) {}
@@ -210,7 +214,7 @@ namespace lev::ast {
       if (const FunctionDeclaration* other = dynamic_cast<const FunctionDeclaration*>(&e)) {
         return other->functionName == functionName and 
                other->returnType == returnType and
-               other->args == args and
+               other->args == args and 
                other->body == body;
       }
       return false;

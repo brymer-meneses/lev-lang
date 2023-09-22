@@ -50,8 +50,9 @@ namespace lev::parser {
       auto parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
       auto parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
 
+      auto parseBlock() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError>;
       auto parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
-      auto parseType() -> std::expected<Type, ParserError>;
+      auto parseType() -> Type;
 
       auto parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
       auto parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
