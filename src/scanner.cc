@@ -4,7 +4,9 @@
 
 using namespace lev::scanner;
 
-Scanner::Scanner(std::string_view source) : mSource(source) {};
+Scanner::Scanner(std::string_view source) : mSource(source) {
+  mIndentationStack.push(0);
+};
 
 auto Scanner::advance() -> char {
   if (isAtEnd()) {
@@ -103,12 +105,33 @@ auto Scanner::scanString() -> std::expected<Token, ScannerError> {
   return buildToken(TokenType::String);
 }
 
+auto Scanner::scanIndentation() -> std::expected<Token, ScannerError> {
+  size_t indentation = 0;
+  while (match(' ') or match('\t')) {
+    indentation += 1;
+  }
+
+  if (indentation > mIndentationStack.top()) {
+    mIndentationStack.push(indentation);
+    return buildToken(TokenType::Indent);
+  } else if (indentation < mIndentationStack.top()) {
+    while (indentation < mIndentationStack.top()) {
+      mIndentationStack.pop();
+    }
+    return buildToken(TokenType::Dedent);
+  } else if (indentation == mIndentationStack.top()) {
+    return buildToken(TokenType::Newline);
+  } else {
+    return std::unexpected(UnexpectedCharacter(peek()));
+  }
+}
 
 auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
 
+  static bool mJoinLines = false;
   auto c = advance();
  
-  while (c == ' ' or c == '\r') {
+  while (c == ' ' or c == '\r' or c == '\t') {
     mStart = mCurrent;
     c = advance();
   }
@@ -116,8 +139,23 @@ auto Scanner::getNextToken() -> std::expected<Token, ScannerError> {
   switch (c) {
     case '\0':
       return buildToken(TokenType::EndOfFile);
+    case '(':
+      mJoinLines = true;
+      return buildToken(TokenType::LeftParen);
+    case ')':
+      mJoinLines = false;
+      return buildToken(TokenType::RightParen);
+    case '\\':
+      return getNextToken();
+    case '\n':
+      if (mJoinLines) {
+        return getNextToken();
+      }
+      return scanIndentation();
     case ':':
       return buildToken(TokenType::Colon);
+    case ',':
+      return buildToken(TokenType::Comma);
     case '"':
       return scanString();
     case '+':

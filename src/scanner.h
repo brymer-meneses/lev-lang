@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <stack>
 
 #include "token.h"
 
@@ -37,6 +38,7 @@ namespace lev::scanner {
     std::string_view mSource;
     size_t mCurrent = 0;
     size_t mStart = 0;
+    std::stack<size_t> mIndentationStack;
 
     public:
       Scanner(std::string_view source);
@@ -55,6 +57,7 @@ namespace lev::scanner {
       auto scanNumber() -> std::expected<Token, ScannerError>;
       auto scanString() -> std::expected<Token, ScannerError>;
       auto scanIdentifier() -> std::expected<Token, ScannerError>;
+      auto scanIndentation() -> std::expected<Token, ScannerError>;
 
       auto peek() const -> char;
       auto isAtEnd() const -> bool;
