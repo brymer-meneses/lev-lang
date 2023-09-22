@@ -54,6 +54,16 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
   mBuilder->CreateRet(mBuilder->getInt8(0));
 }
 
+auto Codegen::visit(VariableDeclaration& v) -> void {
+  if (mCurrentFunction == nullptr) {
+    mModule->getOrInsertGlobal(v.identifier.lexeme, convertType(v.type));
+    auto* gVar = mModule->getNamedGlobal(v.identifier.lexeme);
+    gVar->setLinkage(GlobalValue::CommonLinkage);
+    gVar->setAlignment(Align(4));
+    return;
+  }
+}
+
 auto Codegen::dump() -> std::string {
   std::string str;
   llvm::raw_string_ostream OS(str);
