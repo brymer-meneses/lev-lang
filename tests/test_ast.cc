@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 using namespace lev::ast;
+using namespace lev::token;
 
 TEST(AST, Equality) {
 
@@ -9,6 +10,5 @@ TEST(AST, Equality) {
   auto l2 = LiteralExpr(Token(TokenType::Integer, "1"));
 
   EXPECT_EQ(l1, l2);
-
 }
 

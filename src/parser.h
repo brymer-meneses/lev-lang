@@ -38,6 +38,7 @@ namespace lev::parser {
 
     private:
       auto peek() const -> std::optional<Token>;
+      auto advance() -> std::optional<Token>;
       auto peekPrev() const -> std::optional<Token>;
       auto isAtEnd() const -> bool;
 
@@ -49,6 +50,7 @@ namespace lev::parser {
       auto parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
 
       auto parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
+      auto parseType() -> std::expected<Type, ParserError>;
 
       auto parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
       auto parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;

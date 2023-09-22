@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <ranges>
+#include <map>
 
 using namespace lev::parser;
 using namespace lev::scanner;
@@ -77,7 +78,19 @@ auto Parser::parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserEr
   return parseStmt();
 }
 
-static constexpr auto parseType(std::string_view tokenLexeme) -> Type {
+auto Parser::advance() -> std::optional<Token> {
+  if (not isAtEnd()) {
+    return std::nullopt;
+  }
+
+  return mTokens[mCurrent];
+}
+
+auto Parser::parseType() -> std::expected<Type, ParserError> {
+
+  if (not match(TokenType::Colon)) {
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peekPrev()->type));
+  }
 
   static constexpr auto lexemes = {
     "i8",
@@ -106,7 +119,8 @@ static constexpr auto parseType(std::string_view tokenLexeme) -> Type {
   };
 
   for (auto [lexeme, type] : std::views::zip(lexemes, types)) {
-    if (tokenLexeme == lexeme) {
+    if (peek()->lexeme == lexeme) {
+      advance();
       return type;
     }
   }
@@ -125,13 +139,10 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
   }
 
-  Type type = Type::UserDefined;
-  if (match(TokenType::Colon)) {
-    auto identifier = expect(TokenType::Identifier);
-    if (not identifier) {
-      return std::unexpected(UnexpectedToken(TokenType::Equal, peek()->type));
-    }
-    type = parseType(identifier->lexeme);
+  auto type = parseType();
+
+  if (not type) {
+    return std::unexpected(type.error());
   }
 
   if (not match(TokenType::Equal)) {
@@ -143,7 +154,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(expr.error());
   }
 
-  return std::make_unique<VariableDeclaration>(identifier.value(), isMutable, type, std::move(expr.value()));
+  return std::make_unique<VariableDeclaration>(identifier.value(), isMutable, type.value(), std::move(expr.value()));
 }
 
 

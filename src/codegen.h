@@ -1,13 +1,33 @@
 #pragma once
 
-#include "ast.h"
+#include <memory>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+
+#include "ast.h"
 
 namespace lev::codegen {
-  using namespace llvm;
+  using namespace lev::ast;
 
-  static std::unique_ptr<LLVMContext> TheContext = std::make_unique<llvm::LLVMContext>();
-  static std::unique_ptr<Module> TheModule = std::make_unique<llvm::Module>("lev", *TheContext);
+  class Codegen : StmtVisitor {
+    private:
+      std::unique_ptr<llvm::LLVMContext> mContext;
+      std::unique_ptr<llvm::Module> mModule;
+      std::unique_ptr<llvm::IRBuilder<>> mBuilder;
+
+    public:
+      Codegen();
+
+      auto visit(FunctionDeclaration&) -> void final;
+      auto visit(ExprStmt&) -> void final {};
+      auto visit(VariableDeclaration&) -> void final {};
+
+      auto dump() -> std::string;
+
+    private:
+      auto convertType(ast::Type type) -> llvm::Type*;
+  };
+
 }

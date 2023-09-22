@@ -2,16 +2,30 @@
 
 #include <string>
 #include <gtest/gtest.h>
+#include "token.h"
 
 using namespace lev::codegen;
 
-TEST(CODEGEN, Module) {
-  std::string Str;
-  raw_string_ostream OS(Str);
-  OS << *TheModule;
-  OS.flush();
-  
-  EXPECT_EQ(Str, "; ModuleID = 'lev'\n"
-                "source_filename = \"lev\"\n");
+TEST(Codegen, Module) {
+
+  Codegen codegen;
+
+  FunctionDeclaration func("main", {}, {}, lev::ast::Type::i8);
+
+  codegen.visit(func);
+
+  std::string_view result = 
+R"(; ModuleID = 'lev'
+source_filename = "lev"
+
+define i8 @main() {
+entry:
+  ret i8 0
+}
+)";
+
+  EXPECT_EQ(codegen.dump(), 
+              result
+            );
 }
 

@@ -3,7 +3,6 @@ project('lev', 'cpp')
 sources = [
   'src/scanner.cc',
   'src/parser.cc',
-  'src/ast.cc',
   'src/codegen.cc',
 ]
 
@@ -17,8 +16,8 @@ llvm_dep = dependency(
   'llvm',
   static: false,
   required: true,
-  modules: ['core'],
-  version: '>=16.0.0',
+  modules: ['core', 'support', 'native', 'irreader'],
+  version: '>=17.0.0',
 )
 
 if not llvm_dep.found()

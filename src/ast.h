@@ -6,7 +6,26 @@
 #include <vector>
 
 namespace lev::ast {
-  using namespace lev::token;
+  using lev::token::Token;
+
+  enum class Type {
+    UserDefined,
+
+    i8,
+    i16,
+    i32,
+    i64,
+
+    u8,
+    u16,
+    u32,
+    u64,
+
+    f32,
+    f64,
+    
+    Void,
+  };
 
   struct Expr {
     virtual auto visit(ExprVisitor&) -> void = 0;
@@ -139,12 +158,13 @@ namespace lev::ast {
     std::vector<FunctionArg> args;
     Type returnType;
     std::vector<Stmt> body;
+    std::unique_ptr<Stmt> returnStmt;
 
-    FunctionDeclaration(std::string_view functionName, std::vector<FunctionArg> args,  std::vector<Stmt> body, Type returnType) 
-        : functionName(functionName) 
-        , args(std::move(args))
-        , returnType(returnType) 
-        , body(std::move(body)) {}
+    FunctionDeclaration(std::string_view functionName,
+                        std::vector<FunctionArg> args, std::vector<Stmt> body,
+                        Type returnType)
+        : functionName(functionName), args(std::move(args)),
+          returnType(returnType), body(std::move(body)) {}
 
     auto operator==(const Stmt& e) const -> bool final {
       if (const FunctionDeclaration* other = dynamic_cast<const FunctionDeclaration*>(&e)) {
@@ -154,6 +174,10 @@ namespace lev::ast {
                other->body == body;
       }
       return false;
+    }
+
+    auto visit(StmtVisitor& v) -> void final {
+      v.visit(*this);
     }
   };
 }
