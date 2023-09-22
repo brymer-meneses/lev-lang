@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "parser.h"
+#include <memory>
 
 using namespace lev::parser;
 
@@ -9,6 +10,6 @@ TEST(Parser, VariableDeclaration) {
 
   auto stmts = parser.parse();
 
-  // ASSERT_TRUE(stmts.has_value());
+  ASSERT_TRUE(stmts.has_value());
 
 }
