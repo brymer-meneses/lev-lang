@@ -28,7 +28,7 @@ Codegen::Codegen() {
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
 }
 
-auto Codegen::convertType(Type type) -> llvm::Type* {
+auto Codegen::convertType(ast::Type type) -> llvm::Type* {
   llvm::Type* llvmType = nullptr;
   switch (type) {
     case Type::i8:
@@ -60,15 +60,32 @@ auto Codegen::convertType(Type type) -> llvm::Type* {
   return llvmType;
 }
 
+auto Codegen::visit(ExprStmt& e) -> void {
+
+}
+
 auto Codegen::visit(FunctionDeclaration& f) -> void {
+  std::vector<llvm::Type*> args = {};
+  for (auto arg : f.args) {
+    auto type = convertType(std::get<1>(arg));
+    args.push_back(type);
+  }
+
   llvm::Type* type = convertType(f.returnType);
 
-  auto* funcType = FunctionType::get(type, false);
-  auto* func = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
-  auto* block = BasicBlock::Create(*mContext, "entry", func);
+  auto* funcType = FunctionType::get(type, args, false);
+  mCurrentFunction = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
 
+  for (auto& arg : mCurrentFunction->args()) {
+    arg.setName(std::get<0>(f.args[arg.getArgNo()]));
+  }
+
+  auto* block = BasicBlock::Create(*mContext, "entry", mCurrentFunction);
   mBuilder->SetInsertPoint(block);
-  mBuilder->CreateRet(mBuilder->getInt8(0));
+
+  for (auto& stmts : f.body) {
+    stmts->visit(*this);
+  }
 }
 
 auto Codegen::visit(VariableDeclaration& v) -> void {
@@ -78,6 +95,7 @@ auto Codegen::visit(VariableDeclaration& v) -> void {
     gVar->setLinkage(GlobalValue::CommonLinkage);
     gVar->setAlignment(Align(4));
     return;
+  } else {
   }
 }
 

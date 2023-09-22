@@ -174,6 +174,10 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
       return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
     }
 
+    if (not match(TokenType::Colon)) {
+      return std::unexpected(UnexpectedToken(TokenType::Colon, peek()->type));
+    }
+
     auto type = parseType();
 
     args.push_back({argIdentifier.value().lexeme, type});
