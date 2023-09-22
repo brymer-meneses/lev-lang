@@ -1,9 +1,26 @@
 #include "codegen.h"
+#include "parser.h"
+#include "scanner.h"
 
 using namespace lev::codegen;
+using namespace lev::parser;
+
 using namespace llvm;
 
 using Codegen = lev::codegen::Codegen;
+
+auto Codegen::compile(std::string_view source) -> void {
+  Parser parser(source);
+
+  auto statements = parser.parse();
+  if (not statements) {
+    Parser::printError(statements.error());
+    return;
+  }
+  for (auto& statement : statements.value()) {
+    statement->visit(*this);
+  }
+}
 
 Codegen::Codegen() {
   mContext = std::make_unique<LLVMContext>();
