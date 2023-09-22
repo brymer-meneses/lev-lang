@@ -13,6 +13,7 @@ Parser::Parser(std::string_view source) {
   auto tokens = scanner.scan();
   if (not tokens.has_value()) {
     Scanner::printError(tokens.error());
+    return;
   }
   mTokens = std::move(tokens.value());
 };
@@ -26,6 +27,11 @@ auto Parser::isAtEnd() const -> bool {
 auto Parser::peek() const -> std::optional<Token> {
   if (isAtEnd()) return std::nullopt;
   return mTokens[mCurrent];
+}
+
+auto Parser::peekPrev() const -> std::optional<Token> {
+  if (mCurrent == 0) return std::nullopt;
+  return mTokens[mCurrent - 1];
 }
 
 auto Parser::match(TokenType type) -> bool {
@@ -150,6 +156,13 @@ auto Parser::parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
 }
 
 auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
+  return parsePrimaryExpr();
+}
 
+auto Parser::parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
+  if (match(TokenType::Float) || match(TokenType::Integer)) {
+    auto token = peekPrev().value();
+    return std::make_unique<LiteralExpr>(token);
+  }
 }
 
