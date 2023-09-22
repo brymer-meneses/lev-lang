@@ -14,7 +14,10 @@ cpp_args = [
 ]
 
 llvm_dep = dependency(
-  'llvm', 
+  'llvm',
+  static: false,
+  required: true,
+  modules: ['core'],
   version: '>=16.0.0',
 )
 
@@ -35,7 +38,10 @@ executable(
   'lev', 
   sources: 'src/main.cc', 
   cpp_args: cpp_args, 
-  link_with: liblev
+  link_with: liblev,
+  dependencies: [
+    llvm_dep,
+  ],
 )
 
 gtest = subproject('gtest')
