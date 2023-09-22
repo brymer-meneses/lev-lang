@@ -65,6 +65,9 @@ auto Parser::expect(TokenType type) -> std::optional<Token> {
 auto Parser::parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError> {
   std::vector<std::unique_ptr<Stmt>> statements;
   while (not isAtEnd()) {
+    while (match(TokenType::Newline)) {
+      continue;
+    }
     auto stmt = parseDeclaration();
     if (not stmt) {
       return std::unexpected(stmt.error());
@@ -86,11 +89,7 @@ auto Parser::parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserEr
 }
 
 
-auto Parser::parseType() -> std::expected<Type, ParserError> {
-
-  if (not match(TokenType::Colon)) {
-    return std::unexpected(UnexpectedToken(TokenType::Colon, peekPrev()->type));
-  }
+auto Parser::parseType() -> Type {
 
   static constexpr auto lexemes = {
     "i8",
@@ -139,11 +138,11 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
   }
 
-  auto type = parseType();
-
-  if (not type) {
-    return std::unexpected(type.error());
+  if (not match(TokenType::Colon)) {
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peekPrev()->type));
   }
+
+  auto type = parseType();
 
   if (not match(TokenType::Equal)) {
     return std::unexpected(UnexpectedToken(TokenType::Equal, peek()->type));
@@ -154,16 +153,80 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(expr.error());
   }
 
-  return std::make_unique<VariableDeclaration>(identifier.value(), isMutable, type.value(), std::move(expr.value()));
+  return std::make_unique<VariableDeclaration>(identifier.value(), isMutable, type, std::move(expr.value()));
 }
 
 
 auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
+  auto identifier = expect(TokenType::Identifier);
+  if (not identifier) {
+    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
+  }
 
+  auto args = std::vector<FunctionArg>{};
+  if (not match(TokenType::LeftParen)) {
+    return std::unexpected(UnexpectedToken(TokenType::LeftParen, peek()->type));
+  }
+
+  while (not match(TokenType::RightParen)) {
+    auto argIdentifier = expect(TokenType::Identifier);
+    if (not argIdentifier) {
+      return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
+    }
+
+    auto type = parseType();
+
+    args.push_back({argIdentifier.value().lexeme, type});
+
+    if (not match(TokenType::Comma)) {
+      if (not match(TokenType::RightParen)) {
+        return std::unexpected(UnexpectedToken(TokenType::RightParen, peek()->type));
+      }
+      break;
+    }
+  }
+
+  if (not match(TokenType::RightArrow)) {
+    return std::unexpected(UnexpectedToken(TokenType::RightArrow, peek()->type));
+  }
+
+  auto returnType = parseType();
+
+  if (not match(TokenType::Colon)) {
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peek()->type));
+  }
+
+  if (not match(TokenType::Indent)) {
+    return std::unexpected(UnexpectedToken(TokenType::Indent, peek()->type));
+  }
+
+  auto body = parseBlock();
+
+  if (not body) {
+    return std::unexpected(body.error());
+  }
+
+  return std::make_unique<FunctionDeclaration>(identifier.value().lexeme, args, std::move(body.value()), returnType);
+}
+
+auto Parser::parseBlock() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError> {
+  auto statements = std::vector<std::unique_ptr<Stmt>>{};
+  while (not match(TokenType::Dedent)) {
+    while (match(TokenType::Newline)) {
+      continue;
+    }
+    auto stmt = parseDeclaration();
+    if (not stmt) {
+      return std::unexpected(stmt.error());
+    }
+    statements.push_back(std::move(stmt.value()));
+  }
+  return statements;
 }
 
 auto Parser::parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
-
+  
+  return std::unexpected(UnexpectedToken(TokenType::EqualEqual, peek()->type));
 }
 
 auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {

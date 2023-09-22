@@ -1,4 +1,4 @@
-project('lev', 'cpp')
+project('lev', 'c', 'cpp', version: '0.0.1')
 
 sources = [
   'src/scanner.cc',
@@ -17,7 +17,7 @@ llvm_dep = dependency(
   static: false,
   required: true,
   modules: ['core', 'support', 'native', 'irreader'],
-  version: '>=17.0.0',
+  version: '>=17.0.1',
 )
 
 if not llvm_dep.found()
