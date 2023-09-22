@@ -190,3 +190,137 @@ TEST(Scanner, Identifier) {
     EXPECT_EQ(token.lexeme, lexeme);
   }
 }
+
+TEST(Scanner, Indentation) {
+  Scanner scanner(
+R"(
+fn main(
+  a: i32,
+  b: i32
+) -> i32:
+  let num: i32 = 5
+  if num == 5:
+    if num == 10:
+      return 10
+    else:
+      return 15
+    return 5
+  else if num == 10:
+    return 10
+  else:
+    return 15
+  return 5
+)");
+
+  auto tokens = scanner.scan();
+
+  if (not tokens) {
+    Scanner::printError(tokens.error());
+  }
+
+  ASSERT_TRUE(tokens.has_value());
+
+  const auto types = {
+    // fn main(
+    TokenType::Newline,
+    TokenType::Function,
+    TokenType::Identifier,
+    TokenType::LeftParen,
+
+    // a: i32,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+    TokenType::Comma,
+
+    // b: i32
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+
+    // ) -> i32: \n\t
+    TokenType::RightParen,
+    TokenType::RightArrow,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Indent,
+    
+    // let num: i32 = 5 \n
+    TokenType::Let,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+    TokenType::Equal,
+    TokenType::Integer,
+    TokenType::Newline,
+
+    // if num == 5: \n\t
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // if num == 10: \n\t
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // return 10 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else: \n\t
+    TokenType::Else,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // return 15 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // return 5 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else if num == 10: \n\t
+    TokenType::Else,
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+    
+    //   return 10 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else: \n\t
+    TokenType::Else,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    //   return 15 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+  
+    // return 5 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+  };
+
+  for (auto [token, type] : std::views::zip(tokens.value(), types)) {
+    EXPECT_EQ(token.type, type) << i << " got " << tokenTypeToString(token.type) << " expected " << tokenTypeToString(type);
+  }
+}

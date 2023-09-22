@@ -4,11 +4,18 @@
 namespace lev::token {
 
   enum class TokenType {
+    LeftParen,
+    RightParen,
     RightArrow,
     Function,
     Public,
     Identifier,
     Colon,
+    Comma,
+
+    Newline,
+    Indent,
+    Dedent,
 
     Integer,
     Float,
@@ -45,6 +52,18 @@ namespace lev::token {
 
   constexpr auto tokenTypeToString(TokenType type) -> std::string_view {
     switch (type) {
+      case TokenType::LeftParen:
+        return "(";
+      case TokenType::RightParen:
+        return ")";
+      case TokenType::Comma:
+        return ",";
+      case TokenType::Newline:
+        return "newline";
+      case TokenType::Indent:
+        return "indent";
+      case TokenType::Dedent:
+        return "dedent";
       case TokenType::Colon:
         return ":";
       case TokenType::EndOfFile:
