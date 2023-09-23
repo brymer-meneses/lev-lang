@@ -58,7 +58,7 @@ namespace lev::ast {
   };
 
   struct Expr {
-    virtual auto visit(ExprVisitor&) -> void = 0;
+    virtual auto accept(ExprVisitor&) -> void = 0;
     virtual ~Expr() = default;
 
     virtual auto operator==(const Expr& e) const -> bool = 0;
@@ -77,7 +77,7 @@ namespace lev::ast {
     Token token;
     LiteralExpr(Token token) : token(token) { }
 
-    auto visit(ExprVisitor& v) -> void final {
+    auto accept(ExprVisitor& v) -> void final {
       v.visit(*this);
     }
 
@@ -101,7 +101,7 @@ namespace lev::ast {
         , op(op) 
         , right(std::move(right)) {};
 
-    auto visit(ExprVisitor& v) -> void final {
+    auto accept(ExprVisitor& v) -> void final {
       v.visit(*this);
     }
 
@@ -121,7 +121,7 @@ namespace lev::ast {
         : left(std::move(left))
         , op(op) {}
 
-    auto visit(ExprVisitor& v) -> void final {
+    auto accept(ExprVisitor& v) -> void final {
       v.visit(*this);
     }
 
@@ -134,7 +134,7 @@ namespace lev::ast {
   };
 
   struct Stmt {
-    virtual auto visit(StmtVisitor&) -> void = 0;
+    virtual auto accept(StmtVisitor&) -> void = 0;
     virtual ~Stmt() = default;
     virtual auto operator==(const Stmt& e) const -> bool = 0;
     
@@ -153,7 +153,7 @@ namespace lev::ast {
 
     ExprStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {};
 
-    auto visit(StmtVisitor& v) -> void final {
+    auto accept(StmtVisitor& v) -> void final {
       v.visit(*this);
     }
 
@@ -180,7 +180,7 @@ namespace lev::ast {
                       , isMutable(isMutable)
                       , value(std::move(value)) 
                       , type(type) {}
-    auto visit(StmtVisitor& v) -> void final {
+    auto accept(StmtVisitor& v) -> void final {
       v.visit(*this);
     }
 
@@ -232,7 +232,7 @@ namespace lev::ast {
       return false;
     }
 
-    auto visit(StmtVisitor& v) -> void final {
+    auto accept(StmtVisitor& v) -> void final {
       v.visit(*this);
     }
   };

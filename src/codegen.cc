@@ -20,7 +20,7 @@ auto Codegen::compile(std::string_view source) -> void {
     return;
   }
   for (auto& statement : statements.value()) {
-    statement->visit(*this);
+    statement->accept(*this);
   }
 }
 
@@ -86,7 +86,7 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
   mBuilder->SetInsertPoint(block);
 
   for (auto& stmt : f.body) {
-    stmt->visit(*this);
+    stmt->accept(*this);
   }
 }
 
