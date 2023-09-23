@@ -11,23 +11,32 @@ using namespace llvm;
 
 using Codegen = lev::codegen::Codegen;
 
-auto Codegen::compile(std::string_view source) -> void {
-  Parser parser(source);
+Codegen::Codegen(std::string_view source) {
+  mContext = std::make_unique<LLVMContext>();
+  mModule = std::make_unique<Module>("lev", *mContext);
+  mBuilder = std::make_unique<IRBuilder<>>(*mContext);
 
+  Parser parser(source);
   auto statements = parser.parse();
   if (not statements) {
     Parser::printError(statements.error());
     return;
   }
-  for (auto& statement : statements.value()) {
-    statement->accept(*this);
-  }
+
+  mStatements = std::move(statements.value());
 }
 
-Codegen::Codegen() {
+Codegen::Codegen(std::vector<std::unique_ptr<Stmt>> statements)  {
+  mStatements = std::move(statements);
   mContext = std::make_unique<LLVMContext>();
   mModule = std::make_unique<Module>("lev", *mContext);
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
+};
+
+auto Codegen::compile() -> void {
+  for (auto& statement : mStatements){
+    statement->accept(*this);
+  }
 }
 
 auto Codegen::convertType(ast::Type type) -> llvm::Type* {
@@ -137,8 +146,6 @@ auto Codegen::visit(BinaryExpr& e) -> void {};
 auto Codegen::dump() -> std::string {
   std::string str;
   llvm::raw_string_ostream OS(str);
-
-  Codegen codegen;
 
   OS << *mModule;
   OS.flush();

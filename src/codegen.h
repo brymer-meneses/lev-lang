@@ -13,17 +13,20 @@
 namespace lev::codegen {
   using namespace lev::ast;
 
-  class Codegen : public StmtVisitor,ExprVisitor {
+  class Codegen : public StmtVisitor, public ExprVisitor {
     private:
       std::unique_ptr<llvm::LLVMContext> mContext;
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
       std::map<std::string_view, llvm::Value*> mVariables;
 
+      std::vector<std::unique_ptr<Stmt>> mStatements;
+
     public:
-      Codegen();
+      Codegen(std::vector<std::unique_ptr<Stmt>> statements);
+      Codegen(std::string_view);
       
-      auto compile(std::string_view) -> void;
+      auto compile() -> void;
       auto dump() -> std::string;
 
     private:
@@ -32,7 +35,6 @@ namespace lev::codegen {
       auto visit(VariableDeclaration&) -> void final;
 
       auto visit(LiteralExpr&) -> void final;
-      auto visit(LiteralExpr&, ast::Type) -> llvm::Constant*;
       auto visit(BinaryExpr&) -> void final;
       auto visit(UnaryExpr&) -> void final;
 

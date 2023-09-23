@@ -7,8 +7,7 @@
 using namespace lev::codegen;
 
 TEST(Codegen, GlobalVariable) {
-  Codegen codegen;
-  codegen.compile("let num: i32 = 5");
+  Codegen codegen("let num: i32 = 5");
 
   std::string_view result = 
 R"(; ModuleID = 'lev'
@@ -21,12 +20,13 @@ source_filename = "lev"
 }
 
 TEST(Codegen, LocalVariables) {
-  Codegen codegen;
-  codegen.compile(
+  Codegen codegen(
 R"(
 fn main() -> i32:
   let num: i32 = 5
 )");
+
+  codegen.compile();
 
   std::string_view result =
 R"(; ModuleID = 'lev'
