@@ -24,7 +24,7 @@ if not llvm_dep.found()
   error('LLVM not found')
 endif
 
-liblev = shared_library(
+liblev = static_library(
   'lev',
   sources: sources,
   cpp_args: cpp_args,

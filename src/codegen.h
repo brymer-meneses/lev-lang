@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <string>
 #include <memory>
 
 #include <llvm/IR/LLVMContext.h>
@@ -16,8 +18,7 @@ namespace lev::codegen {
       std::unique_ptr<llvm::LLVMContext> mContext;
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
-      llvm::Function* mCurrentFunction = nullptr;
-      llvm::Value* mCurrentVariable = nullptr;
+      std::map<std::string_view, llvm::Value*> mVariables;
 
     public:
       Codegen();
@@ -31,6 +32,7 @@ namespace lev::codegen {
       auto visit(VariableDeclaration&) -> void final;
 
       auto visit(LiteralExpr&) -> void final;
+      auto visit(LiteralExpr&, ast::Type) -> llvm::Constant*;
       auto visit(BinaryExpr&) -> void final;
       auto visit(UnaryExpr&) -> void final;
 

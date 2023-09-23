@@ -203,11 +203,16 @@ namespace lev::ast {
     Type returnType;
     std::vector<std::unique_ptr<Stmt>> body;
 
+    FunctionDeclaration(FunctionDeclaration& f)
+          : functionName(f.functionName),
+            args(f.args),
+            returnType(f.returnType),
+            body(std::move(f.body)) {};
     FunctionDeclaration(std::string_view functionName,
                         std::vector<FunctionArg> args,
-                        std::vector<std::unique_ptr<Stmt>> body,
-                        Type returnType)
-        : functionName(functionName), args(std::move(args)),
+                        Type returnType,
+                        std::vector<std::unique_ptr<Stmt>> body)
+        : functionName(functionName), args(args),
           returnType(returnType), body(std::move(body)) {}
 
     auto operator==(const Stmt& e) const -> bool final {
