@@ -59,23 +59,15 @@ fn main() -> i32:
       std::make_unique<LiteralExpr>(Token(TokenType::Integer, "5"))
   );
 
-  std::vector<std::unique_ptr<Stmt>> body;
-  body.push_back(std::move(variableDecl));
-
-  std::vector<FunctionArg> args = {};
-  auto decl = FunctionDeclaration{
+  auto block = std::make_unique<BlockStmt>();
+  block->addStmt(std::move(variableDecl));
+  
+  auto expected = FunctionDeclaration(
     "main",
     {},
     Type::i32,
-    std::move(body)
-  };
+    std::move(block)
+  );
 
-  auto expected = &decl;
-
-  EXPECT_EQ(*result, *expected);
-
-  auto resultBodyStmt = result->body[0]->as<VariableDeclaration*>();
-  auto expectedBodyStmt = expected->body[0]->as<VariableDeclaration*>();
-
-  EXPECT_EQ(*resultBodyStmt, *expectedBodyStmt);
+  EXPECT_EQ(*result, expected);
 }

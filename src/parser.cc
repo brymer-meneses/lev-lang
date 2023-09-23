@@ -205,7 +205,6 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
   }
 
   auto body = parseBlock();
-
   if (not body) {
     return std::unexpected(body.error());
   }
@@ -213,7 +212,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
   return std::make_unique<FunctionDeclaration>(identifier.value().lexeme, args, returnType, std::move(body.value()));
 }
 
-auto Parser::parseBlock() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError> {
+auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
   auto statements = std::vector<std::unique_ptr<Stmt>>{};
   while (not match(TokenType::Dedent)) {
     while (match(TokenType::Newline)) {
@@ -225,7 +224,8 @@ auto Parser::parseBlock() -> std::expected<std::vector<std::unique_ptr<Stmt>>, P
     }
     statements.push_back(std::move(stmt.value()));
   }
-  return statements;
+
+  return std::make_unique<BlockStmt>(std::move(statements));
 }
 
 auto Parser::parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
@@ -238,9 +238,14 @@ auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
 }
 
 auto Parser::parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
-  if (match(TokenType::Float) || match(TokenType::Integer)) {
+  if (match(TokenType::Float) or match(TokenType::Integer) or match(TokenType::String)) {
     auto token = peekPrev().value();
-    return std::make_unique<LiteralExpr>(token);
+    return std::make_unique<LiteralExpr>(std::move(token));
+  }
+
+  if (match(TokenType::Identifier)) {
+    auto token = peekPrev().value();
+    return std::make_unique<LiteralExpr>(std::move(token));
   }
 }
 

@@ -106,9 +106,7 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
   auto* block = BasicBlock::Create(*mContext, "entry", function);
   mBuilder->SetInsertPoint(block);
 
-  for (auto& stmt : f.body) {
-    codegenStmt(*stmt);
-  }
+  codegenStmt(*f.body);
 }
 
 auto Codegen::visit(VariableDeclaration& v) -> void {
@@ -146,6 +144,12 @@ auto Codegen::visit(LiteralExpr& e) -> void {
       std::cerr << "codegen not implemented\n";
       exit(0);
       break;
+  }
+};
+
+auto Codegen::visit(BlockStmt& e) -> void {
+  for (auto& stmt : e.statements) {
+    codegenStmt(*stmt);
   }
 };
 

@@ -6,6 +6,7 @@ namespace lev::ast {
   struct UnaryExpr;
 
   struct ExprStmt;
+  struct BlockStmt;
   struct VariableDeclaration;
   struct FunctionDeclaration;
 
@@ -17,6 +18,7 @@ namespace lev::ast {
 
   struct StmtVisitor {
     virtual auto visit(ExprStmt& expr) -> void = 0;
+    virtual auto visit(BlockStmt& expr) -> void = 0;
     virtual auto visit(VariableDeclaration& expr) -> void = 0;
     virtual auto visit(FunctionDeclaration& expr) -> void = 0;
   };

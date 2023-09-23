@@ -82,7 +82,7 @@ namespace lev::ast {
     }
 
     auto operator==(const Expr& e) const -> bool final {
-      if (const LiteralExpr* other = dynamic_cast<const LiteralExpr*>(&e)) {
+      if (const LiteralExpr* other = static_cast<const LiteralExpr*>(&e)) {
         return token == other->token;
       }
       return false;
@@ -106,7 +106,7 @@ namespace lev::ast {
     }
 
     auto operator==(const Expr& e) const -> bool final {
-      if (const BinaryExpr* other = dynamic_cast<const BinaryExpr*>(&e)) {
+      if (const BinaryExpr* other = static_cast<const BinaryExpr*>(&e)) {
         return *other->left == *left and other->op == op and *other->right == *right;
       }
       return false;
@@ -125,8 +125,8 @@ namespace lev::ast {
       v.visit(*this);
     }
 
-    auto operator==(const Expr& e) const -> bool {
-      if (const UnaryExpr* other = dynamic_cast<const UnaryExpr*>(&e)) {
+    auto operator==(const Expr& e) const -> bool final {
+      if (const UnaryExpr* other = static_cast<const UnaryExpr*>(&e)) {
         return *other->left == *left and other->op == op;
       }
       return false;
@@ -157,11 +157,40 @@ namespace lev::ast {
       v.visit(*this);
     }
 
-    auto operator==(const Stmt& e) const -> bool {
-      if (const ExprStmt* other = dynamic_cast<const ExprStmt*>(&e)) {
+    auto operator==(const Stmt& e) const -> bool final {
+      if (const ExprStmt* other = static_cast<const ExprStmt*>(&e)) {
         return *other->expr == *expr;
       }
       return false;
+    }
+  };
+
+  struct BlockStmt : Stmt {
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    BlockStmt() = default;
+    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
+        : statements(std::move(statements)) {}
+    
+    auto accept(StmtVisitor& v) -> void final {
+      v.visit(*this);
+    }
+
+    auto addStmt(std::unique_ptr<Stmt> stmt) -> void {
+      statements.push_back(std::move(stmt));
+    }
+    auto operator==(const Stmt& e) const -> bool final {
+      if (const BlockStmt* other = static_cast<const BlockStmt*>(&e)) {
+        if (other->statements.size() != statements.size()) {
+          return false;
+        }
+        for (int i=0; i < statements.size(); i++) {
+          if (*other->statements[i] != *statements[i]) {
+            return false;
+          }
+        }
+      }
+      return true;
     }
   };
 
@@ -170,7 +199,6 @@ namespace lev::ast {
     bool isMutable;
     std::unique_ptr<Expr> value;
     Type type;
-
 
     VariableDeclaration(Token identifier, 
                         bool isMutable,
@@ -185,7 +213,7 @@ namespace lev::ast {
     }
 
     auto operator==(const Stmt& e) const -> bool final {
-      if (const VariableDeclaration* other = dynamic_cast<const VariableDeclaration*>(&e)) {
+      if (const VariableDeclaration* other = static_cast<const VariableDeclaration*>(&e)) {
         return other->identifier == identifier and 
                other->isMutable == isMutable and
                *other->value == *value and 
@@ -195,39 +223,27 @@ namespace lev::ast {
     }
   };
 
-  using FunctionArg = std::tuple<std::string_view, Type>;
+  using FunctionArg = std::pair<std::string_view, Type>;
 
   struct FunctionDeclaration : Stmt {
     std::string_view functionName;
     std::vector<FunctionArg> args;
     Type returnType;
-    std::vector<std::unique_ptr<Stmt>> body;
+    std::unique_ptr<Stmt> body;
 
-    FunctionDeclaration(FunctionDeclaration& f)
-          : functionName(f.functionName),
-            args(f.args),
-            returnType(f.returnType),
-            body(std::move(f.body)) {};
     FunctionDeclaration(std::string_view functionName,
                         std::vector<FunctionArg> args,
                         Type returnType,
-                        std::vector<std::unique_ptr<Stmt>> body)
+                        std::unique_ptr<Stmt> body)
         : functionName(functionName), args(args),
           returnType(returnType), body(std::move(body)) {}
 
     auto operator==(const Stmt& e) const -> bool final {
-      if (const FunctionDeclaration* other = dynamic_cast<const FunctionDeclaration*>(&e)) {
-        if (other->body.size() != body.size()) return false;
-
-        for (int i = 0; i<body.size(); i++) {
-          if (*body[i] != *other->body[i]) {
-            return false;
-          }
-        }
-
+      if (const FunctionDeclaration* other = static_cast<const FunctionDeclaration*>(&e)) {
         return other->functionName == functionName and 
                other->returnType == returnType and
-               other->args == args;
+               other->args == args and 
+               *other->body == *body;
       }
       return false;
     }
