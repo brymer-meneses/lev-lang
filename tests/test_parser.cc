@@ -63,12 +63,19 @@ fn main() -> i32:
   body.push_back(std::move(variableDecl));
 
   std::vector<FunctionArg> args = {};
-  auto expected = FunctionDeclaration{
+  auto decl = FunctionDeclaration{
     "main",
     {},
-    std::move(body),
     Type::i32,
+    std::move(body)
   };
 
-  EXPECT_EQ(*result, expected);
+  auto expected = &decl;
+
+  EXPECT_EQ(*result, *expected);
+
+  auto resultBodyStmt = result->body[0]->as<VariableDeclaration*>();
+  auto expectedBodyStmt = expected->body[0]->as<VariableDeclaration*>();
+
+  EXPECT_EQ(*resultBodyStmt, *expectedBodyStmt);
 }

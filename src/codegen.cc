@@ -1,6 +1,7 @@
 #include "codegen.h"
 #include "parser.h"
 #include "scanner.h"
+
 #include <string>
 
 using namespace lev::codegen;
@@ -29,7 +30,7 @@ Codegen::Codegen() {
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
 }
 
-auto Codegen::convertType(Type type) -> llvm::Type* {
+auto Codegen::convertType(ast::Type type) -> llvm::Type* {
   llvm::Type* llvmType = nullptr;
   switch (type) {
     case Type::i8:
@@ -66,22 +67,22 @@ auto Codegen::visit(ExprStmt& e) -> void {
 }
 
 auto Codegen::visit(FunctionDeclaration& f) -> void {
-  std::vector<llvm::Type*> args = {};
+  std::vector<llvm::Type*> argsType = {};
   for (auto arg : f.args) {
     auto type = convertType(std::get<1>(arg));
-    args.push_back(type);
+    argsType.push_back(type);
   }
 
-  llvm::Type* type = convertType(f.returnType);
+  llvm::Type* returnType = convertType(f.returnType);
 
-  auto* funcType = FunctionType::get(type, args, false);
-  mCurrentFunction = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
+  auto* funcType = FunctionType::get(returnType, argsType, false);
+  auto* function = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
 
-  for (auto& arg : mCurrentFunction->args()) {
+  for (auto& arg : function->args()) {
     arg.setName(std::get<0>(f.args[arg.getArgNo()]));
   }
 
-  auto* block = BasicBlock::Create(*mContext, "entry", mCurrentFunction);
+  auto* block = BasicBlock::Create(*mContext, "entry", function);
   mBuilder->SetInsertPoint(block);
 
   for (auto& stmt : f.body) {
@@ -90,29 +91,45 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
 }
 
 auto Codegen::visit(VariableDeclaration& v) -> void {
-  if (mCurrentFunction == nullptr) {
-    mModule->getOrInsertGlobal(v.identifier.lexeme, convertType(v.type));
-    auto* gVar = mModule->getNamedGlobal(v.identifier.lexeme);
-    gVar->setLinkage(GlobalValue::CommonLinkage);
-    gVar->setAlignment(Align(4));
+  auto name = v.identifier.lexeme;
+  auto type = convertType(v.type);
+  auto value = visit(*v.value->as<LiteralExpr*>(), v.type);
+
+  if (mBuilder->GetInsertBlock() == nullptr) {
+    mVariables[name] = new GlobalVariable(*mModule, type, false, GlobalValue::ExternalLinkage, value, name);
     return;
   }
-
-  // TODO: panic if variable already exists
-  mBuilder->SetInsertPoint(&mCurrentFunction->getEntryBlock());
-  mCurrentVariable = mBuilder->CreateAlloca(convertType(v.type), nullptr, v.identifier.lexeme);
-  v.value->visit(*this);
+  auto* alloca = mBuilder->CreateAlloca(type, nullptr, v.identifier.lexeme);
+  mBuilder->CreateStore(value, alloca);
+  mVariables[name] = alloca;
 }
 
 auto Codegen::visit(LiteralExpr& e) -> void {
-  Value* value;
-  if (e.token.type == TokenType::Integer) {
-    value = ConstantInt::get(mBuilder->getInt32Ty(), std::stoi(std::string(e.token.lexeme)));
-  } else {
-    value = ConstantInt::get(mBuilder->getFloatTy(), std::stod(std::string(e.token.lexeme)));
-  }
-  mBuilder->CreateStore(value, mCurrentVariable);
+  
 };
+
+auto Codegen::visit(LiteralExpr& e, ast::Type type) -> llvm::Constant* {
+  switch (type) {
+    case Type::i8:
+    case Type::u8:
+      return mBuilder->getInt8(std::stoi(std::string(e.token.lexeme)));
+    case Type::i16:
+    case Type::u16:
+      return mBuilder->getInt16(std::stoi(std::string(e.token.lexeme)));
+    case Type::i32:
+    case Type::u32:
+      return mBuilder->getInt32(std::stoi(std::string(e.token.lexeme)));
+    case Type::i64:
+    case Type::u64:
+      return mBuilder->getInt64(std::stoi(std::string(e.token.lexeme)));
+    case Type::f32:
+      return ConstantFP::get(*mContext, APFloat(std::stof(std::string(e.token.lexeme))));
+    case Type::f64:
+      return ConstantFP::get(*mContext, APFloat(std::stod(std::string(e.token.lexeme))));
+    default:
+      return ConstantFP::get(*mContext, APFloat(0.0));
+  }
+}
 
 auto Codegen::visit(UnaryExpr& e) -> void {};
 auto Codegen::visit(BinaryExpr& e) -> void {};

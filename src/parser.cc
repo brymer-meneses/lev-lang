@@ -210,7 +210,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(body.error());
   }
 
-  return std::make_unique<FunctionDeclaration>(identifier.value().lexeme, args, std::move(body.value()), returnType);
+  return std::make_unique<FunctionDeclaration>(identifier.value().lexeme, args, returnType, std::move(body.value()));
 }
 
 auto Parser::parseBlock() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError> {

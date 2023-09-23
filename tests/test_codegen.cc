@@ -8,16 +8,16 @@ using namespace lev::codegen;
 
 TEST(Codegen, GlobalVariable) {
   Codegen codegen;
-  codegen.compile("let global_variable: i32 = 5");
+  codegen.compile("let num: i32 = 5");
 
   std::string_view result = 
 R"(; ModuleID = 'lev'
 source_filename = "lev"
 
-@global_variable = common global i32, align 4
+@num = global i32 5
 )";
 
-  std::cerr << codegen.dump();
+  EXPECT_EQ(codegen.dump(), result);
 }
 
 TEST(Codegen, LocalVariables) {
@@ -25,9 +25,19 @@ TEST(Codegen, LocalVariables) {
   codegen.compile(
 R"(
 fn main() -> i32:
-  let variable: i32 = 5
-)"
-  );
+  let num: i32 = 5
+)");
 
-  std::cerr << codegen.dump();
+  std::string_view result =
+R"(; ModuleID = 'lev'
+source_filename = "lev"
+
+define i32 @main() {
+entry:
+  %num = alloca i32, align 4
+  store i32 5, ptr %num, align 4
+}
+)";
+
+  EXPECT_EQ(codegen.dump(), result);
 }
