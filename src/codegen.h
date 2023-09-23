@@ -18,9 +18,13 @@ namespace lev::codegen {
       std::unique_ptr<llvm::LLVMContext> mContext;
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
-      std::map<std::string_view, llvm::Value*> mVariables;
 
       std::vector<std::unique_ptr<Stmt>> mStatements;
+
+      Stmt* mCurrentStmt = nullptr;
+      Expr* mCurrentExpr = nullptr;
+
+      llvm::Value* mEvaluatedExpr = nullptr;
 
     public:
       Codegen(std::vector<std::unique_ptr<Stmt>> statements);
@@ -30,6 +34,31 @@ namespace lev::codegen {
       auto dump() -> std::string;
 
     private:
+      auto codegenStmt(Stmt&) -> void;
+      auto codegenExpr(Expr&) -> llvm::Value*;
+
+      inline auto getCurrentStmt() const -> Stmt* {
+        return mCurrentStmt;
+      }
+      inline auto setCurrentStmt(Stmt* s) -> void {
+        mCurrentStmt = s;
+      }
+
+      inline auto getCurrentExpr() const -> Stmt* {
+        return mCurrentStmt;
+      }
+      inline auto setCurrentExpr(Expr* e) -> void {
+        mCurrentExpr = e;
+      }
+
+      inline auto setEvaluatedExpr(llvm::Value* value ) -> void { 
+        mEvaluatedExpr = value; 
+      };
+
+      inline auto getEvaluatedExpr() const -> llvm::Value* { 
+        return mEvaluatedExpr; 
+      };
+
       auto visit(ExprStmt&) -> void final;
       auto visit(FunctionDeclaration&) -> void final;
       auto visit(VariableDeclaration&) -> void final;

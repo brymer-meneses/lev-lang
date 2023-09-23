@@ -8,12 +8,13 @@ using namespace lev::codegen;
 
 TEST(Codegen, GlobalVariable) {
   Codegen codegen("let num: i32 = 5");
+  codegen.compile();
 
   std::string_view result = 
 R"(; ModuleID = 'lev'
 source_filename = "lev"
 
-@num = global i32 5
+@num = common global i32 5, align 4
 )";
 
   EXPECT_EQ(codegen.dump(), result);

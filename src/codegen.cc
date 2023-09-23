@@ -35,8 +35,19 @@ Codegen::Codegen(std::vector<std::unique_ptr<Stmt>> statements)  {
 
 auto Codegen::compile() -> void {
   for (auto& statement : mStatements){
-    statement->accept(*this);
+    codegenStmt(*statement);
   }
+}
+
+auto Codegen::codegenExpr(Expr& expr) -> llvm::Value* {
+  setCurrentExpr(&expr);
+  expr.accept(*this);
+  return mEvaluatedExpr;
+}
+
+auto Codegen::codegenStmt(Stmt& stmt) -> void {
+  mCurrentStmt = &stmt;
+  stmt.accept(*this);
 }
 
 auto Codegen::convertType(ast::Type type) -> llvm::Type* {
@@ -88,57 +99,55 @@ auto Codegen::visit(FunctionDeclaration& f) -> void {
   auto* function = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
 
   for (auto& arg : function->args()) {
-    arg.setName(std::get<0>(f.args[arg.getArgNo()]));
+    auto name = std::get<0>(f.args[arg.getArgNo()]);
+    arg.setName(name);
   }
 
   auto* block = BasicBlock::Create(*mContext, "entry", function);
   mBuilder->SetInsertPoint(block);
 
   for (auto& stmt : f.body) {
-    stmt->accept(*this);
+    codegenStmt(*stmt);
   }
 }
 
 auto Codegen::visit(VariableDeclaration& v) -> void {
-  auto name = v.identifier.lexeme;
   auto type = convertType(v.type);
-  auto value = visit(*v.value->as<LiteralExpr*>(), v.type);
 
   if (mBuilder->GetInsertBlock() == nullptr) {
-    mVariables[name] = new GlobalVariable(*mModule, type, false, GlobalValue::ExternalLinkage, value, name);
+    mModule->getOrInsertGlobal(v.identifier.lexeme, convertType(v.type));
+    auto* globalVariable = mModule->getNamedGlobal(v.identifier.lexeme);
+    globalVariable->setLinkage(GlobalValue::CommonLinkage);
+    globalVariable->setAlignment(Align(4));
+    globalVariable->setConstant(v.isMutable);
+
+    auto* value = codegenExpr(*v.value);
+    globalVariable->setInitializer((Constant*) value);
     return;
   }
+
   auto* alloca = mBuilder->CreateAlloca(type, nullptr, v.identifier.lexeme);
+  auto* value = codegenExpr(*v.value);
   mBuilder->CreateStore(value, alloca);
-  mVariables[name] = alloca;
 }
 
 auto Codegen::visit(LiteralExpr& e) -> void {
-  
-};
 
-auto Codegen::visit(LiteralExpr& e, ast::Type type) -> llvm::Constant* {
-  switch (type) {
-    case Type::i8:
-    case Type::u8:
-      return mBuilder->getInt8(std::stoi(std::string(e.token.lexeme)));
-    case Type::i16:
-    case Type::u16:
-      return mBuilder->getInt16(std::stoi(std::string(e.token.lexeme)));
-    case Type::i32:
-    case Type::u32:
-      return mBuilder->getInt32(std::stoi(std::string(e.token.lexeme)));
-    case Type::i64:
-    case Type::u64:
-      return mBuilder->getInt64(std::stoi(std::string(e.token.lexeme)));
-    case Type::f32:
-      return ConstantFP::get(*mContext, APFloat(std::stof(std::string(e.token.lexeme))));
-    case Type::f64:
-      return ConstantFP::get(*mContext, APFloat(std::stod(std::string(e.token.lexeme))));
+  switch (e.token.type) {
+    case TokenType::Integer:
+      setEvaluatedExpr(ConstantInt::get(mBuilder->getInt32Ty(), std::stoi(std::string(e.token.lexeme))));
+      break;
+    case TokenType::Float:
+      setEvaluatedExpr(ConstantFP::get(mBuilder->getFloatTy(), std::stod(std::string(e.token.lexeme))));
+      break;
+    case TokenType::Identifier:
+      // variable lookup
     default:
-      return ConstantFP::get(*mContext, APFloat(0.0));
+      std::cerr << "codegen not implemented\n";
+      exit(0);
+      break;
   }
-}
+};
 
 auto Codegen::visit(UnaryExpr& e) -> void {};
 auto Codegen::visit(BinaryExpr& e) -> void {};
