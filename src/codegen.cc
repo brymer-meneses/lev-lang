@@ -59,15 +59,11 @@ auto Codegen::dump() const -> std::string {
 }
 
 auto Codegen::codegen(const Stmt& stmt) -> std::expected<bool, CodegenError> {
-  auto value = stmt.accept([this](const auto &e) -> auto { return visit(e); });
-  if (not value) {
-    return std::unexpected(value.error());
-  }
-  return *value;
+  return stmt.accept([this](const auto &e) { return visit(e); });
 }
 
 auto Codegen::codegen(const Expr& expr) -> std::expected<llvm::Value*, CodegenError> {
-  return expr.accept([this](const auto &e) -> auto { return visit(e); });
+  return expr.accept([this](const auto &e) { return visit(e); });
 }
 
 auto Codegen::convertType(ast::Type type) const -> llvm::Type* {
@@ -161,18 +157,18 @@ auto Codegen::inspectUnaryExprType(const Expr::UnaryExpr& e) const -> std::expec
 auto Codegen::inspectExprType(const Expr& expr) const -> std::expected<lev::ast::Type, CodegenError> {
   using lev::ast::Type;
   static const auto visitor = overloaded {
-    [this](const Expr::LiteralExpr& e) -> std::expected<Type, CodegenError> {
+    [this](const Expr::LiteralExpr& e) {
       return inspectLiteralExprType(e);
     },
 
-    [this](const Expr::UnaryExpr& e) -> std::expected<Type, CodegenError> {
+    [this](const Expr::UnaryExpr& e) {
       return inspectUnaryExprType(e);
     },
 
-    [this](const Expr::BinaryExpr& e) -> std::expected<Type, CodegenError> {
+    [this](const Expr::BinaryExpr& e) {
       return inspectBinaryExprType(e);
     },
-    [this](const Expr::VariableExpr& e) -> std::expected<Type, CodegenError> {
+    [this](const Expr::VariableExpr& e) {
       return inspectVariableExprType(e);
     }
   };
@@ -258,10 +254,10 @@ auto Codegen::visit(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, Co
   auto right = codegen(*e.right);
 
   if (not left) {
-    return std::unexpected(left.error());
+    return left;
   }
   if (not right) {
-    return std::unexpected(right.error());
+    return right;
   }
 
   auto type = inspectBinaryExprType(e);

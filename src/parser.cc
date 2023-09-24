@@ -222,7 +222,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParserError> {
 
   auto body = parseBlock();
   if (not body) {
-    return std::unexpected(body.error());
+    return body;
   }
 
   return Stmt::FunctionDeclaration(identifier->lexeme, args, *returnType, std::move(*body));
@@ -236,7 +236,7 @@ auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
     }
     auto stmt = parseDeclaration();
     if (not stmt) {
-      return std::unexpected(stmt.error());
+      return stmt;
     }
     statements.push_back(std::move(*stmt));
   }
@@ -252,7 +252,7 @@ auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
 auto Parser::parseExpr() -> std::expected<Expr, ParserError> {
   auto lhs = parsePrimaryExpr();
   if (not lhs) {
-    return std::unexpected(lhs.error());
+    return lhs;
   }
   return parseBinaryOpRHS(0, std::move(*lhs));
 }
@@ -289,7 +289,7 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
     auto binOp = advance();
     auto rhs = parsePrimaryExpr();
     if (not rhs) {
-      return std::unexpected(rhs.error());
+      return rhs;
     }
 
     int nextPrec = getTokenPrecedence(peek().type);
@@ -297,7 +297,7 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
       rhs = parseBinaryOpRHS(tokenPrec + 1, std::move(*rhs));
 
       if (not rhs) {
-        return std::unexpected(rhs.error());
+        return rhs;
       }
     }
 
