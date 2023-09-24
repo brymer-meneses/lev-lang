@@ -29,6 +29,9 @@ namespace lev::token {
     Let,
     Mutable,
     
+    True,
+    False,
+
     Bang,
     BangEqual,
     Greater,
@@ -117,9 +120,13 @@ namespace lev::token {
       case TokenType::BangEqual:
         return "!=";
       case TokenType::Greater:
-        return "!";
+        return ">";
       case TokenType::GreaterEqual:
-        return "!=";
+        return ">=";
+      case TokenType::True:
+        return "true";
+      case TokenType::False:
+        return "false";
       case TokenType::Less:
         return "<";
       case TokenType::LessEqual:

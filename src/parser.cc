@@ -294,7 +294,7 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
 
     int nextPrec = getTokenPrecedence(peek().type);
     if (tokenPrec < nextPrec) {
-      rhs = parseBinaryOpRHS(0, std::move(*rhs));
+      rhs = parseBinaryOpRHS(tokenPrec + 1, std::move(*rhs));
 
       if (not rhs) {
         return std::unexpected(rhs.error());

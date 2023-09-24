@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <expected>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -13,6 +14,16 @@
 namespace lev::codegen {
   using namespace lev::ast;
 
+  struct InvalidUnaryType {
+
+  };
+
+  struct Unimplemented {
+
+  };
+
+  using CodegenError = std::variant<InvalidUnaryType, Unimplemented>;
+
   class Codegen {
     private:
       std::unique_ptr<llvm::LLVMContext> mContext;
@@ -20,7 +31,6 @@ namespace lev::codegen {
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
 
       std::vector<Stmt> mStatements;
-
 
     public:
       Codegen(std::vector<Stmt> statements);
@@ -30,21 +40,27 @@ namespace lev::codegen {
       auto dump() const -> std::string;
 
     public:
-      auto codegen(const Stmt&) -> void;
-      auto codegen(const Expr&) -> llvm::Value*;
+      auto codegen(const Stmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const Expr&) -> std::expected<llvm::Value*, CodegenError>;
 
-      auto visit(const Stmt::ExprStmt&) -> void;
-      auto visit(const Stmt::BlockStmt&) -> void;
-      auto visit(const Stmt::AssignStmt&) -> void;
-      auto visit(const Stmt::FunctionDeclarationStmt&) -> void;
-      auto visit(const Stmt::VariableDeclarationStmt&) -> void;
+      auto visit(const Stmt::ExprStmt&) -> std::expected<bool, CodegenError>;
+      auto visit(const Stmt::BlockStmt&) -> std::expected<bool, CodegenError>;
+      auto visit(const Stmt::AssignStmt&) -> std::expected<bool, CodegenError>;
+      auto visit(const Stmt::FunctionDeclarationStmt&) -> std::expected<bool, CodegenError>;
+      auto visit(const Stmt::VariableDeclarationStmt&) -> std::expected<bool, CodegenError>;
 
-      auto visit(const Expr::LiteralExpr&) -> llvm::Value*;
-      auto visit(const Expr::BinaryExpr&) -> llvm::Value*;
-      auto visit(const Expr::UnaryExpr&) -> llvm::Value*;
-      auto visit(const Expr::VariableExpr&) -> llvm::Value*;
+      auto visit(const Expr::LiteralExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto visit(const Expr::BinaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto visit(const Expr::UnaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto visit(const Expr::VariableExpr&) -> std::expected<llvm::Value*, CodegenError>;
 
       auto convertType(ast::Type type) const -> llvm::Type*;
+
+      auto inspectExprType(const Expr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inspectBinaryExprType(const Expr::BinaryExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inspectLiteralExprType(const Expr::LiteralExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inspectUnaryExprType(const Expr::UnaryExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inspectVariableExprType(const Expr::VariableExpr&) const -> std::expected<ast::Type, CodegenError>;
   };
 
 }

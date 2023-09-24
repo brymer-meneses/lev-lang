@@ -11,6 +11,8 @@ namespace lev::ast {
 
   enum class Type {
     UserDefined,
+    Bool,
+    String,
 
     i8,
     i16,
@@ -54,6 +56,10 @@ namespace lev::ast {
         return "f64";
       case Type::Void:
         return "void";
+      case Type::Bool:
+        return "bool";
+      case Type::String:
+        return "string";
     }
   };
 
