@@ -69,7 +69,7 @@ namespace lev::ast {
 
     template <typename T>
     inline auto as() -> T {
-      return dynamic_cast<T>(this);
+      return static_cast<T>(this);
     }
   };
 
@@ -163,6 +163,26 @@ namespace lev::ast {
       }
       return false;
     }
+  };
+
+  struct AssignStmt : Stmt {
+    std::unique_ptr<Expr> identifier;
+    std::unique_ptr<Expr> value;
+
+    AssignStmt(std::unique_ptr<Expr> identifier, std::unique_ptr<Expr> value) 
+      : identifier(std::move(identifier)), value(std::move(value)) {}
+
+    auto accept(StmtVisitor& v) -> void final {
+      v.visit(*this);
+    }
+
+    auto operator==(const Stmt& e) const -> bool final {
+      if (const AssignStmt* other = static_cast<const AssignStmt*>(&e)) {
+        return *other->identifier == *identifier and *other->value == *value;
+      }
+      return false;
+    }
+
   };
 
   struct BlockStmt : Stmt {

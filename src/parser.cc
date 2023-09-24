@@ -13,18 +13,20 @@ using namespace lev::token;
 Parser::Parser(std::string_view source) {
   Scanner scanner(source);
   auto tokens = scanner.scan();
-  if (not tokens.has_value()) {
+  if (not tokens) {
     Scanner::printError(tokens.error());
     return;
   }
-  mTokens = std::move(tokens.value());
+  mTokens = std::move(*tokens);
 };
 
 Parser::Parser(std::vector<Token> tokens) : mTokens(std::move(tokens)) {};
 
-auto Parser::advance() -> std::optional<Token> {
+static Token lastToken(TokenType::EndOfFile, "");
+
+auto Parser::advance() -> const Token& {
   if (isAtEnd()) {
-    return std::nullopt;
+    return lastToken;
   }
   return mTokens[mCurrent++];
 }
@@ -33,19 +35,19 @@ auto Parser::isAtEnd() const -> bool {
   return mCurrent >= mTokens.size();
 }
 
-auto Parser::peek() const -> std::optional<Token> {
-  if (isAtEnd()) return std::nullopt;
+auto Parser::peek() const -> const Token& {
+  if (isAtEnd()) return lastToken;
   return mTokens[mCurrent];
 }
 
-auto Parser::peekPrev() const -> std::optional<Token> {
-  if (mCurrent == 0) return std::nullopt;
+auto Parser::peekPrev() const -> const Token& {
+  if (mCurrent == 0) return mTokens[0];
   return mTokens[mCurrent - 1];
 }
 
 auto Parser::match(TokenType type) -> bool {
   if (isAtEnd()) return false;
-  if (type == peek()->type) {
+  if (type == peek().type) {
     mCurrent += 1;
     return true;
   }
@@ -55,7 +57,7 @@ auto Parser::match(TokenType type) -> bool {
 auto Parser::expect(TokenType type) -> std::optional<Token> {
   if (isAtEnd()) return std::nullopt;
 
-  if (type == peek()->type) {
+  if (type == peek().type) {
     return mTokens[mCurrent++];
   } else {
     return std::nullopt;
@@ -72,7 +74,7 @@ auto Parser::parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, Parser
     if (not stmt) {
       return std::unexpected(stmt.error());
     }
-    statements.push_back(std::move(stmt.value()));
+    statements.push_back(std::move(*stmt));
   }
   return std::move(statements);
 }
@@ -88,8 +90,7 @@ auto Parser::parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserEr
   return parseStmt();
 }
 
-
-auto Parser::parseType() -> Type {
+auto Parser::parseType() -> std::expected<Type, ParserError>{
 
   static constexpr auto lexemes = {
     "i8",
@@ -117,8 +118,13 @@ auto Parser::parseType() -> Type {
     Type::f64,
   };
 
+
+  if (peek().type != TokenType::Identifier) {
+    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek().type));
+  }
+
   for (auto [lexeme, type] : std::views::zip(lexemes, types)) {
-    if (peek()->lexeme == lexeme) {
+    if (peek().lexeme == lexeme) {
       advance();
       return type;
     }
@@ -135,17 +141,20 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
 
   auto identifier = expect(TokenType::Identifier);
   if (not identifier) {
-    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek().type));
   }
 
   if (not match(TokenType::Colon)) {
-    return std::unexpected(UnexpectedToken(TokenType::Colon, peekPrev()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
   }
 
   auto type = parseType();
+  if (not type) {
+    return std::unexpected(type.error());
+  }
 
   if (not match(TokenType::Equal)) {
-    return std::unexpected(UnexpectedToken(TokenType::Equal, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Equal, peek().type));
   }
 
   auto expr = parseExpr();
@@ -153,55 +162,62 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(expr.error());
   }
 
-  return std::make_unique<VariableDeclaration>(identifier.value(), isMutable, type, std::move(expr.value()));
+  return std::make_unique<VariableDeclaration>(*identifier, isMutable, *type, std::move(*expr));
 }
 
 
 auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
   auto identifier = expect(TokenType::Identifier);
   if (not identifier) {
-    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Identifier, peek().type));
   }
 
   auto args = std::vector<FunctionArg>{};
   if (not match(TokenType::LeftParen)) {
-    return std::unexpected(UnexpectedToken(TokenType::LeftParen, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::LeftParen, peek().type));
   }
 
   while (not match(TokenType::RightParen)) {
     auto argIdentifier = expect(TokenType::Identifier);
     if (not argIdentifier) {
-      return std::unexpected(UnexpectedToken(TokenType::Identifier, peek()->type));
+      return std::unexpected(UnexpectedToken(TokenType::Identifier, peek().type));
     }
 
     if (not match(TokenType::Colon)) {
-      return std::unexpected(UnexpectedToken(TokenType::Colon, peek()->type));
+      return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
     }
 
     auto type = parseType();
+    if (not type) {
+      return std::unexpected(type.error());
+    }
 
-    args.push_back({argIdentifier.value().lexeme, type});
+    args.push_back({argIdentifier->lexeme, *type});
 
     if (not match(TokenType::Comma)) {
       if (not match(TokenType::RightParen)) {
-        return std::unexpected(UnexpectedToken(TokenType::RightParen, peek()->type));
+        return std::unexpected(UnexpectedToken(TokenType::RightParen, peek().type));
       }
       break;
     }
   }
 
   if (not match(TokenType::RightArrow)) {
-    return std::unexpected(UnexpectedToken(TokenType::RightArrow, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::RightArrow, peek().type));
   }
 
   auto returnType = parseType();
 
+  if (not returnType) {
+    return std::unexpected(returnType.error());
+  }
+
   if (not match(TokenType::Colon)) {
-    return std::unexpected(UnexpectedToken(TokenType::Colon, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
   }
 
   if (not match(TokenType::Indent)) {
-    return std::unexpected(UnexpectedToken(TokenType::Indent, peek()->type));
+    return std::unexpected(UnexpectedToken(TokenType::Indent, peek().type));
   }
 
   auto body = parseBlock();
@@ -209,7 +225,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(body.error());
   }
 
-  return std::make_unique<FunctionDeclaration>(identifier.value().lexeme, args, returnType, std::move(body.value()));
+  return std::make_unique<FunctionDeclaration>(identifier->lexeme, args, *returnType, std::move(*body));
 }
 
 auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
@@ -222,7 +238,7 @@ auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
     if (not stmt) {
       return std::unexpected(stmt.error());
     }
-    statements.push_back(std::move(stmt.value()));
+    statements.push_back(std::move(*stmt));
   }
 
   return std::make_unique<BlockStmt>(std::move(statements));
@@ -230,22 +246,73 @@ auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
 
 auto Parser::parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
   
-  return std::unexpected(UnexpectedToken(TokenType::EqualEqual, peek()->type));
+  return std::unexpected(UnexpectedToken(TokenType::EqualEqual, peek().type));
 }
 
 auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
-  return parsePrimaryExpr();
+  auto lhs = parsePrimaryExpr();
+  if (not lhs) {
+    return std::unexpected(lhs.error());
+  }
+  return parseBinaryOpRHS(0, std::move(*lhs));
+}
+
+auto Parser::parseBinaryOpRHS(int exprPrec, std::unique_ptr<Expr> lhs) -> std::expected<std::unique_ptr<Expr>, ParserError> {
+
+  static constexpr auto getTokenPrecedence = [](TokenType tokenType) -> int {
+    switch (tokenType) {
+      case TokenType::Less:
+      case TokenType::LessEqual:
+      case TokenType::Greater:
+      case TokenType::GreaterEqual:
+        return 10;
+      case TokenType::Plus:
+      case TokenType::PlusEqual:
+      case TokenType::Minus:
+      case TokenType::MinusEqual:
+        return 20;
+      case TokenType::Star:
+      case TokenType::StarEqual:
+      case TokenType::Slash:
+      case TokenType::SlashEqual:
+        return 40;
+      default:
+        return -1;
+    }
+  };
+
+  while (true) {
+    int tokenPrec = getTokenPrecedence(peek().type);
+    if (tokenPrec < exprPrec) {
+      return lhs;
+    }
+    auto binOp = advance();
+    auto rhs = parsePrimaryExpr();
+    if (not rhs) {
+      return std::unexpected(rhs.error());
+    }
+
+    int nextPrec = getTokenPrecedence(peek().type);
+    if (tokenPrec < nextPrec) {
+      rhs = parseBinaryOpRHS(0, std::move(*rhs));
+
+      if (not rhs) {
+        return std::unexpected(rhs.error());
+      }
+    }
+
+    lhs = std::make_unique<BinaryExpr>(std::move(lhs), binOp, std::move(*rhs));
+  }
+
 }
 
 auto Parser::parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
   if (match(TokenType::Float) or match(TokenType::Integer) or match(TokenType::String)) {
-    auto token = peekPrev().value();
-    return std::make_unique<LiteralExpr>(std::move(token));
+    return std::make_unique<LiteralExpr>(peekPrev());
   }
 
   if (match(TokenType::Identifier)) {
-    auto token = peekPrev().value();
-    return std::make_unique<LiteralExpr>(std::move(token));
+    return std::make_unique<LiteralExpr>(peekPrev());
   }
 }
 

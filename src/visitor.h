@@ -7,20 +7,22 @@ namespace lev::ast {
 
   struct ExprStmt;
   struct BlockStmt;
+  struct AssignStmt;
   struct VariableDeclaration;
   struct FunctionDeclaration;
 
   struct ExprVisitor {
-    virtual auto visit(LiteralExpr& expr) -> void = 0;
-    virtual auto visit(BinaryExpr& expr) -> void = 0;
-    virtual auto visit(UnaryExpr& expr) -> void = 0;
+    virtual auto visit(LiteralExpr&) -> void = 0;
+    virtual auto visit(BinaryExpr&) -> void = 0;
+    virtual auto visit(UnaryExpr&) -> void = 0;
   };
 
   struct StmtVisitor {
-    virtual auto visit(ExprStmt& expr) -> void = 0;
-    virtual auto visit(BlockStmt& expr) -> void = 0;
-    virtual auto visit(VariableDeclaration& expr) -> void = 0;
-    virtual auto visit(FunctionDeclaration& expr) -> void = 0;
+    virtual auto visit(ExprStmt&) -> void = 0;
+    virtual auto visit(BlockStmt&) -> void = 0;
+    virtual auto visit(VariableDeclaration&) -> void = 0;
+    virtual auto visit(FunctionDeclaration&) -> void = 0;
+    virtual auto visit(AssignStmt&) -> void = 0;
   };
   
 

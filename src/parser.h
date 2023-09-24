@@ -14,7 +14,6 @@ namespace lev::parser {
   using namespace lev::ast;
   using namespace lev::token;
 
-
   struct UnexpectedToken {
     TokenType required;
     TokenType found;
@@ -38,10 +37,12 @@ namespace lev::parser {
       static auto printError(ParserError error) -> void;
 
     private:
-      auto peek() const -> std::optional<Token>;
-      auto advance() -> std::optional<Token>;
-      auto peekPrev() const -> std::optional<Token>;
+      auto peek() const -> const Token&;
+      auto advance() -> const Token&;
+      auto peekPrev() const -> const Token&;
       auto isAtEnd() const -> bool;
+
+      auto buildError() -> void;
 
       auto match(TokenType type) -> bool;
       auto expect(TokenType type) -> std::optional<Token>;
@@ -49,10 +50,12 @@ namespace lev::parser {
       auto parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
       auto parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
       auto parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
+      
+      auto parseBinaryOpRHS(int opPrecedence, std::unique_ptr<Expr> lhs) -> std::expected<std::unique_ptr<Expr>, ParserError>;
 
       auto parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
       auto parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
-      auto parseType() -> Type;
+      auto parseType() -> std::expected<Type, ParserError>;
 
       auto parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
       auto parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;

@@ -117,7 +117,7 @@ auto Codegen::visit(VariableDeclaration& v) -> void {
     auto* globalVariable = mModule->getNamedGlobal(v.identifier.lexeme);
     globalVariable->setLinkage(GlobalValue::CommonLinkage);
     globalVariable->setAlignment(Align(4));
-    globalVariable->setConstant(v.isMutable);
+    globalVariable->setConstant(not v.isMutable);
 
     auto* value = codegenExpr(*v.value);
     globalVariable->setInitializer((Constant*) value);
@@ -155,6 +155,7 @@ auto Codegen::visit(BlockStmt& e) -> void {
 
 auto Codegen::visit(UnaryExpr& e) -> void {};
 auto Codegen::visit(BinaryExpr& e) -> void {};
+auto Codegen::visit(AssignStmt& s) -> void {};
 
 auto Codegen::dump() -> std::string {
   std::string str;

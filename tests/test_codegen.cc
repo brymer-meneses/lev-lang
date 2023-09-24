@@ -14,7 +14,7 @@ TEST(Codegen, GlobalVariable) {
 R"(; ModuleID = 'lev'
 source_filename = "lev"
 
-@num = common global i32 5, align 4
+@num = common constant i32 5, align 4
 )";
 
   EXPECT_EQ(codegen.dump(), result);

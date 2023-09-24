@@ -61,6 +61,7 @@ namespace lev::codegen {
 
       auto visit(ExprStmt&) -> void final;
       auto visit(BlockStmt&) -> void final;
+      auto visit(AssignStmt&) -> void final;
       auto visit(FunctionDeclaration&) -> void final;
       auto visit(VariableDeclaration&) -> void final;
 
