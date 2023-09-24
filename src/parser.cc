@@ -103,6 +103,7 @@ auto Parser::parseType() -> std::expected<Type, ParserError>{
     "u64",
     "f32",
     "f64",
+    "bool",
   };
 
   static constexpr auto types = {
@@ -116,6 +117,7 @@ auto Parser::parseType() -> std::expected<Type, ParserError>{
     Type::u64,
     Type::f32,
     Type::f64,
+    Type::Bool,
   };
 
 
@@ -308,6 +310,10 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
 
 auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
   if (match(TokenType::Float) or match(TokenType::Integer) or match(TokenType::String)) {
+    return Expr::Literal(peekPrev());
+  }
+
+  if (match(TokenType::False) or match(TokenType::True)) {
     return Expr::Literal(peekPrev());
   }
 

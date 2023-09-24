@@ -71,25 +71,21 @@ auto Codegen::convertType(ast::Type type) const -> llvm::Type* {
     case Type::i8:
     case Type::u8:
       return mBuilder->getInt8Ty();
-      break;
     case Type::i16:
     case Type::u16:
       return mBuilder->getInt16Ty();
-      break;
     case Type::i32:
     case Type::u32:
       return mBuilder->getInt32Ty();
-      break;
     case Type::i64:
     case Type::u64:
       return mBuilder->getInt64Ty();
-      break;
     case Type::f32:
       return mBuilder->getFloatTy();
-      break;
     case Type::f64:
       return mBuilder->getDoubleTy();
-      break;
+    case Type::Bool:
+      return mBuilder->getInt1Ty();
     default:
       return mBuilder->getVoidTy();
   };
@@ -141,7 +137,7 @@ auto Codegen::inferType(const Expr::BinaryExpr& e) const -> std::expected<ast::T
 
 auto Codegen::inferType(const Expr::LiteralExpr& e) const -> std::expected<ast::Type, CodegenError> {
   // TODO: we really should check for the expected type of the current stmt
-  auto type = getDefaultType(e.value.type);
+  const auto type = getDefaultType(e.value.type);
   if (not type) {
     return std::unexpected(Unimplemented{});
   }
@@ -170,7 +166,7 @@ auto Codegen::codegen(const Stmt::ExprStmt& e) -> std::expected<bool, CodegenErr
 auto Codegen::codegen(const Stmt::FunctionDeclarationStmt& f) -> std::expected<bool, CodegenError> {
   std::vector<llvm::Type*> argsType(f.args.size());
   for (const auto& arg : f.args) {
-    auto type = convertType(arg.second);
+    const auto type = convertType(arg.second);
     argsType.push_back(type);
   }
 
@@ -180,7 +176,7 @@ auto Codegen::codegen(const Stmt::FunctionDeclarationStmt& f) -> std::expected<b
   auto* function = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
 
   for (auto& arg : function->args()) {
-    auto name = f.args[arg.getArgNo()].first;
+    const auto name = f.args[arg.getArgNo()].first;
     arg.setName(name);
   }
 
@@ -201,7 +197,7 @@ auto Codegen::codegen(const Stmt::VariableDeclarationStmt& v) -> std::expected<b
     globalVariable->setAlignment(Align(4));
     globalVariable->setConstant(not v.isMutable);
 
-    auto value = codegenExpr(*v.value);
+    const auto value = codegenExpr(*v.value);
     if (not value) {
       return std::unexpected(value.error());
     }
@@ -210,7 +206,7 @@ auto Codegen::codegen(const Stmt::VariableDeclarationStmt& v) -> std::expected<b
   }
 
   auto* alloca = mBuilder->CreateAlloca(type, nullptr, v.identifier.lexeme);
-  auto value = codegenExpr(*v.value);
+  const auto value = codegenExpr(*v.value);
   if (not value) {
     return std::unexpected(value.error());
   }
@@ -222,10 +218,12 @@ auto Codegen::codegen(const Expr::LiteralExpr& e) -> std::expected<llvm::Value*,
   switch (e.value.type) {
     case TokenType::Integer:
       return ConstantInt::get(convertType(Type::i32), std::stoi(std::string(e.value.lexeme)));
-      break;
     case TokenType::Float:
       return ConstantFP::get(convertType(Type::f32), std::stod(std::string(e.value.lexeme)));
-      break;
+    case TokenType::False:
+      return ConstantInt::get(convertType(Type::Bool), 0);
+    case TokenType::True:
+      return ConstantInt::get(convertType(Type::Bool), 1);
     case TokenType::Identifier:
       // variable lookup
     default:
@@ -238,8 +236,8 @@ auto Codegen::codegen(const Expr::VariableExpr& e) -> std::expected<llvm::Value*
 }
 
 auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
-  auto left = codegenExpr(*e.left);
-  auto right = codegenExpr(*e.right);
+  const auto left = codegenExpr(*e.left);
+  const auto right = codegenExpr(*e.right);
 
   if (not left) {
     return left;
@@ -248,8 +246,7 @@ auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, 
     return right;
   }
 
-  auto type = inferType(e);
-
+  const auto type = inferType(e);
   switch (e.op.type) {
     case TokenType::Plus:
       // TODO: create type is integer/ type is unsigned

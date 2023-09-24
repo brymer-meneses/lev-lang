@@ -63,3 +63,17 @@ entry:
 )";
   EXPECT_EQ(codegen.dump(), result);
 }
+
+TEST(Codegen, SimpleBooleanExpr) {
+  Codegen codegen("let value: bool = true");
+  codegen.compile();
+
+  std::string_view result = 
+R"(; ModuleID = 'lev'
+source_filename = "lev"
+
+@value = common constant i1 true, align 4
+)";
+
+  EXPECT_EQ(codegen.dump(), result);
+}

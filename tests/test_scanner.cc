@@ -76,7 +76,7 @@ TEST(Scanner, MultipleCharacterTokens) {
 }
 
 TEST(Scanner, BuiltInIdentifiers) {
-  Scanner scanner("fn pub while for return if else");
+  Scanner scanner("fn pub while for return if else let mut false true");
 
   auto tokens = scanner.scan();
 
@@ -89,7 +89,11 @@ TEST(Scanner, BuiltInIdentifiers) {
     TokenType::For,
     TokenType::Return,
     TokenType::If,
-    TokenType::Else
+    TokenType::Else,
+    TokenType::Let,
+    TokenType::Mutable,
+    TokenType::False,
+    TokenType::True,
   };
 
   const auto lexemes = {
@@ -100,6 +104,10 @@ TEST(Scanner, BuiltInIdentifiers) {
     "return",
     "if",
     "else",
+    "let",
+    "mut",
+    "false",
+    "true",
   };
 
   for (auto [token, type, lexeme] : std::views::zip(tokens.value(), types, lexemes)) {

@@ -10,6 +10,7 @@ cpp_args = [
   '-std=c++2b',
   '-Wpedantic',
   '-fno-exceptions',
+  '-fno-rtti',
 ]
 
 llvm_dep = dependency(

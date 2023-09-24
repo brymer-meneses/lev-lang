@@ -82,6 +82,10 @@ auto Scanner::scanIdentifier() -> std::expected<Token, ScannerError> {
       return TokenType::Let;
     } else if (lexeme == "mut") {
       return TokenType::Mutable;
+    } else if (lexeme == "true") {
+      return TokenType::True;
+    } else if (lexeme == "false") {
+      return TokenType::False;
     }
 
     return TokenType::Identifier;
