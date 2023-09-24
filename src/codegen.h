@@ -14,13 +14,8 @@
 namespace lev::codegen {
   using namespace lev::ast;
 
-  struct InvalidUnaryType {
-
-  };
-
-  struct Unimplemented {
-
-  };
+  struct InvalidUnaryType {};
+  struct Unimplemented {};
 
   using CodegenError = std::variant<InvalidUnaryType, Unimplemented>;
 
@@ -30,6 +25,7 @@ namespace lev::codegen {
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
 
+      std::map<std::string, llvm::Value*> mNamedValues;
       std::vector<Stmt> mStatements;
 
     public:
@@ -39,28 +35,38 @@ namespace lev::codegen {
       auto compile() -> void;
       auto dump() const -> std::string;
 
-    public:
-      auto codegen(const Stmt&) -> std::expected<bool, CodegenError>;
-      auto codegen(const Expr&) -> std::expected<llvm::Value*, CodegenError>;
-
-      auto visit(const Stmt::ExprStmt&) -> std::expected<bool, CodegenError>;
-      auto visit(const Stmt::BlockStmt&) -> std::expected<bool, CodegenError>;
-      auto visit(const Stmt::AssignStmt&) -> std::expected<bool, CodegenError>;
-      auto visit(const Stmt::FunctionDeclarationStmt&) -> std::expected<bool, CodegenError>;
-      auto visit(const Stmt::VariableDeclarationStmt&) -> std::expected<bool, CodegenError>;
-
-      auto visit(const Expr::LiteralExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto visit(const Expr::BinaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto visit(const Expr::UnaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto visit(const Expr::VariableExpr&) -> std::expected<llvm::Value*, CodegenError>;
-
+    private:
       auto convertType(ast::Type type) const -> llvm::Type*;
 
-      auto inspectExprType(const Expr&) const -> std::expected<ast::Type, CodegenError>;
-      auto inspectBinaryExprType(const Expr::BinaryExpr&) const -> std::expected<ast::Type, CodegenError>;
-      auto inspectLiteralExprType(const Expr::LiteralExpr&) const -> std::expected<ast::Type, CodegenError>;
-      auto inspectUnaryExprType(const Expr::UnaryExpr&) const -> std::expected<ast::Type, CodegenError>;
-      auto inspectVariableExprType(const Expr::VariableExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto codegenStmt(const Stmt&) -> std::expected<bool, CodegenError>;
+      auto codegenExpr(const Expr&) -> std::expected<llvm::Value*, CodegenError>;
+
+      auto codegen(const Stmt::ExprStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const Stmt::BlockStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const Stmt::AssignStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const Stmt::FunctionDeclarationStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const Stmt::VariableDeclarationStmt&) -> std::expected<bool, CodegenError>;
+
+      auto codegen(const Expr::LiteralExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const Expr::BinaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const Expr::UnaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const Expr::VariableExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const Expr::CallExpr&) -> std::expected<llvm::Value*, CodegenError>;
+
+      auto inferExprType(const Expr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferStmtType(const Stmt&) const -> std::expected<ast::Type, CodegenError>;
+
+      auto inferType(const Expr::BinaryExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Expr::LiteralExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Expr::UnaryExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Expr::VariableExpr&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Expr::CallExpr&) const -> std::expected<ast::Type, CodegenError>;
+
+      auto inferType(const Stmt::AssignStmt&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Stmt::ExprStmt&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Stmt::BlockStmt&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Stmt::VariableDeclarationStmt&) const -> std::expected<ast::Type, CodegenError>;
+      auto inferType(const Stmt::FunctionDeclarationStmt&) const -> std::expected<ast::Type, CodegenError>;
   };
 
 }

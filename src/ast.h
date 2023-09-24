@@ -96,8 +96,19 @@ namespace lev::ast {
           return value == o.value;
         }
       };
+
+      struct CallExpr {
+        using Arg = std::pair<std::string_view, std::unique_ptr<Expr>>; 
+
+        Token identifier;
+        std::vector<Arg> args;
+
+        auto operator==(const CallExpr& o) const -> bool {
+          return identifier == o.identifier and args == o.args;
+        }
+      };
     
-      using Data = std::variant<BinaryExpr, UnaryExpr, VariableExpr, LiteralExpr>;
+      using Data = std::variant<BinaryExpr, UnaryExpr, VariableExpr, LiteralExpr, CallExpr>;
 
     private:
       Data mData;
@@ -137,6 +148,13 @@ namespace lev::ast {
         LiteralExpr expr;
         expr.value = token;
         return Expr(expr);
+      }
+
+      static auto Call(Token identifier, std::vector<CallExpr::Arg> args) -> Expr {
+        CallExpr expr;
+        expr.identifier = std::move(identifier);
+        expr.args = std::move(args);
+        return Expr(std::move(expr));
       }
 
   };
