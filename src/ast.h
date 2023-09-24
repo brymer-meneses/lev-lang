@@ -1,8 +1,8 @@
 #pragma once
+
 #include <memory>
 #include "token.h"
 #include <variant>
-#include "visitor.h"
 #include <vector>
 #include <iostream>
 
@@ -57,219 +57,195 @@ namespace lev::ast {
     }
   };
 
-  struct Expr {
-    virtual auto accept(ExprVisitor&) -> void = 0;
-    virtual ~Expr() = default;
+  class Expr {
 
-    virtual auto operator==(const Expr& e) const -> bool = 0;
-
-    friend auto operator==(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Expr>e2) -> bool {
-      return *e1 == *e2;
-    }
-
-    template <typename T>
-    inline auto as() -> T {
-      return static_cast<T>(this);
-    }
-  };
-
-  struct LiteralExpr : Expr {
-    Token token;
-    LiteralExpr(Token token) : token(token) { }
-
-    auto accept(ExprVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Expr& e) const -> bool final {
-      if (const LiteralExpr* other = static_cast<const LiteralExpr*>(&e)) {
-        return token == other->token;
-      }
-      return false;
-    }
-  };
-
-  struct BinaryExpr : Expr {
-    std::unique_ptr<Expr> left;
-    Token op;
-    std::unique_ptr<Expr> right;
-
-    BinaryExpr(std::unique_ptr<Expr> left, 
-               Token op,
-               std::unique_ptr<Expr> right)
-        : left(std::move(left))
-        , op(op) 
-        , right(std::move(right)) {};
-
-    auto accept(ExprVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Expr& e) const -> bool final {
-      if (const BinaryExpr* other = static_cast<const BinaryExpr*>(&e)) {
-        return *other->left == *left and other->op == op and *other->right == *right;
-      }
-      return false;
-    }
-  };
-
-  struct UnaryExpr : Expr {
-    std::unique_ptr<Expr> left;
-    Token op;
-
-    UnaryExpr(std::unique_ptr<Expr> left, Token op)
-        : left(std::move(left))
-        , op(op) {}
-
-    auto accept(ExprVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Expr& e) const -> bool final {
-      if (const UnaryExpr* other = static_cast<const UnaryExpr*>(&e)) {
-        return *other->left == *left and other->op == op;
-      }
-      return false;
-    }
-  };
-
-  struct Stmt {
-    virtual auto accept(StmtVisitor&) -> void = 0;
-    virtual ~Stmt() = default;
-    virtual auto operator==(const Stmt& e) const -> bool = 0;
-    
-    friend auto operator==(const std::unique_ptr<Stmt>& e1, const std::unique_ptr<Stmt>e2) -> bool {
-      return *e1 == *e2;
-    }
-
-    template <typename T>
-    inline auto as() -> T {
-      return dynamic_cast<T>(this);
-    }
-  };
-
-  struct ExprStmt : Stmt {
-    std::unique_ptr<Expr> expr;
-
-    ExprStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)) {};
-
-    auto accept(StmtVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Stmt& e) const -> bool final {
-      if (const ExprStmt* other = static_cast<const ExprStmt*>(&e)) {
-        return *other->expr == *expr;
-      }
-      return false;
-    }
-  };
-
-  struct AssignStmt : Stmt {
-    std::unique_ptr<Expr> identifier;
-    std::unique_ptr<Expr> value;
-
-    AssignStmt(std::unique_ptr<Expr> identifier, std::unique_ptr<Expr> value) 
-      : identifier(std::move(identifier)), value(std::move(value)) {}
-
-    auto accept(StmtVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Stmt& e) const -> bool final {
-      if (const AssignStmt* other = static_cast<const AssignStmt*>(&e)) {
-        return *other->identifier == *identifier and *other->value == *value;
-      }
-      return false;
-    }
-
-  };
-
-  struct BlockStmt : Stmt {
-    std::vector<std::unique_ptr<Stmt>> statements;
-
-    BlockStmt() = default;
-    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
-        : statements(std::move(statements)) {}
-    
-    auto accept(StmtVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto addStmt(std::unique_ptr<Stmt> stmt) -> void {
-      statements.push_back(std::move(stmt));
-    }
-    auto operator==(const Stmt& e) const -> bool final {
-      if (const BlockStmt* other = static_cast<const BlockStmt*>(&e)) {
-        if (other->statements.size() != statements.size()) {
-          return false;
+    public:
+      struct BinaryExpr {
+        std::unique_ptr<Expr> left;
+        std::unique_ptr<Expr> right;
+        Token op;
+        auto operator==(const BinaryExpr& o) const -> bool {
+          return *left == *o.left and *right == *o.right and op == o.op;
         }
-        for (int i=0; i < statements.size(); i++) {
-          if (*other->statements[i] != *statements[i]) {
-            return false;
-          }
+      };
+
+      struct UnaryExpr {
+        std::unique_ptr<Expr> right;
+        Token op;
+        auto operator==(const UnaryExpr& o) const -> bool {
+          return *right == *o.right and op == o.op;
         }
+      };
+
+      struct VariableExpr {
+        Token identifier;
+        auto operator==(const VariableExpr& o) const -> bool {
+          return identifier == o.identifier;
+        }
+      };
+
+      struct LiteralExpr {
+        Token value;
+        auto operator==(const LiteralExpr& o) const -> bool {
+          return value == o.value;
+        }
+      };
+    
+      using Data = std::variant<BinaryExpr, UnaryExpr, VariableExpr, LiteralExpr>;
+
+    private:
+      Data mData;
+      Expr(Data data) : mData(std::move(data)) {}
+      Expr() = default;
+      
+
+    public:
+      auto operator==(const Expr&) const -> bool = default;
+
+      auto accept(auto visitor) const -> decltype(std::visit(visitor, mData)) {
+        return std::visit(visitor, mData);
       }
-      return true;
-    }
-  };
 
-  struct VariableDeclaration : Stmt {
-    Token identifier;
-    bool isMutable;
-    std::unique_ptr<Expr> value;
-    Type type;
-
-    VariableDeclaration(Token identifier, 
-                        bool isMutable,
-                        Type type,
-                        std::unique_ptr<Expr> value)
-                      : identifier(identifier)
-                      , isMutable(isMutable)
-                      , value(std::move(value)) 
-                      , type(type) {}
-    auto accept(StmtVisitor& v) -> void final {
-      v.visit(*this);
-    }
-
-    auto operator==(const Stmt& e) const -> bool final {
-      if (const VariableDeclaration* other = static_cast<const VariableDeclaration*>(&e)) {
-        return other->identifier == identifier and 
-               other->isMutable == isMutable and
-               *other->value == *value and 
-               other->type == type;
+      static auto Binary(Token op, Expr left, Expr right) -> Expr {
+        BinaryExpr expr;
+        expr.op = op;
+        expr.left = std::make_unique<Expr>(std::move(left));
+        expr.right = std::make_unique<Expr>(std::move(right));
+        return Expr(std::move(expr));
       }
-      return false;
-    }
+
+      static auto Unary(Token op, Expr value) -> Expr {
+        UnaryExpr expr;
+        expr.op = op;
+        expr.right = std::make_unique<Expr>(std::move(value));
+        return Expr(std::move(expr));
+      }
+  
+      static auto Variable(Token identifier) -> Expr {
+        VariableExpr expr;
+        expr.identifier = identifier;
+        return Expr(std::move(expr));
+      }
+
+      static auto Literal(Token token) -> Expr {
+        LiteralExpr expr;
+        expr.value = token;
+        return Expr(expr);
+      }
+
   };
 
   using FunctionArg = std::pair<std::string_view, Type>;
 
-  struct FunctionDeclaration : Stmt {
-    std::string_view functionName;
-    std::vector<FunctionArg> args;
-    Type returnType;
-    std::unique_ptr<Stmt> body;
+  class Stmt {
+    public:
+      struct VariableDeclarationStmt {
+        Token identifier;
+        bool isMutable;
+        std::unique_ptr<Expr> value;
+        Type type;
+        auto operator==(const VariableDeclarationStmt& o) const -> bool {
+          return identifier == o.identifier and 
+                 isMutable == o.isMutable and
+                 *value == *o.value and
+                 type == o.type;
+        }
+      };
+      struct FunctionDeclarationStmt {
+        std::string_view functionName;
+        std::vector<FunctionArg> args;
+        Type returnType;
+        std::unique_ptr<Stmt> body;
 
-    FunctionDeclaration(std::string_view functionName,
-                        std::vector<FunctionArg> args,
-                        Type returnType,
-                        std::unique_ptr<Stmt> body)
-        : functionName(functionName), args(args),
-          returnType(returnType), body(std::move(body)) {}
+        auto operator==(const FunctionDeclarationStmt& o) const -> bool {
+          return functionName == o.functionName and
+                 args == o.args and
+                 returnType == o.returnType and
+                 *body == *o.body;
+        }
+      };
 
-    auto operator==(const Stmt& e) const -> bool final {
-      if (const FunctionDeclaration* other = static_cast<const FunctionDeclaration*>(&e)) {
-        return other->functionName == functionName and 
-               other->returnType == returnType and
-               other->args == args and 
-               *other->body == *body;
+      struct ExprStmt {
+        std::unique_ptr<Expr> expr;
+        auto operator==(const ExprStmt& o) const -> bool {
+          return *expr == *o.expr;
+        }
+      };
+
+      struct AssignStmt {
+        Token identifier;
+        std::unique_ptr<Expr> value;
+        auto operator==(const AssignStmt& o) const -> bool {
+          return identifier == o.identifier and *value == *o.value;
+        }
+      };
+      
+      struct BlockStmt {
+        std::vector<Stmt> statements;
+        auto operator==(const BlockStmt& o) const -> bool {
+          if (statements.size() != statements.size()) {
+            return false;
+          }
+          for (auto i=0; i<statements.size(); i++) {
+            if (statements[i] != o.statements[i]) {
+              return false;
+            };
+          }
+          return true;
+        }
+      };
+
+      using Data = std::variant<VariableDeclarationStmt, FunctionDeclarationStmt,
+                                ExprStmt, AssignStmt, BlockStmt>;
+      Data mData;
+
+      Stmt(Data data) : mData(std::move(data)) {}
+
+    public:
+      auto operator==(const Stmt&) const -> bool = default;
+
+      auto accept(const auto visitor) const -> decltype(std::visit(visitor, mData)) {
+        return std::visit(visitor, mData);
       }
-      return false;
-    }
 
-    auto accept(StmtVisitor& v) -> void final {
-      v.visit(*this);
-    }
+      static auto VariableDeclaration(Token identifier, bool isMutable, Expr value, Type type) -> Stmt {
+        VariableDeclarationStmt v;
+        v.identifier = identifier;
+        v.isMutable = isMutable;
+        v.value = std::make_unique<Expr>(std::move(value));
+        v.type = type;
+        return Stmt(std::move(v));
+      }
+
+      static auto FunctionDeclaration(std::string_view functionName, std::vector<FunctionArg> args, Type returnType, Stmt body) {
+        FunctionDeclarationStmt v;
+        v.args = std::move(args);
+        v.functionName = functionName;
+        v.returnType = returnType;
+        v.body = std::make_unique<Stmt>(std::move(body));
+        return Stmt(std::move(v));
+      }
+
+      static auto Assign(Token identifier, Expr value) -> Stmt {
+        struct AssignStmt v;
+        v.identifier = identifier;
+        v.value = std::make_unique<Expr>(std::move(value));
+        return Stmt(std::move(v));
+      }
+
+      static auto Block(std::vector<Stmt> statements) -> Stmt {
+        struct BlockStmt v;
+        v.statements = std::move(statements);
+        return Stmt(std::move(v));
+      }
+
+      static auto Expression(Expr expr) -> Stmt {
+        struct ExprStmt v;
+        v.expr = std::make_unique<Expr>(std::move(expr));
+        return Stmt(std::move(v));
+      }
   };
+
+    
+
 }

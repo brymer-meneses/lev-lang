@@ -13,63 +13,38 @@
 namespace lev::codegen {
   using namespace lev::ast;
 
-  class Codegen : public StmtVisitor, public ExprVisitor {
+  class Codegen {
     private:
       std::unique_ptr<llvm::LLVMContext> mContext;
       std::unique_ptr<llvm::Module> mModule;
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
 
-      std::vector<std::unique_ptr<Stmt>> mStatements;
+      std::vector<Stmt> mStatements;
 
-      Stmt* mCurrentStmt = nullptr;
-      Expr* mCurrentExpr = nullptr;
-
-      llvm::Value* mEvaluatedExpr = nullptr;
 
     public:
-      Codegen(std::vector<std::unique_ptr<Stmt>> statements);
+      Codegen(std::vector<Stmt> statements);
       Codegen(std::string_view);
       
       auto compile() -> void;
-      auto dump() -> std::string;
+      auto dump() const -> std::string;
 
-    private:
-      auto codegenStmt(Stmt&) -> void;
-      auto codegenExpr(Expr&) -> llvm::Value*;
+    public:
+      auto codegen(const Stmt&) -> void;
+      auto codegen(const Expr&) -> llvm::Value*;
 
-      inline auto getCurrentStmt() const -> Stmt* {
-        return mCurrentStmt;
-      }
-      inline auto setCurrentStmt(Stmt* s) -> void {
-        mCurrentStmt = s;
-      }
+      auto visit(const Stmt::ExprStmt&) -> void;
+      auto visit(const Stmt::BlockStmt&) -> void;
+      auto visit(const Stmt::AssignStmt&) -> void;
+      auto visit(const Stmt::FunctionDeclarationStmt&) -> void;
+      auto visit(const Stmt::VariableDeclarationStmt&) -> void;
 
-      inline auto getCurrentExpr() const -> Stmt* {
-        return mCurrentStmt;
-      }
-      inline auto setCurrentExpr(Expr* e) -> void {
-        mCurrentExpr = e;
-      }
+      auto visit(const Expr::LiteralExpr&) -> llvm::Value*;
+      auto visit(const Expr::BinaryExpr&) -> llvm::Value*;
+      auto visit(const Expr::UnaryExpr&) -> llvm::Value*;
+      auto visit(const Expr::VariableExpr&) -> llvm::Value*;
 
-      inline auto setEvaluatedExpr(llvm::Value* value ) -> void { 
-        mEvaluatedExpr = value; 
-      };
-
-      inline auto getEvaluatedExpr() const -> llvm::Value* { 
-        return mEvaluatedExpr; 
-      };
-
-      auto visit(ExprStmt&) -> void final;
-      auto visit(BlockStmt&) -> void final;
-      auto visit(AssignStmt&) -> void final;
-      auto visit(FunctionDeclaration&) -> void final;
-      auto visit(VariableDeclaration&) -> void final;
-
-      auto visit(LiteralExpr&) -> void final;
-      auto visit(BinaryExpr&) -> void final;
-      auto visit(UnaryExpr&) -> void final;
-
-      auto convertType(ast::Type type) -> llvm::Type*;
+      auto convertType(ast::Type type) const -> llvm::Type*;
   };
 
 }

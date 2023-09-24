@@ -64,8 +64,8 @@ auto Parser::expect(TokenType type) -> std::optional<Token> {
   }
 }
 
-auto Parser::parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError> {
-  std::vector<std::unique_ptr<Stmt>> statements;
+auto Parser::parse() -> std::expected<std::vector<Stmt>, ParserError> {
+  std::vector<Stmt> statements;
   while (not isAtEnd()) {
     while (match(TokenType::Newline)) {
       continue;
@@ -80,7 +80,7 @@ auto Parser::parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, Parser
 }
 
 
-auto Parser::parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
+auto Parser::parseDeclaration() -> std::expected<Stmt, ParserError> {
   if (match(TokenType::Function)) {
     return parseFunctionDeclaration();
   }
@@ -133,7 +133,7 @@ auto Parser::parseType() -> std::expected<Type, ParserError>{
   return Type::UserDefined;
 }
 
-auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
+auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParserError> {
   bool isMutable = false;
   if (match(TokenType::Mutable)) {
     isMutable = true;
@@ -162,11 +162,11 @@ auto Parser::parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(expr.error());
   }
 
-  return std::make_unique<VariableDeclaration>(*identifier, isMutable, *type, std::move(*expr));
+  return Stmt::VariableDeclaration(*identifier, isMutable, std::move(*expr), *type);
 }
 
 
-auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
+auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParserError> {
   auto identifier = expect(TokenType::Identifier);
   if (not identifier) {
     return std::unexpected(UnexpectedToken(TokenType::Identifier, peek().type));
@@ -225,11 +225,11 @@ auto Parser::parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, 
     return std::unexpected(body.error());
   }
 
-  return std::make_unique<FunctionDeclaration>(identifier->lexeme, args, *returnType, std::move(*body));
+  return Stmt::FunctionDeclaration(identifier->lexeme, args, *returnType, std::move(*body));
 }
 
-auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
-  auto statements = std::vector<std::unique_ptr<Stmt>>{};
+auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
+  auto statements = std::vector<Stmt>{};
   while (not match(TokenType::Dedent)) {
     while (match(TokenType::Newline)) {
       continue;
@@ -241,15 +241,15 @@ auto Parser::parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
     statements.push_back(std::move(*stmt));
   }
 
-  return std::make_unique<BlockStmt>(std::move(statements));
+  return Stmt::Block(std::move(statements));
 }
 
-auto Parser::parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError> {
+auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
   
   return std::unexpected(UnexpectedToken(TokenType::EqualEqual, peek().type));
 }
 
-auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
+auto Parser::parseExpr() -> std::expected<Expr, ParserError> {
   auto lhs = parsePrimaryExpr();
   if (not lhs) {
     return std::unexpected(lhs.error());
@@ -257,7 +257,7 @@ auto Parser::parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
   return parseBinaryOpRHS(0, std::move(*lhs));
 }
 
-auto Parser::parseBinaryOpRHS(int exprPrec, std::unique_ptr<Expr> lhs) -> std::expected<std::unique_ptr<Expr>, ParserError> {
+auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, ParserError> {
 
   static constexpr auto getTokenPrecedence = [](TokenType tokenType) -> int {
     switch (tokenType) {
@@ -301,18 +301,18 @@ auto Parser::parseBinaryOpRHS(int exprPrec, std::unique_ptr<Expr> lhs) -> std::e
       }
     }
 
-    lhs = std::make_unique<BinaryExpr>(std::move(lhs), binOp, std::move(*rhs));
+    lhs = Expr::Binary(binOp, std::move(lhs), std::move(*rhs));
   }
 
 }
 
-auto Parser::parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError> {
+auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
   if (match(TokenType::Float) or match(TokenType::Integer) or match(TokenType::String)) {
-    return std::make_unique<LiteralExpr>(peekPrev());
+    return Expr::Literal(peekPrev());
   }
 
   if (match(TokenType::Identifier)) {
-    return std::make_unique<LiteralExpr>(peekPrev());
+    return Expr::Literal(peekPrev());
   }
 }
 

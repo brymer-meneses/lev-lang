@@ -19,17 +19,16 @@ TEST(Parser, VariableDeclaration) {
   ASSERT_TRUE(stmts.has_value());
   EXPECT_EQ(stmts->size(), 1);
 
-  auto statement = std::move(stmts.value())[0].get();
-  auto result = statement->as<VariableDeclaration*>();
+  auto statement = std::move(stmts.value()[0]);
 
-  auto expected = VariableDeclaration(
+  auto expected = Stmt::VariableDeclaration(
     Token(TokenType::Identifier, "num"),
     false,
-    Type::i32,
-    std::make_unique<LiteralExpr>(Token(TokenType::Integer, "5"))
+    Expr::Literal(Token(TokenType::Integer, "5")),
+    Type::i32
   );
 
-  EXPECT_EQ(*result, expected);
+  EXPECT_EQ(statement, expected);
 }
 
 TEST(Parser, FunctionDeclaration) {
@@ -49,27 +48,24 @@ fn main() -> i32:
   ASSERT_TRUE(stmts.has_value());
   EXPECT_EQ(stmts->size(), 1);
 
-  auto statement = std::move(stmts.value())[0].get();
-  auto result = statement->as<FunctionDeclaration*>();
-
-  auto variableDecl = std::make_unique<VariableDeclaration>(
-      Token(TokenType::Identifier, "num"),
+  auto statement = std::move((*stmts)[0]);
+  auto variableDeclaration = Stmt::VariableDeclaration(
+      Token(TokenType::Identifier, "num"), 
       false,
+      Expr::Literal(Token(TokenType::Integer, "5")), 
+      Type::i32
+  );
+
+  std::vector<Stmt> body;
+  body.emplace_back(std::move(variableDeclaration));
+
+  auto expected = Stmt::FunctionDeclaration(
+      "main", 
+      {}, 
       Type::i32,
-      std::make_unique<LiteralExpr>(Token(TokenType::Integer, "5"))
-  );
+      Stmt::Block(std::move(body)));
 
-  auto block = std::make_unique<BlockStmt>();
-  block->addStmt(std::move(variableDecl));
-  
-  auto expected = FunctionDeclaration(
-    "main",
-    {},
-    Type::i32,
-    std::move(block)
-  );
-
-  EXPECT_EQ(*result, expected);
+  EXPECT_EQ(statement, expected);
 }
 
 TEST(Parser, BinaryExpression) {
@@ -82,27 +78,25 @@ TEST(Parser, BinaryExpression) {
   ASSERT_TRUE(stmts.has_value());
   EXPECT_EQ(stmts->size(), 1);
 
-  auto statement = std::move(stmts.value())[0].get();
-  auto result = statement->as<VariableDeclaration*>();
-  ASSERT_TRUE(result != nullptr);
+  auto statement = std::move(stmts.value()[0]);
 
-  auto lhs = std::make_unique<BinaryExpr>(
-      std::make_unique<LiteralExpr>(Token(TokenType::Integer, "1")),
+  auto lhs = Expr::Binary(
       Token(TokenType::Plus, "+"),
-      std::make_unique<LiteralExpr>(Token(TokenType::Integer, "3"))
+      Expr::Literal(Token(TokenType::Integer, "1")),
+      Expr::Literal(Token(TokenType::Integer, "3"))
   );
-  auto rhs = std::make_unique<BinaryExpr>(
-      std::make_unique<LiteralExpr>(Token(TokenType::Integer, "2")),
+  auto rhs = Expr::Binary(
       Token(TokenType::Star, "*"),
-      std::make_unique<LiteralExpr>(Token(TokenType::Integer, "2"))
+      Expr::Literal(Token(TokenType::Integer, "2")),
+      Expr::Literal(Token(TokenType::Integer, "2"))
   );
 
-  auto expected = VariableDeclaration(
+  auto expected = Stmt::VariableDeclaration(
     Token(TokenType::Identifier, "num"),
     false,
-    Type::i32,
-    std::make_unique<BinaryExpr>(std::move(lhs), Token(TokenType::Plus, "+"), std::move(rhs))
+    Expr::Binary(Token(TokenType::Plus, "+"), std::move(lhs), std::move(rhs)),
+    Type::i32
   );
 
-  EXPECT_EQ(*result, expected);
+  EXPECT_EQ(statement, expected);
 }

@@ -7,7 +7,6 @@
 
 #include "token.h"
 #include "ast.h"
-#include "visitor.h"
 
 namespace lev::parser {
 
@@ -33,7 +32,7 @@ namespace lev::parser {
       Parser(std::vector<Token> tokens);
       Parser(std::string_view source);
 
-      auto parse() -> std::expected<std::vector<std::unique_ptr<Stmt>>, ParserError>;
+      auto parse() -> std::expected<std::vector<Stmt>, ParserError>;
       static auto printError(ParserError error) -> void;
 
     private:
@@ -47,18 +46,18 @@ namespace lev::parser {
       auto match(TokenType type) -> bool;
       auto expect(TokenType type) -> std::optional<Token>;
 
-      auto parseDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
-      auto parseFunctionDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
-      auto parseVariableDeclaration() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
+      auto parseDeclaration() -> std::expected<Stmt, ParserError>;
+      auto parseFunctionDeclaration() -> std::expected<Stmt, ParserError>;
+      auto parseVariableDeclaration() -> std::expected<Stmt, ParserError>;
       
-      auto parseBinaryOpRHS(int opPrecedence, std::unique_ptr<Expr> lhs) -> std::expected<std::unique_ptr<Expr>, ParserError>;
+      auto parseBinaryOpRHS(int opPrecedence, Expr lhs) -> std::expected<Expr, ParserError>;
 
-      auto parseBlock() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
-      auto parseStmt() -> std::expected<std::unique_ptr<Stmt>, ParserError>;
+      auto parseBlock() -> std::expected<Stmt, ParserError>;
+      auto parseStmt() -> std::expected<Stmt, ParserError>;
       auto parseType() -> std::expected<Type, ParserError>;
 
-      auto parseExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
-      auto parsePrimaryExpr() -> std::expected<std::unique_ptr<Expr>, ParserError>;
+      auto parseExpr() -> std::expected<Expr, ParserError>;
+      auto parsePrimaryExpr() -> std::expected<Expr, ParserError>;
   };
 
 }
