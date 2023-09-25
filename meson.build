@@ -4,6 +4,7 @@ sources = [
   'src/scanner.cc',
   'src/parser.cc',
   'src/codegen.cc',
+  'src/context.cc'
 ]
 
 cpp_args = [

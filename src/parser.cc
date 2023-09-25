@@ -318,7 +318,7 @@ auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
   }
 
   if (match(TokenType::Identifier)) {
-    return Expr::Literal(peekPrev());
+    return Expr::Variable(peekPrev());
   }
 }
 

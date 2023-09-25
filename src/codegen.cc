@@ -2,8 +2,10 @@
 #include "parser.h"
 #include "scanner.h"
 
+#include <ranges>
 #include <variant>
 #include <string>
+#include <print>
 
 // https://en.cppreference.com/w/cpp/utility/variant/codegen
 template<class... Ts>
@@ -19,7 +21,7 @@ using namespace llvm;
 
 using Codegen = lev::codegen::Codegen;
 
-Codegen::Codegen(std::string_view source) {
+Codegen::Codegen(std::string_view source)  {
   mContext = std::make_unique<LLVMContext>();
   mModule = std::make_unique<Module>("lev", *mContext);
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
@@ -30,22 +32,19 @@ Codegen::Codegen(std::string_view source) {
     Parser::printError(statements.error());
     return;
   }
-  mStatements = std::move(*statements);
+
+  mSemanticContext = SemanticContext(std::move(*statements));
 }
 
-Codegen::Codegen(std::vector<Stmt> statements)  {
-  mStatements = std::move(statements);
+Codegen::Codegen(std::vector<Stmt> statements) : mSemanticContext(std::move(statements)) {
   mContext = std::make_unique<LLVMContext>();
   mModule = std::make_unique<Module>("lev", *mContext);
   mBuilder = std::make_unique<IRBuilder<>>(*mContext);
 };
 
 auto Codegen::compile() -> void {
-  for (auto& statement : mStatements){
-    if (not codegenStmt(statement)) {
-      std::cerr << "Encountered error\n";
-      break;
-    }
+  for (const auto& statement : mSemanticContext.statements) {
+    codegenStmt(statement);
   }
 }
 
@@ -58,8 +57,28 @@ auto Codegen::dump() const -> std::string {
   return str;
 }
 
+auto Codegen::reportErrors(CodegenError error) -> void {
+  std::visit(overloaded {
+    [](const Unimplemented&){ 
+      std::println("Unimplemented error");
+    },
+    [](const UndefinedVariable&){ 
+      std::println("Undefined variable error");
+    },
+    [](const InvalidUnaryType&){ 
+      std::println("Invalid unary error");
+    }
+  }, error);
+}
+
 auto Codegen::codegenStmt(const Stmt& stmt) -> std::expected<bool, CodegenError> {
-  return stmt.accept([this](const auto &e) { return codegen(e); });
+  mSemanticContext.setCurrentStmt(&stmt);
+  const auto value =  stmt.accept([this](const auto &e) { return codegen(e); });
+  if (not value) {
+    reportErrors(value.error());
+    exit(0);
+  }
+  return value;
 }
 
 auto Codegen::codegenExpr(const Expr& expr) -> std::expected<llvm::Value*, CodegenError> {
@@ -91,73 +110,6 @@ auto Codegen::convertType(ast::Type type) const -> llvm::Type* {
   };
 }
 
-static auto getDefaultType(TokenType type) -> std::optional<lev::ast::Type> {
-  switch (type) {
-    case TokenType::Integer:
-      return lev::ast::Type::i32;
-    case TokenType::Float:
-      return lev::ast::Type::f32;
-    case TokenType::True:
-    case TokenType::False:
-      return lev::ast::Type::Bool;
-    case TokenType::String:
-      return lev::ast::Type::String;
-    default:
-      return std::nullopt;
-  }
-} 
-
-auto Codegen::inferExprType(const Expr& expr) const -> std::expected<lev::ast::Type, CodegenError> {
-  return expr.accept([this](const auto& e){return inferType(e);});
-}
-
-auto Codegen::inferType(const Expr::VariableExpr& e) const -> std::expected<ast::Type, CodegenError> {
-  // TODO: we should look at the variable name and report its type
-  return std::unexpected(Unimplemented{});
-}
-
-auto Codegen::inferType(const Expr::BinaryExpr& e) const -> std::expected<ast::Type, CodegenError> {
-  const auto leftType = inferExprType(*e.left);
-  const auto rightType = inferExprType(*e.right);
-  // TODO: this is ugly :<
-  if (leftType == Type::i32 and rightType == Type::i32) {
-    return Type::i32;
-  }
-  if (leftType == Type::f32 and rightType == Type::f32) {
-    return Type::f32;
-  }
-  if (leftType == Type::i32 and rightType == Type::f32) {
-    return Type::f32;
-  }
-  if (leftType == Type::f32 and rightType == Type::i32) {
-    return Type::f32;
-  }
-  return std::unexpected(Unimplemented{});
-}
-
-auto Codegen::inferType(const Expr::LiteralExpr& e) const -> std::expected<ast::Type, CodegenError> {
-  // TODO: we really should check for the expected type of the current stmt
-  const auto type = getDefaultType(e.value.type);
-  if (not type) {
-    return std::unexpected(Unimplemented{});
-  }
-  return *type;
-}
-
-auto Codegen::inferType(const Expr::UnaryExpr& e) const -> std::expected<ast::Type, CodegenError> {
-  if (e.op.type == TokenType::Bang) {
-    if (inferExprType(*e.right) == Type::Bool) {
-      return Type::Bool;
-    } else {
-      return std::unexpected(InvalidUnaryType{});
-    }
-  }
-  return std::unexpected(Unimplemented{});
-}
-
-auto Codegen::inferType(const Expr::CallExpr& e) const -> std::expected<ast::Type, CodegenError> {
-  return std::unexpected(Unimplemented{});
-}
 
 auto Codegen::codegen(const Stmt::ExprStmt& e) -> std::expected<bool, CodegenError> {
   return std::unexpected(Unimplemented{});
@@ -170,7 +122,7 @@ auto Codegen::codegen(const Stmt::FunctionDeclarationStmt& f) -> std::expected<b
     argsType.push_back(type);
   }
 
-  llvm::Type* returnType = convertType(f.returnType);
+  auto* returnType = convertType(f.returnType);
 
   auto* funcType = FunctionType::get(returnType, argsType, false);
   auto* function = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
@@ -206,7 +158,11 @@ auto Codegen::codegen(const Stmt::VariableDeclarationStmt& v) -> std::expected<b
   }
 
   auto* alloca = mBuilder->CreateAlloca(type, nullptr, v.identifier.lexeme);
+  mNamedValues[std::string(v.identifier.lexeme)] = alloca;
+
+  const auto key = std::string(v.identifier.lexeme);
   const auto value = codegenExpr(*v.value);
+
   if (not value) {
     return std::unexpected(value.error());
   }
@@ -224,15 +180,17 @@ auto Codegen::codegen(const Expr::LiteralExpr& e) -> std::expected<llvm::Value*,
       return ConstantInt::get(convertType(Type::Bool), 0);
     case TokenType::True:
       return ConstantInt::get(convertType(Type::Bool), 1);
-    case TokenType::Identifier:
-      // variable lookup
     default:
       return std::unexpected(Unimplemented{});
   }
 };
 
 auto Codegen::codegen(const Expr::VariableExpr& e) -> std::expected<llvm::Value*, CodegenError> {
-  return nullptr;
+  const auto key = std::string(e.identifier.lexeme);
+  if (not mNamedValues.contains(key)) {
+    return std::unexpected(UndefinedVariable{});
+  }
+  return mNamedValues.at(key);
 }
 
 auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
@@ -246,7 +204,8 @@ auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, 
     return right;
   }
 
-  const auto type = inferType(e);
+  const auto type = mSemanticContext.inferType(e);
+
   switch (e.op.type) {
     case TokenType::Plus:
       // TODO: create type is integer/ type is unsigned

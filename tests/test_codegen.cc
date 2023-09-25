@@ -77,3 +77,31 @@ source_filename = "lev"
 
   EXPECT_EQ(codegen.dump(), result);
 }
+
+TEST(Codegen, VariableExpr) {
+  Codegen codegen(
+R"(
+fn main() -> i32:
+  let num: i32 = 10
+  let double_num: i32 = 2 * num
+)");
+
+  codegen.compile();
+
+std::string_view result = 
+R"(; ModuleID = 'lev'
+source_filename = "lev"
+
+define i32 @main() {
+entry:
+  %num = alloca i32, align 4
+  store i32 10, ptr %num, align 4
+  %double_num = alloca i32, align 4
+  %multmpsi = mul i32 2, ptr %num
+  store i32 %multmpsi, ptr %double_num, align 4
+}
+)";
+
+  EXPECT_EQ(codegen.dump(), result);
+
+}

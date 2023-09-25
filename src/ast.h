@@ -10,10 +10,6 @@ namespace lev::ast {
   using lev::token::Token;
 
   enum class Type {
-    UserDefined,
-    Bool,
-    String,
-
     i8,
     i16,
     i32,
@@ -28,6 +24,10 @@ namespace lev::ast {
     f64,
     
     Void,
+
+    UserDefined,
+    Bool,
+    String,
   };
 
   constexpr auto typeToString(Type type) -> std::string_view {
@@ -219,11 +219,11 @@ namespace lev::ast {
         }
       };
 
-      using Data = std::variant<VariableDeclarationStmt, FunctionDeclarationStmt,
+      using Values = std::variant<VariableDeclarationStmt, FunctionDeclarationStmt,
                                 ExprStmt, AssignStmt, BlockStmt>;
-      Data mData;
+      Values mData;
 
-      Stmt(Data data) : mData(std::move(data)) {}
+      Stmt(Values data) : mData(std::move(data)) {}
 
     public:
       auto operator==(const Stmt&) const -> bool = default;
