@@ -1,6 +1,7 @@
-project('lev', 'c', 'cpp', version: '0.0.1')
+project('lev', 'cpp', version: '0.0.1')
 
 sources = [
+  'src/ast.cc',
   'src/scanner.cc',
   'src/parser.cc',
   'src/codegen.cc',

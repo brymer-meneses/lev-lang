@@ -46,17 +46,17 @@ namespace lev::codegen {
       auto codegenStmt(const Stmt&) -> std::expected<bool, CodegenError>;
       auto codegenExpr(const Expr&) -> std::expected<llvm::Value*, CodegenError>;
 
-      auto codegen(const Stmt::ExprStmt&) -> std::expected<bool, CodegenError>;
-      auto codegen(const Stmt::BlockStmt&) -> std::expected<bool, CodegenError>;
-      auto codegen(const Stmt::AssignStmt&) -> std::expected<bool, CodegenError>;
-      auto codegen(const Stmt::FunctionDeclarationStmt&) -> std::expected<bool, CodegenError>;
-      auto codegen(const Stmt::VariableDeclarationStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const ExprStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const BlockStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const AssignStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const FunctionDeclaration&) -> std::expected<bool, CodegenError>;
+      auto codegen(const VariableDeclaration&) -> std::expected<bool, CodegenError>;
 
-      auto codegen(const Expr::LiteralExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto codegen(const Expr::BinaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto codegen(const Expr::UnaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto codegen(const Expr::VariableExpr&) -> std::expected<llvm::Value*, CodegenError>;
-      auto codegen(const Expr::CallExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const LiteralExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const BinaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const UnaryExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const VariableExpr&) -> std::expected<llvm::Value*, CodegenError>;
+      auto codegen(const CallExpr&) -> std::expected<llvm::Value*, CodegenError>;
 
   };
 

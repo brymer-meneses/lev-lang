@@ -21,14 +21,14 @@ TEST(Parser, VariableDeclaration) {
 
   auto statement = std::move(stmts.value()[0]);
 
-  auto expected = Stmt::VariableDeclaration(
+  auto expected = VariableDeclaration(
     Token(TokenType::Identifier, "num"),
     false,
-    Expr::Literal(Token(TokenType::Integer, "5")),
+    LiteralExpr(Token(TokenType::Integer, "5")),
     Type::i32
   );
 
-  EXPECT_EQ(statement, expected);
+  EXPECT_EQ(statement, Stmt(std::move(expected)));
 }
 
 TEST(Parser, FunctionDeclaration) {
@@ -49,23 +49,23 @@ fn main() -> i32:
   EXPECT_EQ(stmts->size(), 1);
 
   auto statement = std::move((*stmts)[0]);
-  auto variableDeclaration = Stmt::VariableDeclaration(
+  auto variableDeclaration = VariableDeclaration(
       Token(TokenType::Identifier, "num"), 
       false,
-      Expr::Literal(Token(TokenType::Integer, "5")), 
+      LiteralExpr(Token(TokenType::Integer, "5")), 
       Type::i32
   );
 
   std::vector<Stmt> body;
   body.emplace_back(std::move(variableDeclaration));
 
-  auto expected = Stmt::FunctionDeclaration(
+  auto expected = FunctionDeclaration(
       "main", 
       {}, 
       Type::i32,
-      Stmt::Block(std::move(body)));
+      BlockStmt(std::move(body)));
 
-  EXPECT_EQ(statement, expected);
+  EXPECT_EQ(statement, Stmt(std::move(expected)));
 }
 
 TEST(Parser, BinaryExpression) {
@@ -80,23 +80,23 @@ TEST(Parser, BinaryExpression) {
 
   auto statement = std::move(stmts.value()[0]);
 
-  auto lhs = Expr::Binary(
+  auto lhs = BinaryExpr(
       Token(TokenType::Plus, "+"),
-      Expr::Literal(Token(TokenType::Integer, "1")),
-      Expr::Literal(Token(TokenType::Integer, "3"))
+      LiteralExpr(Token(TokenType::Integer, "1")),
+      LiteralExpr(Token(TokenType::Integer, "3"))
   );
-  auto rhs = Expr::Binary(
+  auto rhs = BinaryExpr(
       Token(TokenType::Star, "*"),
-      Expr::Literal(Token(TokenType::Integer, "2")),
-      Expr::Literal(Token(TokenType::Integer, "2"))
+      LiteralExpr(Token(TokenType::Integer, "2")),
+      LiteralExpr(Token(TokenType::Integer, "2"))
   );
 
-  auto expected = Stmt::VariableDeclaration(
+  auto expected = VariableDeclaration(
     Token(TokenType::Identifier, "num"),
     false,
-    Expr::Binary(Token(TokenType::Plus, "+"), std::move(lhs), std::move(rhs)),
+    BinaryExpr(Token(TokenType::Plus, "+"), std::move(lhs), std::move(rhs)),
     Type::i32
   );
 
-  EXPECT_EQ(statement, expected);
+  EXPECT_EQ(statement, Stmt(std::move(expected)));
 }

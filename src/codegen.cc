@@ -111,11 +111,11 @@ auto Codegen::convertType(ast::Type type) const -> llvm::Type* {
 }
 
 
-auto Codegen::codegen(const Stmt::ExprStmt& e) -> std::expected<bool, CodegenError> {
+auto Codegen::codegen(const ExprStmt& e) -> std::expected<bool, CodegenError> {
   return std::unexpected(Unimplemented{});
 }
 
-auto Codegen::codegen(const Stmt::FunctionDeclarationStmt& f) -> std::expected<bool, CodegenError> {
+auto Codegen::codegen(const FunctionDeclaration& f) -> std::expected<bool, CodegenError> {
   std::vector<llvm::Type*> argsType(f.args.size());
   for (const auto& arg : f.args) {
     const auto type = convertType(arg.second);
@@ -139,7 +139,7 @@ auto Codegen::codegen(const Stmt::FunctionDeclarationStmt& f) -> std::expected<b
   return true;
 }
 
-auto Codegen::codegen(const Stmt::VariableDeclarationStmt& v) -> std::expected<bool, CodegenError> {
+auto Codegen::codegen(const VariableDeclaration& v) -> std::expected<bool, CodegenError> {
   const auto type = convertType(v.type);
 
   if (mBuilder->GetInsertBlock() == nullptr) {
@@ -170,7 +170,7 @@ auto Codegen::codegen(const Stmt::VariableDeclarationStmt& v) -> std::expected<b
   return true;
 }
 
-auto Codegen::codegen(const Expr::LiteralExpr& e) -> std::expected<llvm::Value*, CodegenError> {
+auto Codegen::codegen(const LiteralExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   switch (e.value.type) {
     case TokenType::Integer:
       return ConstantInt::get(convertType(Type::i32), std::stoi(std::string(e.value.lexeme)));
@@ -185,7 +185,7 @@ auto Codegen::codegen(const Expr::LiteralExpr& e) -> std::expected<llvm::Value*,
   }
 };
 
-auto Codegen::codegen(const Expr::VariableExpr& e) -> std::expected<llvm::Value*, CodegenError> {
+auto Codegen::codegen(const VariableExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   const auto key = std::string(e.identifier.lexeme);
   if (not mNamedValues.contains(key)) {
     return std::unexpected(UndefinedVariable{});
@@ -193,7 +193,7 @@ auto Codegen::codegen(const Expr::VariableExpr& e) -> std::expected<llvm::Value*
   return mNamedValues.at(key);
 }
 
-auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
+auto Codegen::codegen(const BinaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   const auto left = codegenExpr(*e.left);
   const auto right = codegenExpr(*e.right);
 
@@ -247,19 +247,19 @@ auto Codegen::codegen(const Expr::BinaryExpr& e) -> std::expected<llvm::Value*, 
   return std::unexpected(Unimplemented{});
 }
 
-auto Codegen::codegen(const Expr::UnaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
+auto Codegen::codegen(const UnaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   return std::unexpected(Unimplemented{});
 }
 
-auto Codegen::codegen(const Expr::CallExpr& e) -> std::expected<llvm::Value*, CodegenError> {
+auto Codegen::codegen(const CallExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   return std::unexpected(Unimplemented{});
 }
 
-auto Codegen::codegen(const Stmt::AssignStmt& e) -> std::expected<bool, CodegenError> {
+auto Codegen::codegen(const AssignStmt& e) -> std::expected<bool, CodegenError> {
   return std::unexpected(Unimplemented{});
 }
 
-auto Codegen::codegen(const Stmt::BlockStmt& e) -> std::expected<bool, CodegenError> {
+auto Codegen::codegen(const BlockStmt& e) -> std::expected<bool, CodegenError> {
   for (const auto& statement : e.statements) {
     codegenStmt(statement);
   }

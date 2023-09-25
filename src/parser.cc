@@ -164,7 +164,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParserError> {
     return std::unexpected(expr.error());
   }
 
-  return Stmt::VariableDeclaration(*identifier, isMutable, std::move(*expr), *type);
+  return VariableDeclaration(*identifier, isMutable, std::move(*expr), *type);
 }
 
 
@@ -227,7 +227,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParserError> {
     return body;
   }
 
-  return Stmt::FunctionDeclaration(identifier->lexeme, args, *returnType, std::move(*body));
+  return FunctionDeclaration(identifier->lexeme, args, *returnType, std::move(*body));
 }
 
 auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
@@ -243,7 +243,7 @@ auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
     statements.push_back(std::move(*stmt));
   }
 
-  return Stmt::Block(std::move(statements));
+  return BlockStmt(std::move(statements));
 }
 
 auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
@@ -303,22 +303,22 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
       }
     }
 
-    lhs = Expr::Binary(binOp, std::move(lhs), std::move(*rhs));
+    lhs = BinaryExpr(binOp, std::move(lhs), std::move(*rhs));
   }
 
 }
 
 auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
   if (match(TokenType::Float) or match(TokenType::Integer) or match(TokenType::String)) {
-    return Expr::Literal(peekPrev());
+    return LiteralExpr(peekPrev());
   }
 
   if (match(TokenType::False) or match(TokenType::True)) {
-    return Expr::Literal(peekPrev());
+    return LiteralExpr(peekPrev());
   }
 
   if (match(TokenType::Identifier)) {
-    return Expr::Variable(peekPrev());
+    return VariableExpr(peekPrev());
   }
 }
 

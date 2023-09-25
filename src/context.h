@@ -24,17 +24,17 @@ namespace lev::semantics {
       auto inferExprType(const Expr&) const -> std::expected<ast::Type, SemanticError>;
       auto inferStmtType(const Stmt&) const -> std::expected<ast::Type, SemanticError>;
 
-      auto inferType(const Expr::UnaryExpr&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Expr::BinaryExpr&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Expr::CallExpr&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Expr::VariableExpr&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Expr::LiteralExpr&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const UnaryExpr&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const BinaryExpr&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const CallExpr&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const VariableExpr&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const LiteralExpr&) const -> std::expected<ast::Type, SemanticError>;
 
-      auto inferType(const Stmt::ExprStmt&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Stmt::AssignStmt&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Stmt::BlockStmt&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Stmt::FunctionDeclarationStmt&) const -> std::expected<ast::Type, SemanticError>;
-      auto inferType(const Stmt::VariableDeclarationStmt&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const ExprStmt&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const AssignStmt&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const BlockStmt&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const FunctionDeclaration&) const -> std::expected<ast::Type, SemanticError>;
+      auto inferType(const VariableDeclaration&) const -> std::expected<ast::Type, SemanticError>;
 
       auto getVariableContext(std::string_view) const -> std::expected<const Stmt*, SemanticError>;
 

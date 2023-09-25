@@ -99,11 +99,11 @@ auto SemanticContext::getVariableContext(std::string_view name) const -> std::ex
   return std::unexpected(UndefinedVariable{});
 }
 
-auto SemanticContext::inferType(const Expr::CallExpr& e) const -> std::expected<ast::Type, SemanticError> {
+auto SemanticContext::inferType(const CallExpr& e) const -> std::expected<ast::Type, SemanticError> {
   return std::unexpected(Unimplemented{});
 }
 
-auto SemanticContext::inferType(const Expr::LiteralExpr& e) const -> std::expected<ast::Type, SemanticError> {
+auto SemanticContext::inferType(const LiteralExpr& e) const -> std::expected<ast::Type, SemanticError> {
   const auto type = inferStmtType(*mCurrentStmt);
   if (not type) {
     return std::unexpected(Unimplemented{});
@@ -111,7 +111,7 @@ auto SemanticContext::inferType(const Expr::LiteralExpr& e) const -> std::expect
   return *type;
 }
 
-auto SemanticContext::inferType(const Expr::VariableExpr& e) const -> std::expected<ast::Type, SemanticError> {
+auto SemanticContext::inferType(const VariableExpr& e) const -> std::expected<ast::Type, SemanticError> {
   const auto type = inferStmtType(*mCurrentStmt);
   if (not type) {
     return std::unexpected(Unimplemented{});
@@ -119,7 +119,7 @@ auto SemanticContext::inferType(const Expr::VariableExpr& e) const -> std::expec
   return *type;
 }
 
-auto SemanticContext::inferType(const Expr::UnaryExpr& e) const -> std::expected<ast::Type, SemanticError> {
+auto SemanticContext::inferType(const UnaryExpr& e) const -> std::expected<ast::Type, SemanticError> {
   if (e.op.type == TokenType::Bang) {
     if (inferExprType(*e.right) == Type::Bool) {
       return Type::Bool;
@@ -130,7 +130,7 @@ auto SemanticContext::inferType(const Expr::UnaryExpr& e) const -> std::expected
   return std::unexpected(Unimplemented{});
 }
 
-auto SemanticContext::inferType(const Expr::BinaryExpr& e) const -> std::expected<ast::Type, SemanticError> {
+auto SemanticContext::inferType(const BinaryExpr& e) const -> std::expected<ast::Type, SemanticError> {
   const auto leftType = inferExprType(*e.left);
   const auto rightType = inferExprType(*e.right);
   if (leftType == Type::i32 and rightType == Type::i32) {
@@ -154,10 +154,10 @@ auto SemanticContext::inferExprType(const Expr& e) const -> std::expected<ast::T
 
 auto SemanticContext::inferStmtType(const Stmt& s) const -> std::expected<ast::Type, SemanticError> {
   static const auto visitor = overloaded {
-    [](const Stmt::VariableDeclarationStmt& e) -> std::expected<ast::Type, SemanticError> {
+    [](const VariableDeclaration& e) -> std::expected<ast::Type, SemanticError> {
       return e.type;
     },
-    [](const Stmt::FunctionDeclarationStmt& e) -> std::expected<ast::Type, SemanticError> {
+    [](const FunctionDeclaration& e) -> std::expected<ast::Type, SemanticError> {
       return e.returnType;
     },
     [](const auto& e) -> std::expected<ast::Type, SemanticError> {
