@@ -64,7 +64,6 @@ namespace lev::ast {
   };
 
   class Expr;
-  auto operator==(const Expr& e1, const Expr& e2) -> bool;
 
   struct BinaryExpr {
     std::unique_ptr<Expr> left;
@@ -129,7 +128,6 @@ namespace lev::ast {
   };
 
   class Stmt;
-  auto operator==(const Stmt& e1, const Stmt& e2) -> bool;
 
   struct VariableDeclaration {
     Token identifier;
@@ -187,11 +185,10 @@ namespace lev::ast {
       Stmt(AssignStmt data) : mData(std::move(data)) {}
       Stmt(BlockStmt data) : mData(std::move(data)) {}
 
-    public:
-      friend auto operator==(const Stmt& e1, const Stmt& e2) -> bool;
-
       auto accept(const auto visitor) const -> decltype(std::visit(visitor, mData)) {
         return std::visit(visitor, mData);
       }
+
+      friend auto operator==(const Stmt& e1, const Stmt& e2) -> bool;
   };
 }
