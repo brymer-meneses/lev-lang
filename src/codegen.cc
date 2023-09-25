@@ -127,10 +127,17 @@ auto Codegen::codegen(const FunctionDeclaration& f) -> std::expected<bool, Codeg
   auto* funcType = FunctionType::get(returnType, argsType, false);
   auto* function = Function::Create(funcType, llvm::Function::ExternalLinkage, f.functionName, *mModule);
 
+  mFunctionStack.clear();
   for (auto& arg : function->args()) {
-    const auto name = f.args[arg.getArgNo()].first;
+    auto [name, type] = f.args[arg.getArgNo()];
     arg.setName(name);
+
+    auto alloca = mBuilder->CreateAlloca(convertType(type), nullptr, name);
+
+    mBuilder->CreateStore(&arg, alloca);
+    mFunctionStack[std::string(name)] = alloca;
   }
+
 
   auto* block = BasicBlock::Create(*mContext, "entry", function);
   mBuilder->SetInsertPoint(block);
@@ -158,7 +165,6 @@ auto Codegen::codegen(const VariableDeclaration& v) -> std::expected<bool, Codeg
   }
 
   auto* alloca = mBuilder->CreateAlloca(type, nullptr, v.identifier.lexeme);
-  mNamedValues[std::string(v.identifier.lexeme)] = alloca;
 
   const auto key = std::string(v.identifier.lexeme);
   const auto value = codegenExpr(*v.value);
@@ -167,6 +173,7 @@ auto Codegen::codegen(const VariableDeclaration& v) -> std::expected<bool, Codeg
     return std::unexpected(value.error());
   }
   mBuilder->CreateStore(*value, alloca);
+  mFunctionStack[key] = alloca;
   return true;
 }
 
@@ -187,10 +194,13 @@ auto Codegen::codegen(const LiteralExpr& e) -> std::expected<llvm::Value*, Codeg
 
 auto Codegen::codegen(const VariableExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   const auto key = std::string(e.identifier.lexeme);
-  if (not mNamedValues.contains(key)) {
+
+  if (not mFunctionStack.contains(key)) {
     return std::unexpected(UndefinedVariable{});
   }
-  return mNamedValues.at(key);
+
+  auto* variable = mFunctionStack.at(key);
+  return mBuilder->CreateLoad(variable->getAllocatedType(), variable, e.identifier.lexeme);
 }
 
 auto Codegen::codegen(const BinaryExpr& e) -> std::expected<llvm::Value*, CodegenError> {

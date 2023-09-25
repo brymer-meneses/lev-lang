@@ -97,7 +97,8 @@ entry:
   %num = alloca i32, align 4
   store i32 10, ptr %num, align 4
   %double_num = alloca i32, align 4
-  %multmpsi = mul i32 2, ptr %num
+  %num1 = load i32, ptr %num, align 4
+  %multmpsi = mul i32 2, %num1
   store i32 %multmpsi, ptr %double_num, align 4
 }
 )";

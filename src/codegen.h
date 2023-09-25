@@ -29,7 +29,7 @@ namespace lev::codegen {
       std::unique_ptr<llvm::IRBuilder<>> mBuilder;
 
       SemanticContext mSemanticContext;
-      std::map<std::string, llvm::Value*> mNamedValues;
+      std::map<std::string, llvm::AllocaInst*> mFunctionStack;
 
     public:
       Codegen(std::vector<Stmt> statements);
