@@ -79,16 +79,16 @@ static constexpr auto getSize(Type type) -> size_t {
 }
 
 auto SemanticContext::isTriviallyCastableTo(const Type t1, const Type t2) -> bool {
-  if (t1 == t2) return true;
+  if (t1 != t2) return false;
 
-  if (isSigned(t1) == isSigned(t2)) return true;
-  if (isInteger(t1) == isInteger(t2)) return true;
+  if (isSigned(t1) != isSigned(t2)) return false;
+  if (isInteger(t1) != isInteger(t2)) return false;
 
-  if (getSize(t1) <= getSize(t2)) {
-    return true;
+  if (getSize(t1) > getSize(t2)) {
+    return false;
   }
 
-  return false;
+  return true;
 }
 
 auto SemanticContext::setCurrentStmt(const Stmt* stmt) -> void {
