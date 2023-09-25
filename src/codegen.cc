@@ -156,7 +156,7 @@ auto Codegen::codegen(const VariableDeclaration& v) -> std::expected<bool, Codeg
     globalVariable->setAlignment(Align(4));
     globalVariable->setConstant(not v.isMutable);
 
-    const auto value = codegenExpr(*v.value);
+    auto value = codegenExpr(*v.value);
     if (not value) {
       return std::unexpected(value.error());
     }
@@ -194,7 +194,6 @@ auto Codegen::codegen(const LiteralExpr& e) -> std::expected<llvm::Value*, Codeg
 
 auto Codegen::codegen(const VariableExpr& e) -> std::expected<llvm::Value*, CodegenError> {
   const auto key = std::string(e.identifier.lexeme);
-
   if (not mFunctionStack.contains(key)) {
     return std::unexpected(UndefinedVariable{});
   }
@@ -266,7 +265,17 @@ auto Codegen::codegen(const CallExpr& e) -> std::expected<llvm::Value*, CodegenE
 }
 
 auto Codegen::codegen(const AssignStmt& e) -> std::expected<bool, CodegenError> {
-  return std::unexpected(Unimplemented{});
+  // TODO: check if the variable is mutable first
+  const auto key = std::string(e.identifier.lexeme);
+  if (not mFunctionStack.contains(key)) {
+    return std::unexpected(UndefinedVariable{});
+  }
+  auto* variable = mFunctionStack.at(key);
+  auto newValue = codegenExpr(*e.value);
+  if (not newValue) {
+    return std::unexpected(newValue.error());
+  }
+  return mBuilder->CreateStore(variable, *newValue);
 }
 
 auto Codegen::codegen(const BlockStmt& e) -> std::expected<bool, CodegenError> {

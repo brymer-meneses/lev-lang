@@ -100,3 +100,23 @@ TEST(Parser, BinaryExpression) {
 
   EXPECT_EQ(statement, Stmt(std::move(expected)));
 }
+
+TEST(Parser, AssignmentStmt) {
+  Parser parser("variable = 5");
+  auto stmts = parser.parse();
+
+  if (not stmts) {
+    Parser::printError(stmts.error());
+  }
+
+  ASSERT_TRUE(stmts.has_value());
+  EXPECT_EQ(stmts->size(), 1);
+
+  auto statement = std::move(stmts.value()[0]);
+  auto expected = AssignStmt(
+    Token(TokenType::Identifier, "variable"),
+    LiteralExpr(Token(TokenType::Integer, "5"))
+  );
+
+  EXPECT_EQ(statement, Stmt(std::move(expected)));
+}

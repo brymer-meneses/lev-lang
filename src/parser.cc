@@ -1,6 +1,6 @@
 #include "parser.h"
 #include "scanner.h"
-#include <iostream>
+#include <print>
 #include <memory>
 #include <ranges>
 #include <format>
@@ -247,8 +247,35 @@ auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
 }
 
 auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
+
+  if (match(TokenType::If)) {
+    return std::unexpected(Unimplemented{});
+  }
+
+  if (match(TokenType::For)) {
+    return std::unexpected(Unimplemented{});
+  }
+
+  if (match(TokenType::Identifier)) {
+    return parseAssignment();
+  }
   
-  return std::unexpected(UnexpectedToken(TokenType::EqualEqual, peek().type));
+  return std::unexpected(Unimplemented{});
+}
+
+auto Parser::parseAssignment() -> std::expected<Stmt, ParserError> {
+  const auto identifier = peekPrev();
+
+  if (not match(TokenType::Equal)) {
+    return std::unexpected(UnexpectedToken(TokenType::Equal, peek().type));
+  }
+
+  auto value = parseExpr();
+  if (not value) {
+    return std::unexpected(value.error());
+  }
+
+  return AssignStmt(identifier, std::move(*value));
 }
 
 auto Parser::parseExpr() -> std::expected<Expr, ParserError> {
@@ -325,7 +352,10 @@ auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
 auto Parser::printError(ParserError error) -> void {
   struct ErrorVistor {
     auto operator()(const UnexpectedToken& err) const -> void {
-      std::cerr << std::format("ERROR: Got an unexpected token `{}` expected `{}`\n", tokenTypeToString(err.found), tokenTypeToString(err.required));
+      std::println(stderr, "ERROR: Got an unexpected token `{}` expected `{}", tokenTypeToString(err.found), tokenTypeToString(err.required));
+    }
+    auto operator()(const Unimplemented& err) const -> void {
+      std::println(stderr, "ERROR: Unimplemented!");
     }
   };
 
