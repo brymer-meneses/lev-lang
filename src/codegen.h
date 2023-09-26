@@ -19,8 +19,9 @@ namespace lev::codegen {
   struct InvalidUnaryType {};
   struct Unimplemented {};
   struct UndefinedVariable {};
+  struct IllFormed {};
 
-  using CodegenError = std::variant<InvalidUnaryType, UndefinedVariable, Unimplemented>;
+  using CodegenError = std::variant<InvalidUnaryType, UndefinedVariable, Unimplemented, IllFormed>;
 
   class Codegen {
     private:
@@ -50,6 +51,7 @@ namespace lev::codegen {
       auto codegen(const BlockStmt&) -> std::expected<bool, CodegenError>;
       auto codegen(const IfStmt& e) -> std::expected<bool, CodegenError>;
       auto codegen(const AssignStmt&) -> std::expected<bool, CodegenError>;
+      auto codegen(const ReturnStmt& s) -> std::expected<bool, CodegenError>;
       auto codegen(const FunctionDeclaration&) -> std::expected<bool, CodegenError>;
       auto codegen(const VariableDeclaration&) -> std::expected<bool, CodegenError>;
 

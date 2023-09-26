@@ -25,6 +25,7 @@ TEST(Codegen, LocalVariables) {
 R"(
 fn main() -> i32:
   let num: i32 = 5
+  return 0
 )");
 
   codegen.compile();
@@ -37,6 +38,7 @@ define i32 @main() {
 entry:
   %num = alloca i32, align 4
   store i32 5, ptr %num, align 4
+  ret i32 0
 }
 )";
 
@@ -48,6 +50,7 @@ TEST(Codegen, SimpleBinaryExpr) {
 R"(
 fn main() -> i32:
   let num: i32 = 5 + 6 * 2
+  return num
 )");
   codegen.compile();
 
@@ -59,6 +62,8 @@ define i32 @main() {
 entry:
   %num = alloca i32, align 4
   store i32 17, ptr %num, align 4
+  %num1 = load i32, ptr %num, align 4
+  ret i32 %num1
 }
 )";
   EXPECT_EQ(codegen.dump(), result);
@@ -84,11 +89,12 @@ R"(
 fn main() -> i32:
   let num: i32 = 10
   let double_num: i32 = 2 * num
+  return 0
 )");
 
   codegen.compile();
 
-std::string_view result = 
+  std::string_view result = 
 R"(; ModuleID = 'lev'
 source_filename = "lev"
 
@@ -100,6 +106,7 @@ entry:
   %num1 = load i32, ptr %num, align 4
   %multmpsi = mul i32 2, %num1
   store i32 %multmpsi, ptr %double_num, align 4
+  ret i32 0
 }
 )";
 

@@ -193,12 +193,20 @@ namespace lev::ast {
 
     BlockStmt(std::vector<Stmt> statements);
     explicit BlockStmt(Stmt statement);
+
     friend auto operator==(const BlockStmt& e1, const BlockStmt& e2) -> bool;
+  };
+
+  struct ReturnStmt {
+    std::optional<Expr> expr;
+    ReturnStmt(std::optional<Expr> expr);
+
+    friend auto operator==(const ReturnStmt& e1, const ReturnStmt& e2) -> bool;
   };
 
   class Stmt {
     private:
-      using Data = std::variant<VariableDeclaration, FunctionDeclaration, ExprStmt, AssignStmt, BlockStmt, IfStmt>;
+      using Data = std::variant<VariableDeclaration, FunctionDeclaration, ExprStmt, AssignStmt, BlockStmt, IfStmt, ReturnStmt>;
       Data mData;
 
     public:
@@ -208,6 +216,7 @@ namespace lev::ast {
       Stmt(AssignStmt data) : mData(std::move(data)) {}
       Stmt(BlockStmt data) : mData(std::move(data)) {}
       Stmt(IfStmt data) : mData(std::move(data)) {}
+      Stmt(ReturnStmt data) : mData(std::move(data)) {}
 
       auto accept(const auto visitor) const -> decltype(std::visit(visitor, mData)) {
         return std::visit(visitor, mData);

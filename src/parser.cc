@@ -264,10 +264,24 @@ auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
   if (match(TokenType::Identifier)) {
     return parseAssignmentStmt();
   }
+
+  if (match(TokenType::Return)) {
+    return parseReturnStmt();
+  }
   
   return std::unexpected(Unimplemented{});
 }
+auto Parser::parseReturnStmt() -> std::expected<Stmt, ParserError> {
+  if (match(TokenType::Newline)) {
+    return ReturnStmt(std::nullopt);
+  }
 
+  auto expr = parseExpr();
+  if (not expr) {
+    return std::unexpected(expr.error());
+  }
+  return ReturnStmt(std::move(*expr));
+}
 auto Parser::parseIfStmt() -> std::expected<Stmt, ParserError> {
   using Branch = IfStmt::Branch;
 

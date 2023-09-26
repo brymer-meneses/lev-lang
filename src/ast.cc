@@ -10,6 +10,9 @@ BlockStmt::BlockStmt(Stmt statement) {
   statements.emplace_back(std::move(statement));
 }
 
+ReturnStmt::ReturnStmt(std::optional<Expr> expr) 
+  : expr(std::move(expr)) {}
+
 AssignStmt::AssignStmt(Token identifier, Expr value) 
   : identifier(identifier),
     value(std::make_unique<Expr>(std::move(value))) {}
@@ -76,6 +79,10 @@ auto ast::operator==(const IfStmt& e1, const IfStmt& e2) -> bool {
   }
 
   return e1.ifBranch == e2.ifBranch and e1.elseIfBranches == e2.elseIfBranches;
+}
+
+auto ast::operator==(const ReturnStmt& e1, const ReturnStmt& e2) -> bool {
+  return e1.expr == e2.expr;
 }
 
 auto ast::operator==(const Branch& e1, const Branch& e2) -> bool {

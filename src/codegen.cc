@@ -67,6 +67,9 @@ auto Codegen::reportErrors(CodegenError error) -> void {
     },
     [](const InvalidUnaryType&){ 
       std::println("Invalid unary error");
+    },
+    [](const IllFormed&){ 
+      std::println("Illformed error");
     }
   }, error);
 }
@@ -282,6 +285,22 @@ auto Codegen::codegen(const BlockStmt& e) -> std::expected<bool, CodegenError> {
   for (const auto& statement : e.statements) {
     codegenStmt(statement);
   }
+  return true;
+}
+
+auto Codegen::codegen(const ReturnStmt& s) -> std::expected<bool, CodegenError> {
+
+  if (not s.expr) {
+    mBuilder->CreateRetVoid();
+    return true;
+  }
+
+  auto value = codegenExpr(*s.expr);
+  if (not value) {
+    return std::unexpected(IllFormed{});
+  }
+
+  mBuilder->CreateRet(*value);
   return true;
 }
 
