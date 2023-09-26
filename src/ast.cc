@@ -6,12 +6,33 @@ using namespace lev::ast;
 BlockStmt::BlockStmt(std::vector<Stmt> statements) 
   : statements(std::move(statements)) {}
 
+BlockStmt::BlockStmt(Stmt statement) {
+  statements.emplace_back(std::move(statement));
+}
+
 AssignStmt::AssignStmt(Token identifier, Expr value) 
   : identifier(identifier),
     value(std::make_unique<Expr>(std::move(value))) {}
 
 ExprStmt::ExprStmt(Expr expr)
     : expr(std::make_unique<Expr>(std::move(expr))) {}
+
+using Branch = IfStmt::Branch;
+Branch::Branch(Expr condition, Stmt then)
+    : condition(std::move(condition)), 
+      body(std::make_unique<Stmt>(std::move(then))) {}
+
+IfStmt::IfStmt(Branch ifBranch, 
+               std::vector<Branch> elseIfBranches,
+               std::optional<Stmt> elseBody)
+    : ifBranch(std::move(ifBranch)), 
+      elseIfBranches(std::move(elseIfBranches)) {
+  if (elseBody.has_value()) {
+    this->elseBody = std::make_unique<Stmt>(std::move(elseBody.value()));
+  } else {
+    this->elseBody = std::nullopt;
+  }
+}
 
 FunctionDeclaration::FunctionDeclaration(std::string_view functionName,
                                               std::vector<FunctionArg> args,
@@ -45,6 +66,21 @@ VariableExpr::VariableExpr(Token identifier)
 CallExpr::CallExpr(Token identifier, std::vector<Arg> args)
   : identifier(std::move(identifier)),
     args(std::move(args)) {}
+
+auto ast::operator==(const IfStmt& e1, const IfStmt& e2) -> bool {
+  if (e1.elseBody and not e2.elseBody) return false;
+  if (not e1.elseBody and e2.elseBody) return false;
+
+  if (e1.elseBody and e2.elseBody) {
+    if (*e1.elseBody.value() != *e2.elseBody.value()) return false;
+  }
+
+  return e1.ifBranch == e2.ifBranch and e1.elseIfBranches == e2.elseIfBranches;
+}
+
+auto ast::operator==(const Branch& e1, const Branch& e2) -> bool {
+  return e1.condition == e2.condition and *e1.body == *e2.body;
+}
 
 auto ast::operator==(const BlockStmt& e1, const BlockStmt& e2) -> bool {
   if (e2.statements.size() != e1.statements.size()) {

@@ -51,7 +51,8 @@ namespace lev::parser {
       auto parseDeclaration() -> std::expected<Stmt, ParserError>;
       auto parseFunctionDeclaration() -> std::expected<Stmt, ParserError>;
       auto parseVariableDeclaration() -> std::expected<Stmt, ParserError>;
-      auto parseAssignment() -> std::expected<Stmt, ParserError>;
+      auto parseAssignmentStmt() -> std::expected<Stmt, ParserError>;
+      auto parseIfStmt() -> std::expected<Stmt, ParserError>;
       
       auto parseBinaryOpRHS(int opPrecedence, Expr lhs) -> std::expected<Expr, ParserError>;
 

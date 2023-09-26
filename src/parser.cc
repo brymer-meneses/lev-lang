@@ -236,7 +236,8 @@ auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
     while (match(TokenType::Newline)) {
       continue;
     }
-    auto stmt = parseDeclaration();
+
+    auto stmt = parseStmt();
     if (not stmt) {
       return stmt;
     }
@@ -248,8 +249,12 @@ auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
 
 auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
 
+  if (match(TokenType::Let)) {
+    return parseVariableDeclaration();
+  }
+
   if (match(TokenType::If)) {
-    return std::unexpected(Unimplemented{});
+    return parseIfStmt();
   }
 
   if (match(TokenType::For)) {
@@ -257,13 +262,80 @@ auto Parser::parseStmt() -> std::expected<Stmt, ParserError> {
   }
 
   if (match(TokenType::Identifier)) {
-    return parseAssignment();
+    return parseAssignmentStmt();
   }
   
   return std::unexpected(Unimplemented{});
 }
 
-auto Parser::parseAssignment() -> std::expected<Stmt, ParserError> {
+auto Parser::parseIfStmt() -> std::expected<Stmt, ParserError> {
+  using Branch = IfStmt::Branch;
+
+  auto condition = parseExpr();
+  if (not condition) {
+    return std::unexpected(condition.error());
+  }
+
+  if (not match(TokenType::Colon)) {
+    return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
+  }
+
+  if (not match(TokenType::Indent)) {
+    return std::unexpected(UnexpectedToken(TokenType::Indent, peek().type));
+  }
+
+
+  auto body = parseBlock();
+  if (not body) {
+    return std::unexpected(body.error());
+  }
+
+  auto ifBranch = Branch(std::move(*condition), std::move(*body));
+  std::vector<Branch> elseIfBranches;
+  while (match(TokenType::Else) and match(TokenType::If)) {
+    auto condition = parseExpr();
+    if (not condition) {
+      return std::unexpected(condition.error());
+    }
+
+    if (not match(TokenType::Colon)) {
+      return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
+    }
+
+    if (not match(TokenType::Indent)) {
+      return std::unexpected(UnexpectedToken(TokenType::Indent, peek().type));
+    }
+
+    auto body = parseBlock();
+    if (not body) {
+      return std::unexpected(body.error());
+    }
+
+    elseIfBranches.push_back(Branch(std::move(*condition), std::move(*body)));
+  }
+
+  std::optional<Stmt> elseBody = std::nullopt;
+  if (peekPrev().type == TokenType::Else) {
+
+    if (not match(TokenType::Colon)) {
+      return std::unexpected(UnexpectedToken(TokenType::Colon, peek().type));
+    }
+
+    if (not match(TokenType::Indent)) {
+      return std::unexpected(UnexpectedToken(TokenType::Indent, peek().type));
+    }
+
+    auto body = parseBlock();
+    if (not body) {
+      return std::unexpected(body.error());
+    }
+    elseBody = std::move(*body);
+  }
+
+  return IfStmt(std::move(ifBranch), std::move(elseIfBranches), std::move(elseBody));
+}
+
+auto Parser::parseAssignmentStmt() -> std::expected<Stmt, ParserError> {
   const auto identifier = peekPrev();
 
   if (not match(TokenType::Equal)) {
@@ -347,6 +419,8 @@ auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
   if (match(TokenType::Identifier)) {
     return VariableExpr(peekPrev());
   }
+
+  return std::unexpected(Unimplemented{});
 }
 
 auto Parser::printError(ParserError error) -> void {

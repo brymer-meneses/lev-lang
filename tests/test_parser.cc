@@ -49,21 +49,18 @@ fn main() -> i32:
   EXPECT_EQ(stmts->size(), 1);
 
   auto statement = std::move((*stmts)[0]);
-  auto variableDeclaration = VariableDeclaration(
+
+  auto expected = FunctionDeclaration(
+    "main", 
+    {}, 
+    Type::i32,
+    BlockStmt(
+      VariableDeclaration(
       Token(TokenType::Identifier, "num"), 
       false,
       LiteralExpr(Token(TokenType::Integer, "5")), 
-      Type::i32
+      Type::i32))
   );
-
-  std::vector<Stmt> body;
-  body.emplace_back(std::move(variableDeclaration));
-
-  auto expected = FunctionDeclaration(
-      "main", 
-      {}, 
-      Type::i32,
-      BlockStmt(std::move(body)));
 
   EXPECT_EQ(statement, Stmt(std::move(expected)));
 }
@@ -116,6 +113,82 @@ TEST(Parser, AssignmentStmt) {
   auto expected = AssignStmt(
     Token(TokenType::Identifier, "variable"),
     LiteralExpr(Token(TokenType::Integer, "5"))
+  );
+
+  EXPECT_EQ(statement, Stmt(std::move(expected)));
+}
+
+TEST(Parser, IfStmt) {
+  Parser parser(
+R"(
+if true:
+  let variable: i32 = 1
+else if true:
+  let variable: i32 = 1
+else if true:
+  let variable: i32 = 2
+else:
+  let variable: i32 = 4
+)");
+  auto stmts = parser.parse();
+  if (not stmts) {
+    Parser::printError(stmts.error());
+  }
+
+  ASSERT_TRUE(stmts);
+  EXPECT_EQ(stmts->size(), 1);
+
+  auto statement = std::move(stmts.value()[0]);
+
+  std::vector<IfStmt::Branch> elseIfBranches;
+
+  elseIfBranches.push_back(
+    IfStmt::Branch(
+      LiteralExpr(Token(TokenType::True, "true")),
+      BlockStmt(
+        VariableDeclaration(
+          Token(TokenType::Identifier, "variable"),
+          false,
+          LiteralExpr(Token(TokenType::Integer, "1")),
+          Type::i32
+        )
+      )
+    )
+  );
+  elseIfBranches.push_back(
+    IfStmt::Branch(
+      LiteralExpr(Token(TokenType::True, "true")),
+      BlockStmt(
+        VariableDeclaration(
+          Token(TokenType::Identifier, "variable"),
+          false,
+          LiteralExpr(Token(TokenType::Integer, "2")),
+          Type::i32
+        )
+      )
+    )
+  );
+
+  auto expected = IfStmt(
+    IfStmt::Branch(
+      LiteralExpr(Token(TokenType::True, "true")),
+      BlockStmt(
+        VariableDeclaration(
+        Token(TokenType::Identifier, "variable"),
+        false,
+        LiteralExpr(Token(TokenType::Integer, "1")),
+        Type::i32
+      ))
+    ),
+    std::move(elseIfBranches),
+    BlockStmt(
+      VariableDeclaration(
+        Token(TokenType::Identifier, "variable"),
+        false,
+        LiteralExpr(Token(TokenType::Integer, "4")),
+        Type::i32
+      )
+    )
   );
 
   EXPECT_EQ(statement, Stmt(std::move(expected)));

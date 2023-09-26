@@ -285,3 +285,6 @@ auto Codegen::codegen(const BlockStmt& e) -> std::expected<bool, CodegenError> {
   return true;
 }
 
+auto Codegen::codegen(const IfStmt& e) -> std::expected<bool, CodegenError> {
+  return std::unexpected(Unimplemented{});
+}

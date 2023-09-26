@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
-#include "token.h"
 #include <variant>
 #include <vector>
 #include <iostream>
+#include <optional>
+#include <concepts>
+
+#include "token.h"
 
 namespace lev::ast {
   using lev::token::Token;
@@ -158,6 +161,25 @@ namespace lev::ast {
     friend auto operator==(const ExprStmt& e1, const ExprStmt& e2) -> bool;
   };
 
+
+  struct IfStmt {
+    struct Branch {
+      Expr condition;
+      std::unique_ptr<Stmt> body;
+
+      Branch(Expr condition, Stmt stmt);
+      friend auto operator==(const Branch& e1, const Branch& e2) -> bool;
+    };
+
+    Branch ifBranch;
+    std::vector<Branch> elseIfBranches;
+    std::optional<std::unique_ptr<Stmt>> elseBody;
+
+    IfStmt(Branch ifBranch, std::vector<Branch> elseIfBranches, std::optional<Stmt> elseBody);
+
+    friend auto operator==(const IfStmt& e1, const IfStmt& e2) -> bool;
+  };
+
   struct AssignStmt {
     Token identifier;
     std::unique_ptr<Expr> value;
@@ -170,12 +192,13 @@ namespace lev::ast {
     std::vector<Stmt> statements;
 
     BlockStmt(std::vector<Stmt> statements);
+    explicit BlockStmt(Stmt statement);
     friend auto operator==(const BlockStmt& e1, const BlockStmt& e2) -> bool;
   };
 
   class Stmt {
     private:
-      using Data = std::variant<VariableDeclaration, FunctionDeclaration, ExprStmt, AssignStmt, BlockStmt>;
+      using Data = std::variant<VariableDeclaration, FunctionDeclaration, ExprStmt, AssignStmt, BlockStmt, IfStmt>;
       Data mData;
 
     public:
@@ -184,6 +207,7 @@ namespace lev::ast {
       Stmt(ExprStmt data) : mData(std::move(data)) {}
       Stmt(AssignStmt data) : mData(std::move(data)) {}
       Stmt(BlockStmt data) : mData(std::move(data)) {}
+      Stmt(IfStmt data) : mData(std::move(data)) {}
 
       auto accept(const auto visitor) const -> decltype(std::visit(visitor, mData)) {
         return std::visit(visitor, mData);
