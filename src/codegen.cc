@@ -1,17 +1,12 @@
 #include "codegen.h"
 #include "parser.h"
 #include "scanner.h"
+#include "utils.h"
 
 #include <ranges>
 #include <variant>
 #include <string>
 #include <print>
-
-// https://en.cppreference.com/w/cpp/utility/variant/codegen
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
 
 using namespace lev::codegen;
 using namespace lev::parser;

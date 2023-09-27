@@ -1,6 +1,7 @@
 #include <cctype>
 #include <iostream>
 #include "scanner.h"
+#include "utils.h"
 
 using namespace lev::scanner;
 
@@ -238,21 +239,19 @@ auto Scanner::scan() -> std::expected<std::vector<Token>, ScannerError> {
 
 
 auto Scanner::printError(ScannerError error) -> void {
-  struct ErrorVistor {
-    auto operator()(const UnexpectedCharacter& err) const -> void {
+  static const auto visitor = overloaded {
+    [](const UnexpectedCharacter& err) -> void {
       std::cerr << "Got an unexpected character: " << err.character << "\n";
-    }
-    auto operator()(const InvalidNumber& err) const -> void {
+    },
+    [](const InvalidNumber& err) -> void {
       std::cerr << "Got an invalid number: " << err.lexeme << "\n";
-    }
-    auto operator()(const InvalidString& err) const -> void {
+    },
+    [](const InvalidString& err) -> void {
       std::cerr << "Got an invalid string: " << err.lexeme << "\n";
-    }
-    auto operator()(const UnterminatedString& err) const -> void {
+    },
+    [](const UnterminatedString& err) -> void {
       std::cerr << "Unterminated string: " << err.lexeme << "\n";
     }
   };
-
-  static ErrorVistor visitor;
   std::visit(visitor, error);
 }

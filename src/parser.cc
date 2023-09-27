@@ -1,5 +1,7 @@
 #include "parser.h"
 #include "scanner.h"
+#include "utils.h"
+
 #include <print>
 #include <memory>
 #include <ranges>
@@ -438,16 +440,15 @@ auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParserError> {
 }
 
 auto Parser::printError(ParserError error) -> void {
-  struct ErrorVistor {
-    auto operator()(const UnexpectedToken& err) const -> void {
-      std::println(stderr, "ERROR: Got an unexpected token `{}` expected `{}", tokenTypeToString(err.found), tokenTypeToString(err.required));
-    }
-    auto operator()(const Unimplemented& err) const -> void {
-      std::println(stderr, "ERROR: Unimplemented!");
+  static const auto visitor = overloaded {
+    [](const UnexpectedToken &err) -> void {
+      std::println(stderr, "PARSER ERROR: Got an unexpected token `{}` expected `{}",
+        tokenTypeToString(err.found), tokenTypeToString(err.required));
+    },
+    [](const Unimplemented &err) -> void {
+      std::println(stderr, "PARSER ERROR: Unimplemented!");
     }
   };
-
-  static ErrorVistor visitor;
   std::visit(visitor, error);
 }
 
