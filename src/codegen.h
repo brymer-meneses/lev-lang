@@ -8,6 +8,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
+#include <source_location>
 
 #include "ast.h"
 #include "context.h"
@@ -16,10 +17,26 @@ namespace lev::codegen {
   using namespace lev::ast;
   using namespace lev::semantics;
 
-  struct InvalidUnaryType {};
-  struct Unimplemented {};
-  struct UndefinedVariable {};
-  struct IllFormed {};
+  struct InvalidUnaryType {
+    std::source_location location;
+    InvalidUnaryType(const std::source_location loc = std::source_location::current())
+        : location(loc) {}
+  };
+  struct Unimplemented {
+    std::source_location location;
+    Unimplemented(const std::source_location loc = std::source_location::current())
+        : location(loc) {}
+  };
+  struct UndefinedVariable {
+    std::source_location location;
+    UndefinedVariable(const std::source_location loc = std::source_location::current())
+        : location(loc) {}
+  };
+  struct IllFormed {
+    std::source_location location;
+    IllFormed(const std::source_location loc = std::source_location::current())
+        : location(loc) {}
+  };
 
   using CodegenError = std::variant<InvalidUnaryType, UndefinedVariable, Unimplemented, IllFormed>;
 

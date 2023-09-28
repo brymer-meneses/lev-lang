@@ -54,8 +54,8 @@ auto Codegen::dump() const -> std::string {
 
 auto Codegen::reportErrors(CodegenError error) -> void {
   std::visit(overloaded {
-    [](const Unimplemented&){ 
-      std::println("Unimplemented error");
+    [](const Unimplemented& e){ 
+      std::println("Unimplemented error {}", e.location.function_name());
     },
     [](const UndefinedVariable&){ 
       std::println("Undefined variable error");
@@ -63,8 +63,8 @@ auto Codegen::reportErrors(CodegenError error) -> void {
     [](const InvalidUnaryType&){ 
       std::println("Invalid unary error");
     },
-    [](const IllFormed&){ 
-      std::println("Illformed error");
+    [](const IllFormed& e){ 
+      std::println("Illformed error {} at {}", e.location.function_name(), e.location.line());
     }
   }, error);
 }
@@ -212,41 +212,130 @@ auto Codegen::codegen(const BinaryExpr& e) -> std::expected<llvm::Value*, Codege
   }
 
   const auto type = mSemanticContext.inferType(e);
+  if (not type) {
+    mSemanticContext.reportError(type.error());
+    exit(1);
+  }
+
+  const auto isFloat = mSemanticContext.isFloat(*type);
+  const auto isInteger = mSemanticContext.isInteger(*type);
+  const auto isSigned = mSemanticContext.isSigned(*type);
 
   switch (e.op.type) {
     case TokenType::Plus:
       // TODO: create type is integer/ type is unsigned
-      if (type == ast::Type::i32) {
-        return mBuilder->CreateAdd(*left, *right, "addtmpsi");
-      } else if (type == ast::Type::f32) {
-        return mBuilder->CreateFAdd(*left, *right, "addtmpf");
-      }
-    case TokenType::Minus:
-      if (type == ast::Type::i32) {
-        return mBuilder->CreateSub(*left, *right, "subtmpsi");
-      } else if (type == ast::Type::f32) {
-        return mBuilder->CreateFSub(*left, *right, "subtmpf");
-      }
-    case TokenType::Star:
-      if (type == ast::Type::i32) {
-        return mBuilder->CreateMul(*left, *right, "multmpsi");
-      } else if (type == ast::Type::f32) {
-        return mBuilder->CreateFMul(*left, *right, "multmpf");
-      }
-    case TokenType::Slash:
-      if (type == ast::Type::i32) {
-        return mBuilder->CreateSDiv(*left, *right, "divtmpsi");
-      } else if (type == ast::Type::f32) {
-        return mBuilder->CreateFDiv(*left, *right, "divtmpf");
+      if (isInteger) {
+        return mBuilder->CreateAdd(*left, *right, "addtmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFAdd(*left, *right, "addtmp");
+      } else {
+        return std::unexpected(IllFormed{});
       }
 
-    case TokenType::Greater:
-    case TokenType::GreaterEqual:
-    case TokenType::Less:
-    case TokenType::LessEqual:
-    case TokenType::Bang:
+    case TokenType::Minus:
+      if (isInteger) {
+        return mBuilder->CreateSub(*left, *right, "subtmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFSub(*left, *right, "subtmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+
+    case TokenType::Star:
+      if (isInteger) {
+        return mBuilder->CreateMul(*left, *right, "multmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFMul(*left, *right, "multmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+
+    case TokenType::Slash:
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateSDiv(*left, *right, "divtmp");
+        } else {
+          return mBuilder->CreateUDiv(*left, *right, "divtmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFDiv(*left, *right, "divtmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+
+    case TokenType::Greater: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSGT(*left, *right, "getmp");
+        } else {
+          return mBuilder->CreateICmpUGT(*left, *right, "getmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUGT(*left, *right, "getmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+    }
+    case TokenType::GreaterEqual: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSGE(*left, *right, "getmp");
+        } else {
+          return mBuilder->CreateICmpUGE(*left, *right, "getmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUEQ(*left, *right, "getmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+    }
+    case TokenType::Less: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSLT(*left, *right, "ltmp");
+        } else {
+          return mBuilder->CreateICmpULT(*left, *right, "ltmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpULT(*left, *right, "ltmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+    }
+    case TokenType::LessEqual: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSLE(*left, *right, "letmp");
+        } else {
+          return mBuilder->CreateICmpULE(*left, *right, "letmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpULE(*left, *right, "letmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+    }
     case TokenType::BangEqual:
-    // TODO: implement this
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpNE(*left, *right, "netmp");
+        } else {
+          return mBuilder->CreateICmpNE(*left, *right, "netmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUNE(*left, *right, "netmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+    case TokenType::EqualEqual:
+      if (isInteger) {
+        return mBuilder->CreateICmpEQ(*left, *right, "eetmp");
+      } else if (isFloat) {
+        return mBuilder->CreateICmpEQ(*left, *right, "eetmp");
+      } else {
+        return std::unexpected(IllFormed{});
+      }
+      
     default:
       return std::unexpected(Unimplemented{});
   }
@@ -273,7 +362,8 @@ auto Codegen::codegen(const AssignStmt& e) -> std::expected<bool, CodegenError> 
   if (not newValue) {
     return std::unexpected(newValue.error());
   }
-  return mBuilder->CreateStore(variable, *newValue);
+  mBuilder->CreateStore(*newValue, variable);
+  return true;
 }
 
 auto Codegen::codegen(const BlockStmt& e) -> std::expected<bool, CodegenError> {
@@ -300,5 +390,56 @@ auto Codegen::codegen(const ReturnStmt& s) -> std::expected<bool, CodegenError> 
 }
 
 auto Codegen::codegen(const IfStmt& e) -> std::expected<bool, CodegenError> {
-  return std::unexpected(Unimplemented{});
+
+  auto* function = mBuilder->GetInsertBlock()->getParent();
+  if (function == nullptr) {
+    return std::unexpected(IllFormed{});
+  }
+
+  auto* mergeBB = BasicBlock::Create(*mContext, "ifend", function);
+
+  static const auto codegenBranch = 
+    [this, &function, &mergeBB] (const IfStmt::Branch& branch) -> std::expected<BasicBlock*, CodegenError> {
+    auto condition = codegenExpr(branch.condition);
+    if (not condition) {
+      return std::unexpected(condition.error());
+    }
+
+    condition = mBuilder->CreateICmpEQ(*condition, mBuilder->getTrue(), "ifcond");
+    
+    auto* thenBB = BasicBlock::Create(*mContext, "then", function);
+    auto* elseBB = BasicBlock::Create(*mContext, "else", function);
+
+    mBuilder->CreateCondBr(*condition, thenBB, elseBB);
+    mBuilder->SetInsertPoint(thenBB);
+
+    // codegen the then body
+    codegenStmt(*branch.body);
+    mBuilder->CreateBr(mergeBB);
+    mBuilder->SetInsertPoint(elseBB);
+
+    return elseBB;
+  };
+
+  auto lastBB = codegenBranch(e.ifBranch);
+  if (not lastBB) {
+    return std::unexpected(lastBB.error());
+  }
+
+  for (auto i = 0; i < e.elseIfBranches.size(); i++) {
+    lastBB = codegenBranch(e.elseIfBranches[i]);
+    if (not lastBB) {
+      return std::unexpected(lastBB.error());
+    }
+  }
+
+  if (e.elseBody) {
+    codegenStmt(**e.elseBody);
+    mBuilder->CreateBr(mergeBB);
+  }
+
+  mergeBB->moveAfter(*lastBB);
+  mBuilder->SetInsertPoint(mergeBB);
+
+  return true;
 }

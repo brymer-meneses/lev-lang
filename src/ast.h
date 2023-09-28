@@ -222,6 +222,17 @@ namespace lev::ast {
         return std::visit(visitor, mData);
       }
 
+      template <typename T>
+      auto holds() const -> bool {
+        return std::holds_alternative<T>(mData);
+      }
+
+      template <typename T>
+      auto get() const -> const T& {
+        return std::get<T>(mData);
+      }
+
+
       friend auto operator==(const Stmt& e1, const Stmt& e2) -> bool;
   };
 }

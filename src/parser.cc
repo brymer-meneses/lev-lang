@@ -56,6 +56,14 @@ auto Parser::match(TokenType type) -> bool {
   return false;
 }
 
+auto Parser::check(TokenType type) const -> bool {
+  if (isAtEnd()) return false;
+  if (type == peek().type) {
+    return true;
+  }
+  return false;
+}
+
 auto Parser::expect(TokenType type) -> std::optional<Token> {
   if (isAtEnd()) return std::nullopt;
 
@@ -234,7 +242,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParserError> {
 
 auto Parser::parseBlock() -> std::expected<Stmt, ParserError> {
   auto statements = std::vector<Stmt>{};
-  while (not match(TokenType::Dedent)) {
+  while (not match(TokenType::Dedent) and not isAtEnd()) {
     while (match(TokenType::Newline)) {
       continue;
     }
@@ -382,6 +390,8 @@ auto Parser::parseBinaryOpRHS(int exprPrec, Expr lhs) -> std::expected<Expr, Par
       case TokenType::LessEqual:
       case TokenType::Greater:
       case TokenType::GreaterEqual:
+      case TokenType::EqualEqual:
+      case TokenType::BangEqual:
         return 10;
       case TokenType::Plus:
       case TokenType::PlusEqual:

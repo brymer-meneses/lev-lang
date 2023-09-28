@@ -46,6 +46,7 @@ namespace lev::parser {
       auto buildError() -> void;
 
       auto match(TokenType type) -> bool;
+      auto check(TokenType type) const -> bool;
       auto expect(TokenType type) -> std::optional<Token>;
 
       auto parseDeclaration() -> std::expected<Stmt, ParserError>;
