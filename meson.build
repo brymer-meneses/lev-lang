@@ -1,11 +1,6 @@
 project('lev', 'cpp', version: '0.0.1')
 
 sources = [
-  'src/ast.cc',
-  'src/scanner.cc',
-  'src/parser.cc',
-  'src/codegen.cc',
-  'src/context.cc'
 ]
 
 cpp_args = [
@@ -41,9 +36,6 @@ executable(
   sources: 'src/main.cc', 
   cpp_args: cpp_args, 
   link_with: liblev,
-  dependencies: [
-    llvm_dep,
-  ],
 )
 
 gtest = subproject('gtest')
@@ -52,10 +44,6 @@ gmock_dep = gtest.get_variable('gmock_dep')
 
 test_sources = [
   'tests/test_runner.cc',
-  'tests/test_scanner.cc',
-  'tests/test_parser.cc',
-  'tests/test_ast.cc',
-  'tests/test_codegen.cc',
 ]
 
 test_runner = executable(
@@ -64,7 +52,6 @@ test_runner = executable(
   dependencies: [
     gtest_dep,
     gmock_dep,
-    llvm_dep,
   ],
   cpp_args: cpp_args,
   link_with: liblev,
