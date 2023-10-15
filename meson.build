@@ -1,6 +1,11 @@
 project('lev', 'cpp', version: '0.0.1')
 
 sources = [
+  'src/parsing/lexer.cc',
+  'src/reporter.cc',
+  'src/lev.cc',
+  'src/sourceContext.cc',
+  'src/reporter.cc',
 ]
 
 cpp_args = [
@@ -29,6 +34,7 @@ liblev = static_library(
   dependencies: [
     llvm_dep,
   ],
+  include_directories: ['src']
 )
 
 executable(
@@ -44,6 +50,7 @@ gmock_dep = gtest.get_variable('gmock_dep')
 
 test_sources = [
   'tests/test_runner.cc',
+  'tests/test_lexer.cc',
 ]
 
 test_runner = executable(
