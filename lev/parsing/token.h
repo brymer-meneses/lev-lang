@@ -1,10 +1,15 @@
 #pragma once
 #include "../sourceLocation.h"
 
+namespace lev {
+
 enum class TokenType {
   Number,
   String,
+  Boolean,
+
   Identifier,
+  Let,
 
   While,
   For,
@@ -47,6 +52,8 @@ enum class TokenType {
   LessEqual,
   Greater,
   GreaterEqual,
+
+  End,
 };
 
 struct Token {
@@ -59,3 +66,5 @@ struct Token {
     , lexeme(lexeme)
     , location(location) {}
 };
+
+}

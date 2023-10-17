@@ -5,6 +5,8 @@
 
 #include "lev.h"
 
+using namespace lev;
+
 Reporter::Reporter() {}
 
 auto Reporter::report(LevError error) -> void {

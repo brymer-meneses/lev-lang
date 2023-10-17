@@ -1,11 +1,16 @@
 project('lev', 'cpp', version: '0.0.1')
 
 sources = [
-  'src/parsing/lexer.cc',
-  'src/reporter.cc',
-  'src/lev.cc',
-  'src/sourceContext.cc',
-  'src/reporter.cc',
+  'lev/parsing/lexer.cc',
+  'lev/parsing/ast.cc',
+  'lev/parsing/parser.cc',
+
+  'lev/diagnostics/reporter.cc',
+  'lev/diagnostics/errors.cc',
+
+  'lev/sourceContext.cc',
+  'lev/sourceLocation.cc',
+  'lev/lev.cc',
 ]
 
 cpp_args = [
@@ -34,12 +39,12 @@ liblev = static_library(
   dependencies: [
     llvm_dep,
   ],
-  include_directories: ['src']
+  include_directories: ['lev']
 )
 
 executable(
   'lev', 
-  sources: 'src/main.cc', 
+  sources: 'lev/main.cc', 
   cpp_args: cpp_args, 
   link_with: liblev,
 )
@@ -62,7 +67,7 @@ test_runner = executable(
   ],
   cpp_args: cpp_args,
   link_with: liblev,
-  include_directories: ['src'],
+  include_directories: ['lev'],
 )
 
 test('lev-tester', test_runner)

@@ -1,7 +1,11 @@
 
-#include "sourceContext.h"
 #include <print>
 #include <fstream>
+
+#include <lev/utils.h>
+#include <lev/sourceContext.h>
+
+using namespace lev;
 
 auto SourceContext::getLine(std::string_view filename, size_t line) const -> std::optional<std::string> {
   auto key = std::string(filename);
@@ -38,13 +42,11 @@ auto SourceContext::addSourceFile(std::string_view filename) -> void {
   std::ifstream file(filename);
 
   if (mFilenamesToSourceLines.contains(std::string(filename))) {
-    std::println(stderr, "The file {} already exists in the source context.", filename);
-    exit(1);
+    RAISE_INTERNAL_ERROR("The file {} already exists in the source context.", filename);
   }
 
   if (!file.is_open()) {
-    std::println(stderr, "Invalid file {}", filename);
-    exit(1);
+    RAISE_INTERNAL_ERROR("Invalid file {}", filename);
   }
 
   std::string line;

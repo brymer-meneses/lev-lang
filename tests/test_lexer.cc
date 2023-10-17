@@ -3,6 +3,8 @@
 #include <print>
 #include <ranges>
 
+using namespace lev;
+
 auto verifyTokens(std::string_view source,
                   const std::initializer_list<const char*> lexemes,
                   const std::initializer_list<TokenType> types) {
@@ -17,7 +19,7 @@ auto verifyTokens(std::string_view source,
     FAIL() << tokens.error().message();
   }
 
-  ASSERT_EQ(tokens->size(), lexemes.size());
+  ASSERT_EQ(tokens->size(), lexemes.size() + 1);
 
   for (const auto& [token, lexeme, type] : std::views::zip(*tokens, lexemes, types)) {
     EXPECT_EQ(token.lexeme, lexeme) << std::format("Got mismatched lexeme expected: `{}` got: `{}`", lexeme, token.lexeme);

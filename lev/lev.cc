@@ -1,8 +1,11 @@
-#include "lev.h"
 #include <fstream>
 #include <sstream>
 #include <print>
 #include <assert.h>
+
+#include <lev/lev.h>
+
+using namespace lev;
 
 Lev::Lev(const char** argv) {
   processCommandLineArgs(argv);
@@ -42,10 +45,11 @@ auto Lev::lex() -> std::vector<Token> {
     auto error = tokens.error();
     auto sourceLine = mSourceContext.getSourceLineFromLocation(error.location());
 
-    assert(sourceLine.has_value());
+    if (not sourceLine) {
+      RAISE_INTERNAL_ERROR("Error getting source line from location");
+    }
 
     mReporter.report({error, *sourceLine});
-    exit(1);
   }
   return *tokens;
 }

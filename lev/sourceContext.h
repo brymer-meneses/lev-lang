@@ -2,7 +2,9 @@
 #include <vector>
 #include <map>
 
-#include "sourceLocation.h"
+#include <lev/sourceLocation.h>
+
+namespace lev {
 
 class SourceContext {
 
@@ -21,3 +23,4 @@ class SourceContext {
     std::map<std::string, SourceLines> mFilenamesToSourceLines;
 };
 
+}

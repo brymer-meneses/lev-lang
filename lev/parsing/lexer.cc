@@ -1,19 +1,24 @@
 
-#include "lexer.h"
 #include <ctype.h>
 #include <map>
 #include <print>
 
+#include <lev/parsing/lexer.h>
+
+using namespace lev;
+
 auto Lexer::lex() -> std::expected<std::vector<Token>, LexingError>{
   std::vector<Token> tokens;
-  while (not isAtEnd()) {
 
+  while (not isAtEnd()) {
     auto token = lexNextToken();
     if (not token) {
       return std::unexpected(token.error());
     }
     tokens.push_back(*token);
   }
+
+  tokens.emplace_back(Token(TokenType::End, "", getCurrentLocation()));
   return tokens;
 }
 
@@ -98,8 +103,7 @@ auto Lexer::lexNextToken() -> std::expected<Token, LexingError> {
       } else if (std::isalnum(c) or c == '_') {
         return lexIdentifier();
       } else {
-        auto pos = mLastNewline - mCurrent;
-        return std::unexpected(LexingError::UnexpectedCharacter(c, SourceLocation(pos, pos, mLine)));
+        return std::unexpected(LexingError::UnexpectedCharacter(c, getPrevCharLocation()));
       }
   }
 
@@ -116,8 +120,7 @@ auto Lexer::lexNumber() -> std::expected<Token, LexingError> {
   while (std::isdigit(peek()) or peek() == '.') {
     if (peek() == '.') {
       if (didVisitPoint) {
-        auto pos = mLastNewline - mCurrent;
-        return std::unexpected(LexingError::RedundantDecimalPoint(SourceLocation(pos, pos, mLine)));
+        return std::unexpected(LexingError::RedundantDecimalPoint(getCurrentLocation()));
       }
       didVisitPoint = true;
     }
@@ -143,6 +146,7 @@ auto Lexer::lexIdentifier() -> std::expected<Token, LexingError> {
     {"not", TokenType::Not},
     {"or", TokenType::Or},
     {"and", TokenType::And},
+    {"let", TokenType::Let}
   };
 
   while (std::isalnum(peek()) or peek() == '_') {
@@ -161,7 +165,7 @@ auto Lexer::lexIdentifier() -> std::expected<Token, LexingError> {
 auto Lexer::lexString() -> std::expected<Token, LexingError> {
   while (peek() != '"') {
     if (isAtEnd()) {
-      return std::unexpected(LexingError::UnterminatedString(getCharLocation(-1)));
+      return std::unexpected(LexingError::UnterminatedString(getPrevCharLocation()));
     }
     advance();
   }
@@ -182,8 +186,13 @@ auto Lexer::getCurrentLocation() -> SourceLocation {
   return SourceLocation(mFilename, mLastNewline - mStart, mLastNewline - mCurrent, mLine);
 }
 
-auto Lexer::getCharLocation(int offset) -> SourceLocation {
-  auto pos = mLastNewline - mCurrent + offset;
+auto Lexer::getCurrentCharLocation() -> SourceLocation {
+  auto pos = mLastNewline - mCurrent;
+  return SourceLocation(mFilename, pos, pos, mLine);
+}
+
+auto Lexer::getPrevCharLocation() -> SourceLocation {
+  auto pos = mLastNewline - mCurrent - 1;
   return SourceLocation(mFilename, pos, pos, mLine);
 }
 

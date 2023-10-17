@@ -1,12 +1,13 @@
 #pragma once
 #include <expected>
 #include <vector>
-#include "parsing/token.h"
-#include "parsing/lexer.h"
 
-#include "reporter.h"
-#include "sourceContext.h"
+#include <lev/parsing/token.h>
+#include <lev/parsing/lexer.h>
+#include <lev/diagnostics/reporter.h>
+#include <lev/sourceContext.h>
 
+namespace lev {
 
 class Lev {
 
@@ -26,3 +27,6 @@ private:
   auto processCommandLineArgs(const char**) -> void;
 
 };
+
+}
+
