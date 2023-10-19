@@ -39,6 +39,9 @@ auto Lexer::lexNextToken() -> std::expected<Token, LexingError> {
       mLine += 1;
       break;
 
+    case ':':
+      return buildToken(TokenType::Colon);
+
     case '+': 
       if (match('=')) {
         return buildToken(TokenType::PlusEqual);

@@ -5,88 +5,94 @@
 
 namespace lev {
 
-class BuiltinType {
-  public:
-    enum class Types {
-      i8,
-      u8,
-      i16,
-      u16,
-      i32,
-      u32,
-      i64,
-      u64,
-      f32,
-      f64,
-    };
-
-    Types type;
-
-  public:
-    static constexpr auto i8() -> BuiltinType {
-      return BuiltinType(Types::i8);
-    }
-    static constexpr auto i16() -> BuiltinType {
-      return BuiltinType(Types::i16);
-    }
-    static constexpr auto i32() -> BuiltinType {
-      return BuiltinType(Types::i32);
-    }
-    static constexpr auto i64() -> BuiltinType {
-      return BuiltinType(Types::i64);
-    }
-
-    static constexpr auto u8() -> BuiltinType {
-      return BuiltinType(Types::u8);
-    }
-    static constexpr auto u16() -> BuiltinType {
-      return BuiltinType(Types::u16);
-    }
-    static constexpr auto u32() -> BuiltinType {
-      return BuiltinType(Types::u32);
-    }
-    static constexpr auto u64() -> BuiltinType {
-      return BuiltinType(Types::u64);
-    }
-
-    static constexpr auto f32() -> BuiltinType {
-      return BuiltinType(Types::f32);
-    }
-    static constexpr auto f64() -> BuiltinType {
-      return BuiltinType(Types::f64);
-    }
-
-  private:
-    constexpr BuiltinType(Types type) : type(type) {};
-};
-
-class GenericType {
-
-};
-
-class Inferred {};
-
-class UserDefinedType {
-  Token identifier;
-};
 
 class LevType {
-  using Type = std::variant<BuiltinType, GenericType, UserDefinedType, Inferred>;
+  public:
+    class Builtin {
+      public:
+        enum class Types {
+          i8,
+          u8,
+          i16,
+          u16,
+          i32,
+          u32,
+          i64,
+          u64,
+          f32,
+          f64,
+        };
+
+        Types type;
+
+      public:
+        static constexpr auto i8() -> Builtin {
+          return Builtin(Types::i8);
+        }
+        static constexpr auto i16() -> Builtin {
+          return Builtin(Types::i16);
+        }
+        static constexpr auto i32() -> Builtin {
+          return Builtin(Types::i32);
+        }
+        static constexpr auto i64() -> Builtin {
+          return Builtin(Types::i64);
+        }
+
+        static constexpr auto u8() -> Builtin {
+          return Builtin(Types::u8);
+        }
+        static constexpr auto u16() -> Builtin {
+          return Builtin(Types::u16);
+        }
+        static constexpr auto u32() -> Builtin {
+          return Builtin(Types::u32);
+        }
+        static constexpr auto u64() -> Builtin {
+          return Builtin(Types::u64);
+        }
+
+        static constexpr auto f32() -> Builtin {
+          return Builtin(Types::f32);
+        }
+        static constexpr auto f64() -> Builtin {
+          return Builtin(Types::f64);
+        }
+
+      private:
+        constexpr Builtin(Types type) : type(type) {};
+    };
+
+    class Generic {
+
+    };
+
+    class Inferred {};
+
+    struct UserDefined {
+      Token identifier;
+      constexpr explicit UserDefined(Token identifier) 
+        : identifier(identifier) {}
+    };
+
+  using ValueType = std::variant<Builtin, Generic, UserDefined, Inferred>;
 
   public:
 
     template <typename T>
-    requires std::is_constructible_v<Type, T>
-    LevType(T type) : type(type) {};
+    requires std::is_constructible_v<ValueType, T>
+    LevType(T value) : value(value) {};
 
     template <typename T>
-    requires std::is_constructible_v<Type, T>
+    requires std::is_constructible_v<ValueType, T>
     auto is() const -> bool {
-      return std::holds_alternative<T>(type);
+      return std::holds_alternative<T>(value);
     }
 
   private:
-    Type type;
+    ValueType value;
+
+  friend constexpr auto operator==(const LevType&, const LevType&) -> bool;
 };
 
 };

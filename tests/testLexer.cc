@@ -37,6 +37,7 @@ TEST(Lexer, SingleCharacterTokens) {
     TokenType::Greater,
     TokenType::Less,
     TokenType::Star,
+    TokenType::Colon,
   };
 
   auto lexemes = {
@@ -47,9 +48,10 @@ TEST(Lexer, SingleCharacterTokens) {
     ">",
     "<",
     "*",
+    ":",
   };
 
-  verifyTokens("= + - ! > < *", lexemes, types);
+  verifyTokens("= + - ! > < * :", lexemes, types);
 }
 
 TEST(Lexer, MultipleCharacterTokens) {

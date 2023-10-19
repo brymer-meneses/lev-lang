@@ -53,6 +53,8 @@ enum class TokenType {
   Greater,
   GreaterEqual,
 
+  Colon,
+
   End,
 };
 
@@ -61,7 +63,7 @@ struct Token {
   std::string_view lexeme;
   SourceLocation location;
 
-  Token(TokenType type, std::string_view lexeme, SourceLocation location)
+  constexpr Token(TokenType type, std::string_view lexeme, SourceLocation location)
     : type(type)
     , lexeme(lexeme)
     , location(location) {}

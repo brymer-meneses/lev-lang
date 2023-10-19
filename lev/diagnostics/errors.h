@@ -1,6 +1,7 @@
 #pragma once
 #include <variant>
 #include <format>
+#include <source_location>
 
 #include <lev/sourceLocation.h>
 #include <lev/parsing/token.h>
@@ -54,10 +55,19 @@ class ParsingError {
   public:
     struct UnexpectedToken {
       TokenType got;
+      TokenType expected;
+      std::string_view message;
       SourceLocation location;
 
-      UnexpectedToken(TokenType got, SourceLocation location)
+      UnexpectedToken(TokenType got, TokenType expected, SourceLocation location)
         : got(got)
+        , expected(expected)
+        , location(location) {}
+
+      UnexpectedToken(TokenType got, TokenType expected, std::string_view message, SourceLocation location)
+        : got(got)
+        , expected(got)
+        , message(message)
         , location(location) {}
 
       auto format() const -> std::string {
@@ -65,8 +75,20 @@ class ParsingError {
       }
     };
 
+    struct Unimplemented {
+
+      std::source_location location;
+
+      Unimplemented(const std::source_location location = std::source_location::current())
+          : location(location) {}
+
+      auto format() const -> std::string {
+        return std::format("Unimplemented Error at: {}{} {}", location.line(), location.file_name(), location.column());
+      }
+    };
+
   private:
-    using Error = std::variant<UnexpectedToken>;
+    using Error = std::variant<UnexpectedToken, Unimplemented>;
     Error mError;
 
   public:
@@ -76,10 +98,6 @@ class ParsingError {
 
     auto accept(auto visitor) -> decltype(auto) {
       return std::visit(visitor, mError);
-    }
-
-    auto location() const -> SourceLocation {
-      return std::visit([](const auto& e) { return e.location; }, mError);
     }
 
     auto message() const -> std::string {

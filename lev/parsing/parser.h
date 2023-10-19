@@ -14,7 +14,7 @@ class Parser {
 
   private:
     std::vector<Token> mTokens;
-    size_t mCurrent;
+    size_t mCurrent = 0;
 
   public:
     Parser() = default;
@@ -34,8 +34,15 @@ class Parser {
     auto parseLiteralExpr() -> std::expected<Expr, ParsingError>;
     auto parseUnaryExpr() -> std::expected<Expr, ParsingError>;
 
+    auto parseType() -> std::expected<LevType, ParsingError>;
+
     auto match(TokenType type) -> bool;
     auto match(std::initializer_list<TokenType> types) -> bool;
+    auto check(TokenType type) const -> bool;
+
+    auto expect(TokenType type, std::string_view message) -> std::expected<Token, ParsingError>;
+    auto expect(TokenType type) -> std::expected<Token, ParsingError>;
+
     auto getCurrentLocation() -> SourceLocation;
     auto peek() const -> const Token&;
     auto peekPrev() const -> const Token&;

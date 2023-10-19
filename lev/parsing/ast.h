@@ -48,6 +48,8 @@ struct Expr {
 
   private:
     ValueType value;
+
+    friend constexpr auto operator==(const Expr& s1, const Expr& s2) -> bool;
 };
 
 struct VariableDeclaration {
@@ -87,11 +89,13 @@ struct Stmt {
     };
 
     template <typename T>
-    requires std::is_constructible_v<T, ValueType>
-    Stmt(T value) : value(value) {}
+    requires std::is_constructible_v<ValueType, T>
+    Stmt(T value) : value(std::move(value)) {}
 
   private:
     ValueType value;
+
+    friend constexpr auto operator==(const Stmt& s1, const Stmt& s2) -> bool;
 };
 
 };
