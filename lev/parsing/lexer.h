@@ -38,6 +38,10 @@ class Lexer {
     auto lexNumber() -> std::expected<Token, LexingError>;
     auto lexString() -> std::expected<Token, LexingError>;
     auto lexIdentifier() -> std::expected<Token, LexingError>;
+    auto lexIndentation() -> std::expected<Token, LexingError>;
+
+    auto skipWhitespaces() -> void;
+    auto skipComments() -> void;
 
     auto getCurrentLocation() -> SourceLocation;
     auto getPrevCharLocation() -> SourceLocation;
@@ -46,8 +50,15 @@ class Lexer {
     auto advance() -> char;
     [[nodiscard]] auto buildToken(TokenType type) -> Token;
     [[nodiscard]] auto isAtEnd() const -> bool;
+
     [[nodiscard]] auto match(const char expected) -> bool;
+    [[nodiscard]] auto match(std::initializer_list<const char>) -> bool;
+
+    [[nodiscard]] auto check(const char expected) const -> bool;
+    [[nodiscard]] auto check(std::initializer_list<const char>) const -> bool;
+
     [[nodiscard]] auto peek() const -> char;
+    [[nodiscard]] auto peekNext() const -> char;
     [[nodiscard]] auto peekPrev() const -> char;
 
 };

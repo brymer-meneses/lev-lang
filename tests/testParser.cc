@@ -29,17 +29,17 @@ static SourceLocation DUMMY_SOURCE_LOCATION("testing.lev", 0, 0, 1);
 TEST(Parser, VariableDeclaration) {
   verifyStatement(
       "let variable: i32 = 5",
-      VariableDeclaration(
+      Stmt::VariableDeclaration(
           Token(TokenType::Identifier, "variable", DUMMY_SOURCE_LOCATION),
           LevType::Builtin::i32(),
-          LiteralExpr(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
+          Expr::Literal(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
 
   verifyStatement(
       "let variable = 5",
-      VariableDeclaration(
+      Stmt::VariableDeclaration(
           Token(TokenType::Identifier, "variable", DUMMY_SOURCE_LOCATION),
           LevType::Inferred(),
-          LiteralExpr(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
+          Expr::Literal(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
 }
 
 TEST(Parser, FunctionDeclaration) {

@@ -60,7 +60,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParsingError> {
 
   auto value = parseExpression();
 
-  return VariableDeclaration(*identifier, *type, std::move(*value));
+  return Stmt::VariableDeclaration(*identifier, *type, std::move(*value));
 }
 
 auto Parser::parseType() -> std::expected<LevType, ParsingError> {
@@ -102,7 +102,7 @@ auto Parser::parseExpression() -> std::expected<Expr, ParsingError> {
 
 auto Parser::parseLiteralExpr() -> std::expected<Expr, ParsingError> {
   if (match({TokenType::Number, TokenType::String, TokenType::Identifier, TokenType::Boolean})) {
-    return LiteralExpr(peekPrev());
+    return Expr::Literal(peekPrev());
   }
 
   return std::unexpected(ParsingError::Unimplemented());

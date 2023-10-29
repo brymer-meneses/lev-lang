@@ -11,31 +11,30 @@ namespace lev {
 struct Expr;
 struct Stmt;
 
-struct BinaryExpr;
-struct UnaryExpr;
-
-struct BinaryExpr {
-  std::unique_ptr<Expr> left;
-  std::unique_ptr<Expr> right;
-  Token op;
-
-  explicit BinaryExpr(Expr left, Expr right, Token op);
-};
-
-struct UnaryExpr {
-  std::unique_ptr<Expr> right;
-  Token op;
-
-  explicit UnaryExpr(Expr right, Token op);
-};
-
-struct LiteralExpr {
-  Token value;
-  explicit LiteralExpr(Token value);
-};
 
 struct Expr {
-  using ValueType = std::variant<BinaryExpr, UnaryExpr, LiteralExpr>;
+
+  struct Binary {
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    Token op;
+
+    explicit Binary(Expr left, Expr right, Token op);
+  };
+
+  struct Unary {
+    std::unique_ptr<Expr> right;
+    Token op;
+
+    explicit Unary(Expr right, Token op);
+  };
+
+  struct Literal {
+    Token value;
+    explicit Literal(Token value);
+  };
+
+  using ValueType = std::variant<Binary, Unary, Literal>;
 
   public:
     auto accept(auto visitor) -> decltype(auto) {
@@ -52,36 +51,38 @@ struct Expr {
     friend constexpr auto operator==(const Expr& s1, const Expr& s2) -> bool;
 };
 
-struct VariableDeclaration {
-  Token identifier;
-  LevType type;
-  Expr value;
-
-  explicit VariableDeclaration(Token identifier, LevType type, Expr value);
-};
-
-struct FunctionArgument {
-  Token identifier;
-  LevType type;
-
-  explicit FunctionArgument(Token identifier, LevType type);
-};
-
-struct FunctionDeclaration {
-  Token identifier;
-  std::vector<FunctionArgument> arguments;
-  LevType returnType;
-
-  explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type);
-};
-
-struct BlockStmt {
-  std::vector<Stmt> statements;
-  explicit BlockStmt(std::vector<Stmt> statements);
-};
 
 struct Stmt {
-  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, BlockStmt>;
+
+  struct VariableDeclaration {
+    Token identifier;
+    LevType type;
+    Expr value;
+
+    explicit VariableDeclaration(Token identifier, LevType type, Expr value);
+  };
+
+  struct FunctionArgument {
+    Token identifier;
+    LevType type;
+
+    explicit FunctionArgument(Token identifier, LevType type);
+  };
+
+  struct FunctionDeclaration {
+    Token identifier;
+    std::vector<FunctionArgument> arguments;
+    LevType returnType;
+
+    explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type);
+  };
+
+  struct Block {
+    std::vector<Stmt> statements;
+    explicit Block(std::vector<Stmt> statements);
+  };
+
+  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block>;
 
   public:
     auto accept(auto visitor) -> decltype(auto) {

@@ -22,6 +22,7 @@ auto Lexer::lex() -> std::expected<std::vector<Token>, LexingError>{
   return tokens;
 }
 
+
 auto Lexer::lexNextToken() -> std::expected<Token, LexingError> {
   auto c = advance();
 
@@ -179,6 +180,30 @@ auto Lexer::lexString() -> std::expected<Token, LexingError> {
   return buildToken(TokenType::String);
 }
 
+auto Lexer::lexIndentation() -> std::expected<Token, LexingError> {
+
+}
+
+auto Lexer::skipWhitespaces() -> void {
+  while (check({' ', '\r', '\t'})) {
+    mStart = mCurrent;
+    advance();
+  }
+}
+
+auto Lexer::skipComments() -> void {
+  // while (true) {
+  //   if (peek() == '\\' and peekNext() == '\\') {
+  //     mCurrent += 2;
+  //   }
+  //
+  //   while (not peek('\n')) {
+  //     mCurrent += 1;
+  //   }
+  // }
+  // return c;
+};
+
 auto Lexer::buildToken(TokenType type) -> Token {
   auto token = Token(type, mSource.substr(mStart, mCurrent - mStart), getCurrentLocation());
   mStart = mCurrent;
@@ -213,13 +238,45 @@ auto Lexer::match(const char expected) -> bool {
     mCurrent += 1;
     return true;
   }
+  return false;
+}
 
+auto Lexer::match(std::initializer_list<const char> chars) -> bool {
+  for (auto c : chars) {
+    if (peek() == c) {
+      mCurrent += 1;
+      return true;
+    }
+  }
+  return false;
+}
+
+auto Lexer::check(const char expected) const -> bool {
+  if (peek() == expected) {
+    return true;
+  }
+  return false;
+}
+
+auto Lexer::check(std::initializer_list<const char> chars) const -> bool {
+  for (auto c : chars) {
+    if (peek() == c) {
+      return true;
+    }
+  }
   return false;
 }
 
 auto Lexer::peek() const -> char {
   if (isAtEnd()) return '\0';
   return mSource.at(mCurrent);
+}
+
+auto Lexer::peekNext() const -> char {
+  if (mCurrent + 1 >= mSource.length()) 
+    return '\0';
+
+  return mSource.at(mCurrent + 1);
 }
 
 auto Lexer::peekPrev() const -> char {
