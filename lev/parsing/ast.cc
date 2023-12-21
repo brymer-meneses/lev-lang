@@ -26,7 +26,9 @@ Stmt::FunctionArgument::FunctionArgument(Token identifier, LevType type)
 Stmt::FunctionDeclaration::FunctionDeclaration(
     Token identifier, 
     std::vector<FunctionArgument> arguments, 
-    LevType type)
+    LevType type,
+    Stmt body)
   : identifier(identifier)
   , arguments(std::move(arguments))
-  , returnType(type) {}
+  , returnType(type) 
+  , body(std::make_unique<Stmt>(std::move(body))) {}

@@ -37,7 +37,45 @@ auto Parser::parseDeclaration() -> std::expected<Stmt, ParsingError> {
 }
 
 auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParsingError> {
-  return std::unexpected(ParsingError::Unimplemented());
+  auto identifier = expect(TokenType::Identifier);
+  if (not identifier) {
+    return std::unexpected(identifier.error());
+  }
+
+  CONSUME(TokenType::LeftParen);
+
+  auto arguments = std::vector<Stmt::FunctionArgument>{};
+
+  while (not match(TokenType::RightParen)) {
+    auto argName = expect(TokenType::Identifier);
+    if (not argName) {
+      return std::unexpected(argName.error());
+    }
+
+    CONSUME(TokenType::Colon);
+
+    auto type = parseType();
+    if (not type) {
+      return std::unexpected(type.error());
+    }
+
+    arguments.push_back(Stmt::FunctionArgument(*identifier, *type));
+
+    if (not check(TokenType::RightParen)) {
+      CONSUME(TokenType::Comma);
+    }
+  }
+
+  CONSUME(TokenType::RightArrow);
+  auto returnType = parseType();
+
+  auto body = parseStatement();
+
+  if (not body) {
+    return std::unexpected(body.error());
+  }
+
+  return Stmt::FunctionDeclaration(*identifier, std::move(arguments), *returnType, std::move(*body));
 }
 
 
@@ -93,6 +131,10 @@ auto Parser::parseType() -> std::expected<LevType, ParsingError> {
 }
 
 auto Parser::parseStatement() -> std::expected<Stmt, ParsingError> {
+  if (match(TokenType::Let)) {
+    return parseVariableDeclaration();
+  }
+
   return std::unexpected(ParsingError::Unimplemented());
 }
 

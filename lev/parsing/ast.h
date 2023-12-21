@@ -8,10 +8,6 @@
 
 namespace lev {
 
-struct Expr;
-struct Stmt;
-
-
 struct Expr {
 
   struct Binary {
@@ -73,8 +69,9 @@ struct Stmt {
     Token identifier;
     std::vector<FunctionArgument> arguments;
     LevType returnType;
+    std::unique_ptr<Stmt> body;
 
-    explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type);
+    explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type, Stmt body);
   };
 
   struct Block {

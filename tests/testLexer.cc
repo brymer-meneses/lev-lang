@@ -38,6 +38,7 @@ TEST(Lexer, SingleCharacterTokens) {
     TokenType::Less,
     TokenType::Star,
     TokenType::Colon,
+    TokenType::Semicolon,
   };
 
   auto lexemes = {
@@ -49,9 +50,10 @@ TEST(Lexer, SingleCharacterTokens) {
     "<",
     "*",
     ":",
+    ";"
   };
 
-  verifyTokens("= + - ! > < * :", lexemes, types);
+  verifyTokens("= + - ! > < * : ;", lexemes, types);
 }
 
 TEST(Lexer, MultipleCharacterTokens) {
@@ -163,4 +165,18 @@ TEST(Lexer, String) {
   };
 
   verifyTokens("\"the quick brown fox jumped over the lazy cat!\" \"Hello there, someone reading the code!\"", lexemes, types);
+}
+
+TEST(Lexer, SkipComments) {
+  auto types = {
+    TokenType::Function,
+    TokenType::If,
+  };
+
+  auto lexemes = {
+    "fn",
+    "if"
+  };
+
+  verifyTokens("// this should be ignored\n fn if", lexemes, types);
 }

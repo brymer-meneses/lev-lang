@@ -54,6 +54,8 @@ enum class TokenType {
   GreaterEqual,
 
   Colon,
+  Semicolon,
+  Comma,
 
   End,
 };

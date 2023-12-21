@@ -22,9 +22,11 @@ class Lexer {
     size_t mCurrent = 0;
     size_t mStart = 0;
     size_t mLine = 1;
-    size_t mLastNewline = 0;
+    size_t mLineStart = 0;
+    std::vector<Token> mTokens;
 
   public:
+    Lexer(std::string_view source, std::string_view filename) : mSource(source), mFilename(filename) { }
     Lexer() = default;
 
     auto setSource(std::string_view) -> void;
@@ -34,21 +36,17 @@ class Lexer {
     auto reset() -> void;
 
   private:
-    auto lexNextToken() -> std::expected<Token, LexingError>;
-    auto lexNumber() -> std::expected<Token, LexingError>;
-    auto lexString() -> std::expected<Token, LexingError>;
-    auto lexIdentifier() -> std::expected<Token, LexingError>;
-    auto lexIndentation() -> std::expected<Token, LexingError>;
-
-    auto skipWhitespaces() -> void;
-    auto skipComments() -> void;
+    auto lexNextToken() -> std::expected<void, LexingError>;
+    auto lexNumber() -> std::expected<void, LexingError>;
+    auto lexString() -> std::expected<void, LexingError>;
+    auto lexIdentifier() -> std::expected<void, LexingError>;
 
     auto getCurrentLocation() -> SourceLocation;
     auto getPrevCharLocation() -> SourceLocation;
     auto getCurrentCharLocation() -> SourceLocation;
 
     auto advance() -> char;
-    [[nodiscard]] auto buildToken(TokenType type) -> Token;
+    auto buildToken(TokenType type) -> void;
     [[nodiscard]] auto isAtEnd() const -> bool;
 
     [[nodiscard]] auto match(const char expected) -> bool;

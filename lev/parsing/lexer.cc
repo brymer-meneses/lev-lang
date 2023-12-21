@@ -8,113 +8,129 @@
 using namespace lev;
 
 auto Lexer::lex() -> std::expected<std::vector<Token>, LexingError>{
-  std::vector<Token> tokens;
 
   while (not isAtEnd()) {
+    mStart = mCurrent;
     auto token = lexNextToken();
     if (not token) {
       return std::unexpected(token.error());
     }
-    tokens.push_back(*token);
   }
 
-  tokens.emplace_back(Token(TokenType::End, "", getCurrentLocation()));
-  return tokens;
+  mTokens.emplace_back(Token(TokenType::End, "", getCurrentLocation()));
+  return mTokens;
 }
 
 
-auto Lexer::lexNextToken() -> std::expected<Token, LexingError> {
+auto Lexer::lexNextToken() -> std::expected<void, LexingError> {
   auto c = advance();
 
-  while (c == ' ') {
-    mStart = mCurrent;
-    c = advance();
-  }
 
   switch (c) {
     case '"':
-      return lexString();
+      lexString();
+      break;
+
+    case ',':
+      buildToken(TokenType::Comma);
+      break;
+
+    case ';':
+      buildToken(TokenType::Semicolon);
+      break;
 
     case '\n':
-      mLastNewline = mCurrent - 1;
+      mLineStart = mCurrent;
       mLine += 1;
       break;
 
     case ':':
-      return buildToken(TokenType::Colon);
+      buildToken(TokenType::Colon);
+      break;
 
     case '+': 
       if (match('=')) {
-        return buildToken(TokenType::PlusEqual);
+        buildToken(TokenType::PlusEqual);
       } else {
-        return buildToken(TokenType::Plus);
+        buildToken(TokenType::Plus);
       }
+      break;
 
     case '*': 
       if (match('=')) {
-        return buildToken(TokenType::StarEqual);
+        buildToken(TokenType::StarEqual);
       } else {
-        return buildToken(TokenType::Star);
+        buildToken(TokenType::Star);
       }
+      break;
 
     case '=':
       if (match('=')) {
-        return buildToken(TokenType::EqualEqual);
+        buildToken(TokenType::EqualEqual);
       } else {
-        return buildToken(TokenType::Equal);
+        buildToken(TokenType::Equal);
       }
+      break;
 
     case '-':
       if (match('>')){
-        return buildToken(TokenType::RightArrow);
+        buildToken(TokenType::RightArrow);
       } else if (match('=')) {
-        return buildToken(TokenType::MinusEqual);
+        buildToken(TokenType::MinusEqual);
       } else {
-        return buildToken(TokenType::Minus);
+        buildToken(TokenType::Minus);
       }
+      break;
 
     case '>':
       if (match('=')) {
-        return buildToken(TokenType::GreaterEqual);
+        buildToken(TokenType::GreaterEqual);
       } else {
-        return buildToken(TokenType::Greater);
+        buildToken(TokenType::Greater);
       }
+      break;
 
     case '<':
       if (match('=')) {
-        return buildToken(TokenType::LessEqual);
+        buildToken(TokenType::LessEqual);
       } else {
-        return buildToken(TokenType::Less);
+        buildToken(TokenType::Less);
       }
+      break;
 
     case '!':
       if (match('=')) {
-        return buildToken(TokenType::BangEqual);
+        buildToken(TokenType::BangEqual);
       } else {
-        return buildToken(TokenType::Bang);
+        buildToken(TokenType::Bang);
       }
+      break;
 
     case '/':
-      if (match('=')) {
-        return buildToken(TokenType::SlashEqual);
+      if (match('/')) {
+        while (peek() != '\n' and not isAtEnd()) {
+          advance();
+        }
+      } else if (match('=')) {
+        buildToken(TokenType::SlashEqual);
       } else {
-        return buildToken(TokenType::Slash);
+        buildToken(TokenType::Slash);
       }
+      break;
 
     default:
       if (std::isdigit(c)) {
-        return lexNumber();
+        lexNumber();
       } else if (std::isalnum(c) or c == '_') {
-        return lexIdentifier();
+        lexIdentifier();
       } else {
-        return std::unexpected(LexingError::UnexpectedCharacter(c, getPrevCharLocation()));
+        std::unexpected(LexingError::UnexpectedCharacter(c, getPrevCharLocation()));
       }
   }
-
-  __builtin_unreachable();
+  return {};
 }
 
-auto Lexer::lexNumber() -> std::expected<Token, LexingError> {
+auto Lexer::lexNumber() -> std::expected<void, LexingError> {
   bool didVisitPoint = false;
 
   if (peekPrev() == '.') {
@@ -131,10 +147,11 @@ auto Lexer::lexNumber() -> std::expected<Token, LexingError> {
     advance();
   }
 
-  return buildToken(TokenType::Number);
+  buildToken(TokenType::Number);
+  return {};
 }
 
-auto Lexer::lexIdentifier() -> std::expected<Token, LexingError> {
+auto Lexer::lexIdentifier() -> std::expected<void, LexingError> {
   static const std::map<std::string_view, TokenType> map = {
     {"fn", TokenType::Function},
     {"for", TokenType::For},
@@ -159,14 +176,15 @@ auto Lexer::lexIdentifier() -> std::expected<Token, LexingError> {
 
   auto identifierStr = mSource.substr(mStart, mCurrent - mStart);
   if (map.contains(identifierStr)) {
-    return buildToken(map.at(identifierStr));
+    buildToken(map.at(identifierStr));
   } else {
-    return buildToken(TokenType::Identifier); 
+    buildToken(TokenType::Identifier); 
   }
 
+  return {};
 }
 
-auto Lexer::lexString() -> std::expected<Token, LexingError> {
+auto Lexer::lexString() -> std::expected<void, LexingError> {
   while (peek() != '"') {
     if (isAtEnd()) {
       return std::unexpected(LexingError::UnterminatedString(getPrevCharLocation()));
@@ -176,51 +194,27 @@ auto Lexer::lexString() -> std::expected<Token, LexingError> {
 
   // consume the last '"'
   advance();
+  buildToken(TokenType::String);
 
-  return buildToken(TokenType::String);
+  return {};
 }
 
-auto Lexer::lexIndentation() -> std::expected<Token, LexingError> {
-
-}
-
-auto Lexer::skipWhitespaces() -> void {
-  while (check({' ', '\r', '\t'})) {
-    mStart = mCurrent;
-    advance();
-  }
-}
-
-auto Lexer::skipComments() -> void {
-  // while (true) {
-  //   if (peek() == '\\' and peekNext() == '\\') {
-  //     mCurrent += 2;
-  //   }
-  //
-  //   while (not peek('\n')) {
-  //     mCurrent += 1;
-  //   }
-  // }
-  // return c;
-};
-
-auto Lexer::buildToken(TokenType type) -> Token {
+auto Lexer::buildToken(TokenType type) -> void {
   auto token = Token(type, mSource.substr(mStart, mCurrent - mStart), getCurrentLocation());
-  mStart = mCurrent;
-  return token;
+  mTokens.push_back(token);
 }
 
 auto Lexer::getCurrentLocation() -> SourceLocation {
-  return SourceLocation(mFilename, mLastNewline - mStart, mLastNewline - mCurrent, mLine);
+  return SourceLocation(mFilename, mLineStart - mStart, mLineStart - mCurrent, mLine);
 }
 
 auto Lexer::getCurrentCharLocation() -> SourceLocation {
-  auto pos = mLastNewline - mCurrent;
+  auto pos = mLineStart - mCurrent;
   return SourceLocation(mFilename, pos, pos, mLine);
 }
 
 auto Lexer::getPrevCharLocation() -> SourceLocation {
-  auto pos = mLastNewline - mCurrent - 1;
+  auto pos = mLineStart - mCurrent - 1;
   return SourceLocation(mFilename, pos, pos, mLine);
 }
 
@@ -301,5 +295,5 @@ auto Lexer::reset() -> void {
   mSource = "";
   mFilename = "anonymous";
   mLine = 0;
-  mLastNewline = 0;
+  mLineStart = 0;
 }
