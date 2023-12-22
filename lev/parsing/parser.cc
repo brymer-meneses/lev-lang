@@ -42,13 +42,13 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParseError> {
   auto arguments = std::vector<Stmt::FunctionArgument>{};
 
   while (not match(TokenType::RightParen)) {
-    auto argName = expect(TokenType::Identifier);
+    auto argName = TRY(expect(TokenType::Identifier));
 
     CONSUME(TokenType::Colon);
 
     auto type = TRY(parseType());
 
-    arguments.push_back(Stmt::FunctionArgument(identifier, type));
+    arguments.push_back(Stmt::FunctionArgument(argName, type));
 
     if (not check(TokenType::RightParen)) {
       CONSUME(TokenType::Comma);

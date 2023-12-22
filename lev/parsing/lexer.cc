@@ -11,9 +11,9 @@ auto Lexer::lex() -> std::expected<std::vector<Token>, LexError>{
 
   while (not isAtEnd()) {
     mStart = mCurrent;
-    auto token = lexNextToken();
-    if (not token) {
-      return std::unexpected(token.error());
+    auto status = lexNextToken();
+    if (not status) {
+      return std::unexpected(status.error());
     }
   }
 
