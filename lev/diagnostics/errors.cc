@@ -3,7 +3,7 @@
 
 using namespace lev;
 
-auto LexingError::message() const -> std::string {
+auto LexError::message() const -> std::string {
   return std::visit(utils::match {
     [](const RedundantDecimalPoint& e) {
       return std::format("Got redundant decimal point");

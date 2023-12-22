@@ -8,7 +8,7 @@
 
 namespace lev {
 
-class LexingError {
+class LexError {
   public:
     struct UnexpectedCharacter {
       char character;
@@ -38,7 +38,7 @@ class LexingError {
   public:
     template <class T>
     requires std::is_constructible_v<Error, T>
-    LexingError(T error) : mError(error) {}
+    LexError(T error) : mError(error) {}
 
     constexpr auto location() const -> SourceLocation {
       return std::visit([](const auto& e) { return e.location; }, mError);
@@ -51,7 +51,7 @@ class LexingError {
     auto message() const -> std::string;
 };
 
-class ParsingError {
+class ParseError {
   public:
     struct UnexpectedToken {
       TokenType got;
@@ -76,14 +76,14 @@ class ParsingError {
     };
 
     struct Unimplemented {
+      std::source_location sourceLocation;
+      SourceLocation location;
 
-      std::source_location location;
-
-      Unimplemented(const std::source_location location = std::source_location::current())
-          : location(location) {}
+      Unimplemented(const std::source_location location_ = std::source_location::current())
+          : sourceLocation(location_) {}
 
       auto format() const -> std::string {
-        return std::format("Unimplemented Error at: {}{} {}", location.line(), location.file_name(), location.column());
+        return std::format("Unimplemented Error at: {}{} {}", sourceLocation.line(), sourceLocation.file_name(), sourceLocation.column());
       }
     };
 
@@ -94,7 +94,7 @@ class ParsingError {
   public:
     template <class T>
     requires std::is_constructible_v<Error, T>
-    ParsingError(T error) : mError(error) {}
+    ParseError(T error) : mError(error) {}
 
     auto accept(auto visitor) -> decltype(auto) {
       return std::visit(visitor, mError);
@@ -103,11 +103,16 @@ class ParsingError {
     auto message() const -> std::string {
       return std::visit([](const auto& e){ return e.format(); }, mError);
     }
+
+    constexpr auto location() const -> SourceLocation {
+      return std::visit([](const auto& e) { return e.location; }, mError);
+    }
+
 };
 
 
 struct LevError {
-  using Error = std::variant<LexingError>;
+  using Error = std::variant<LexError, ParseError>;
 
   Error error;
   std::string_view line;

@@ -19,29 +19,29 @@ class Parser {
   public:
     Parser() = default;
     auto setTokens(std::vector<Token>) -> void;
-    auto parse() -> std::expected<std::vector<Stmt>, ParsingError>;
+    auto parse() -> std::expected<std::vector<Stmt>, ParseError>;
 
   private:
-    auto parseStatement() -> std::expected<Stmt, ParsingError>;
-    auto parseBlockStmt() -> std::expected<Stmt, ParsingError>;
-    auto parseDeclaration() -> std::expected<Stmt, ParsingError>;
+    auto parseStatement() -> std::expected<Stmt, ParseError>;
+    auto parseBlockStmt() -> std::expected<Stmt, ParseError>;
+    auto parseDeclaration() -> std::expected<Stmt, ParseError>;
 
-    auto parseVariableDeclaration() -> std::expected<Stmt, ParsingError>;
-    auto parseFunctionDeclaration() -> std::expected<Stmt, ParsingError>;
+    auto parseVariableDeclaration() -> std::expected<Stmt, ParseError>;
+    auto parseFunctionDeclaration() -> std::expected<Stmt, ParseError>;
 
-    auto parseExpression() -> std::expected<Expr, ParsingError>;
-    auto parseBinaryExpr() -> std::expected<Expr, ParsingError>;
-    auto parseLiteralExpr() -> std::expected<Expr, ParsingError>;
-    auto parseUnaryExpr() -> std::expected<Expr, ParsingError>;
+    auto parseExpression() -> std::expected<Expr, ParseError>;
+    auto parseBinaryExpr() -> std::expected<Expr, ParseError>;
+    auto parseLiteralExpr() -> std::expected<Expr, ParseError>;
+    auto parseUnaryExpr() -> std::expected<Expr, ParseError>;
 
-    auto parseType() -> std::expected<LevType, ParsingError>;
+    auto parseType() -> std::expected<LevType, ParseError>;
 
     auto match(TokenType type) -> bool;
     auto match(std::initializer_list<TokenType> types) -> bool;
     auto check(TokenType type) const -> bool;
 
-    auto expect(TokenType type, std::string_view message) -> std::expected<Token, ParsingError>;
-    auto expect(TokenType type) -> std::expected<Token, ParsingError>;
+    auto expect(TokenType type, std::string_view message) -> std::expected<Token, ParseError>;
+    auto expect(TokenType type) -> std::expected<Token, ParseError>;
 
     auto getCurrentLocation() -> SourceLocation;
     auto peek() const -> const Token&;

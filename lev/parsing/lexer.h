@@ -32,14 +32,14 @@ class Lexer {
     auto setSource(std::string_view) -> void;
     auto setFilename(std::string_view) -> void;
 
-    auto lex() -> std::expected<std::vector<Token>, LexingError>;
+    auto lex() -> std::expected<std::vector<Token>, LexError>;
     auto reset() -> void;
 
   private:
-    auto lexNextToken() -> std::expected<void, LexingError>;
-    auto lexNumber() -> std::expected<void, LexingError>;
-    auto lexString() -> std::expected<void, LexingError>;
-    auto lexIdentifier() -> std::expected<void, LexingError>;
+    auto lexNextToken() -> std::expected<void, LexError>;
+    auto lexNumber() -> std::expected<void, LexError>;
+    auto lexString() -> std::expected<void, LexError>;
+    auto lexIdentifier() -> std::expected<void, LexError>;
 
     auto getCurrentLocation() -> SourceLocation;
     auto getPrevCharLocation() -> SourceLocation;
