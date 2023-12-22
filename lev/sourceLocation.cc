@@ -1,7 +1,5 @@
 #include <algorithm>
-#include <print>
-
-#include <lev/utils.h>
+#include <lev/misc/macros.h>
 #include <lev/sourceLocation.h>
 
 auto operator+(const SourceLocation& l1, const SourceLocation& l2) -> SourceLocation {

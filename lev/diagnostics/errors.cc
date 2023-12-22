@@ -1,10 +1,11 @@
 #include "errors.h"
-#include "utils.h"
+
+#include <lev/misc/match.h>
 
 using namespace lev;
 
 auto LexError::message() const -> std::string {
-  return std::visit(utils::match {
+  return std::visit(match {
     [](const RedundantDecimalPoint& e) {
       return std::format("Got redundant decimal point");
     },

@@ -1,5 +1,7 @@
 #include <lev/parsing/parser.h>
-#include <lev/utils.h>
+#include <lev/misc/macros.h>
+#include <lev/misc/match.h>
+
 #include <map>
 
 using namespace lev;
@@ -12,19 +14,16 @@ using namespace lev;
     }                                                                          \
   }
 
-auto Parser::parse() -> std::expected<std::vector<Stmt>, ParsingError> {
+auto Parser::parse() -> std::expected<std::vector<Stmt>, ParseError> {
   std::vector<Stmt> statements;
   while (not isAtEnd()) {
-    auto statement = parseDeclaration();
-    if (not statement) {
-      return std::unexpected(statement.error());
-    }
-    statements.push_back(std::move(*statement));
+    auto statement = TRY(parseDeclaration());
+    statements.push_back(std::move(statement));
   };
   return statements;
 }
 
-auto Parser::parseDeclaration() -> std::expected<Stmt, ParsingError> {
+auto Parser::parseDeclaration() -> std::expected<Stmt, ParseError> {
   if (match(TokenType::Function)) {
     return parseFunctionDeclaration();
   }
@@ -36,30 +35,20 @@ auto Parser::parseDeclaration() -> std::expected<Stmt, ParsingError> {
   return parseStatement();
 }
 
-auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParsingError> {
-  auto identifier = expect(TokenType::Identifier);
-  if (not identifier) {
-    return std::unexpected(identifier.error());
-  }
-
+auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParseError> {
+  auto identifier = TRY(expect(TokenType::Identifier));
   CONSUME(TokenType::LeftParen);
 
   auto arguments = std::vector<Stmt::FunctionArgument>{};
 
   while (not match(TokenType::RightParen)) {
     auto argName = expect(TokenType::Identifier);
-    if (not argName) {
-      return std::unexpected(argName.error());
-    }
 
     CONSUME(TokenType::Colon);
 
-    auto type = parseType();
-    if (not type) {
-      return std::unexpected(type.error());
-    }
+    auto type = TRY(parseType());
 
-    arguments.push_back(Stmt::FunctionArgument(*identifier, *type));
+    arguments.push_back(Stmt::FunctionArgument(identifier, type));
 
     if (not check(TokenType::RightParen)) {
       CONSUME(TokenType::Comma);
@@ -68,40 +57,29 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParsingError> {
 
   CONSUME(TokenType::RightArrow);
   auto returnType = parseType();
+  auto body = TRY(parseStatement());
 
-  auto body = parseStatement();
-
-  if (not body) {
-    return std::unexpected(body.error());
-  }
-
-  return Stmt::FunctionDeclaration(*identifier, std::move(arguments), *returnType, std::move(*body));
+  return Stmt::FunctionDeclaration(identifier, std::move(arguments), *returnType, std::move(body));
 }
 
 
-auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParsingError> {
-  auto identifier = expect(TokenType::Identifier);
-  if (not identifier) {
-    return std::unexpected(identifier.error());
-  }
+auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
+  auto identifier = TRY(expect(TokenType::Identifier));
 
-  std::expected<LevType, ParsingError> type = LevType::Inferred();
+  std::expected<LevType, ParseError> type = LevType::Inferred();
 
   if (match(TokenType::Colon)) {
-    type = parseType();
-    if (not type) {
-      return std::unexpected(type.error());
-    }
+    type = TRY(parseType());
   } 
 
   CONSUME(TokenType::Equal);
 
-  auto value = parseExpression();
+  auto value = TRY(parseExpression());
 
-  return Stmt::VariableDeclaration(*identifier, *type, std::move(*value));
+  return Stmt::VariableDeclaration(identifier, *type, std::move(value));
 }
 
-auto Parser::parseType() -> std::expected<LevType, ParsingError> {
+auto Parser::parseType() -> std::expected<LevType, ParseError> {
 
   static const std::map<std::string_view, LevType::Builtin> builtinTypes = {
     {"i8", LevType::Builtin::i8() },
@@ -118,36 +96,33 @@ auto Parser::parseType() -> std::expected<LevType, ParsingError> {
     {"f64", LevType::Builtin::f64() },
   };
 
-  auto type = expect(TokenType::Identifier);
-  if (not type) {
-    return std::unexpected(type.error());
-  }
+  auto type = TRY(expect(TokenType::Identifier));
 
-  if (builtinTypes.contains(type->lexeme)) {
-    return builtinTypes.at(type->lexeme);
+  if (builtinTypes.contains(type.lexeme)) {
+    return builtinTypes.at(type.lexeme);
   } 
 
-  return LevType::UserDefined(*type);
+  return LevType::UserDefined(type);
 }
 
-auto Parser::parseStatement() -> std::expected<Stmt, ParsingError> {
+auto Parser::parseStatement() -> std::expected<Stmt, ParseError> {
   if (match(TokenType::Let)) {
     return parseVariableDeclaration();
   }
 
-  return std::unexpected(ParsingError::Unimplemented());
+  return std::unexpected(ParseError::Unimplemented());
 }
 
-auto Parser::parseExpression() -> std::expected<Expr, ParsingError> {
+auto Parser::parseExpression() -> std::expected<Expr, ParseError> {
   return parseLiteralExpr();
 }
 
-auto Parser::parseLiteralExpr() -> std::expected<Expr, ParsingError> {
+auto Parser::parseLiteralExpr() -> std::expected<Expr, ParseError> {
   if (match({TokenType::Number, TokenType::String, TokenType::Identifier, TokenType::Boolean})) {
     return Expr::Literal(peekPrev());
   }
 
-  return std::unexpected(ParsingError::Unimplemented());
+  return std::unexpected(ParseError::Unimplemented());
 }
 
 auto Parser::getCurrentLocation() -> SourceLocation {
@@ -158,11 +133,11 @@ auto Parser::setTokens(std::vector<Token> tokens) -> void {
   mTokens = std::move(tokens);
 }
 
-auto Parser::expect(TokenType type) -> std::expected<Token, ParsingError> {
+auto Parser::expect(TokenType type) -> std::expected<Token, ParseError> {
   if (match(type)) {
     return peekPrev();
   }
-  return std::unexpected(ParsingError::UnexpectedToken(type, peek().type, getCurrentLocation()));
+  return std::unexpected(ParseError::UnexpectedToken(type, peek().type, getCurrentLocation()));
 }
 
 auto Parser::match(TokenType type) -> bool {

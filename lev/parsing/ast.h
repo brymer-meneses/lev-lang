@@ -8,7 +8,19 @@
 
 namespace lev {
 
-struct Expr {
+struct Node {
+  Node* parent = nullptr;
+
+  constexpr auto setParent(Node* parent) -> void {
+    this->parent = parent;
+  }
+
+  constexpr auto getParent() const -> Node* {
+    return parent;
+  }
+};
+
+struct Expr : Node {
 
   struct Binary {
     std::unique_ptr<Expr> left;
@@ -39,7 +51,7 @@ struct Expr {
 
     template <typename T>
     requires std::is_constructible_v<ValueType, T>
-    Expr(T value) : value(value) {}
+    constexpr Expr(T value) : value(value) {}
 
   private:
     ValueType value;
@@ -48,7 +60,7 @@ struct Expr {
 };
 
 
-struct Stmt {
+struct Stmt : Node {
 
   struct VariableDeclaration {
     Token identifier;
@@ -82,13 +94,13 @@ struct Stmt {
   using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block>;
 
   public:
-    auto accept(auto visitor) -> decltype(auto) {
+    constexpr auto accept(auto visitor) -> decltype(auto) {
       return std::visit(visitor, value);
     };
 
     template <typename T>
     requires std::is_constructible_v<ValueType, T>
-    Stmt(T value) : value(std::move(value)) {}
+    constexpr Stmt(T value) : value(std::move(value)) {}
 
   private:
     ValueType value;

@@ -7,7 +7,7 @@
 
 using namespace lev;
 
-auto Lexer::lex() -> std::expected<std::vector<Token>, LexingError>{
+auto Lexer::lex() -> std::expected<std::vector<Token>, LexError>{
 
   while (not isAtEnd()) {
     mStart = mCurrent;
@@ -22,7 +22,7 @@ auto Lexer::lex() -> std::expected<std::vector<Token>, LexingError>{
 }
 
 
-auto Lexer::lexNextToken() -> std::expected<void, LexingError> {
+auto Lexer::lexNextToken() -> std::expected<void, LexError> {
   auto c = advance();
 
 
@@ -124,13 +124,13 @@ auto Lexer::lexNextToken() -> std::expected<void, LexingError> {
       } else if (std::isalnum(c) or c == '_') {
         lexIdentifier();
       } else {
-        std::unexpected(LexingError::UnexpectedCharacter(c, getPrevCharLocation()));
+        std::unexpected(LexError::UnexpectedCharacter(c, getPrevCharLocation()));
       }
   }
   return {};
 }
 
-auto Lexer::lexNumber() -> std::expected<void, LexingError> {
+auto Lexer::lexNumber() -> std::expected<void, LexError> {
   bool didVisitPoint = false;
 
   if (peekPrev() == '.') {
@@ -140,7 +140,7 @@ auto Lexer::lexNumber() -> std::expected<void, LexingError> {
   while (std::isdigit(peek()) or peek() == '.') {
     if (peek() == '.') {
       if (didVisitPoint) {
-        return std::unexpected(LexingError::RedundantDecimalPoint(getCurrentLocation()));
+        return std::unexpected(LexError::RedundantDecimalPoint(getCurrentLocation()));
       }
       didVisitPoint = true;
     }
@@ -151,7 +151,7 @@ auto Lexer::lexNumber() -> std::expected<void, LexingError> {
   return {};
 }
 
-auto Lexer::lexIdentifier() -> std::expected<void, LexingError> {
+auto Lexer::lexIdentifier() -> std::expected<void, LexError> {
   static const std::map<std::string_view, TokenType> map = {
     {"fn", TokenType::Function},
     {"for", TokenType::For},
@@ -184,10 +184,10 @@ auto Lexer::lexIdentifier() -> std::expected<void, LexingError> {
   return {};
 }
 
-auto Lexer::lexString() -> std::expected<void, LexingError> {
+auto Lexer::lexString() -> std::expected<void, LexError> {
   while (peek() != '"') {
     if (isAtEnd()) {
-      return std::unexpected(LexingError::UnterminatedString(getPrevCharLocation()));
+      return std::unexpected(LexError::UnterminatedString(getPrevCharLocation()));
     }
     advance();
   }

@@ -18,6 +18,7 @@ cpp_args = [
   '-Wpedantic',
   '-fno-exceptions',
   '-fno-rtti',
+  '-Wno-gnu-statement-expression'
 ]
 
 llvm_dep = dependency(

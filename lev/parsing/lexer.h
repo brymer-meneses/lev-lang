@@ -8,7 +8,6 @@
 #include <concepts>
 #include <format>
 
-#include <lev/utils.h>
 #include <lev/diagnostics/errors.h>
 #include <lev/parsing/token.h>
 

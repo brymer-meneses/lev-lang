@@ -4,6 +4,8 @@
 #include <assert.h>
 
 #include <lev/lev.h>
+#include <lev/misc/macros.h>
+#include <lev/misc/match.h>
 
 using namespace lev;
 
