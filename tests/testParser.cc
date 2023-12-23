@@ -4,45 +4,22 @@
 #include <lev/parsing/parser.h>
 
 #include "equalityHelper.h"
+#include "testHelpers.h"
 
 using namespace lev;
-
-auto verifyStatement(std::string_view source, const Stmt& expectedStatement) -> void {
-  Lexer lexer;
-  lexer.setSource(source);
-  auto tokens = lexer.lex();
-
-  ASSERT_TRUE(tokens) << tokens.error().message();
-
-  Parser parser;
-  parser.setTokens(std::move(*tokens));
-  auto statements = parser.parse();
-
-  ASSERT_TRUE(statements) << statements.error().message();
-  ASSERT_EQ(statements->size(), 1);
-
-  EXPECT_EQ(statements->at(0), expectedStatement);
-}
-
-static SourceLocation DUMMY_SOURCE_LOCATION("testing.lev", 0, 0, 1);
 
 TEST(Parser, VariableDeclaration) {
   verifyStatement(
       "let variable: i32 = 5",
-      Stmt::VariableDeclaration(
-          Token(TokenType::Identifier, "variable", DUMMY_SOURCE_LOCATION),
+      VariableDeclarationStmt(
+          Token(TokenType::Identifier, "variable", TEST_LOCATION),
           LevType::Builtin::i32(),
-          Expr::Literal(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
+          LiteralExpr(Token(TokenType::Integer, "5", TEST_LOCATION))));
 
   verifyStatement(
       "let variable = 5",
-      Stmt::VariableDeclaration(
-          Token(TokenType::Identifier, "variable", DUMMY_SOURCE_LOCATION),
+      VariableDeclarationStmt(
+          Token(TokenType::Identifier, "variable", TEST_LOCATION),
           LevType::Inferred(),
-          Expr::Literal(Token(TokenType::Number, "5", DUMMY_SOURCE_LOCATION))));
+          LiteralExpr(Token(TokenType::Integer, "5", TEST_LOCATION))));
 }
-
-TEST(Parser, FunctionDeclaration) {
-
-}
-

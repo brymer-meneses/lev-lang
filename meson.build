@@ -58,6 +58,7 @@ test_sources = [
   'tests/testRunner.cc',
   'tests/testLexer.cc',
   'tests/testParser.cc',
+  'tests/testHelpers.cc',
 ]
 
 test_runner = executable(

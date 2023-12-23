@@ -5,27 +5,7 @@
 
 using namespace lev;
 
-auto verifyTokens(std::string_view source,
-                  const std::initializer_list<const char*> lexemes,
-                  const std::initializer_list<TokenType> types) {
-
-  ASSERT_EQ(lexemes.size(), types.size()) << "expected lexemes and types must have the same size";
-
-  Lexer lexer;
-  lexer.setSource(source);
-
-  auto tokens = lexer.lex();
-  if (not tokens) {
-    FAIL() << tokens.error().message();
-  }
-
-  ASSERT_EQ(tokens->size(), lexemes.size() + 1);
-
-  for (const auto& [token, lexeme, type] : std::views::zip(*tokens, lexemes, types)) {
-    EXPECT_EQ(token.lexeme, lexeme) << std::format("Got mismatched lexeme expected: `{}` got: `{}`", lexeme, token.lexeme);
-    EXPECT_EQ(token.type, type);
-  }
-}
+#include "testHelpers.h"
 
 TEST(Lexer, SingleCharacterTokens) {
 
@@ -87,9 +67,9 @@ TEST(Lexer, MultipleCharacterTokens) {
 
 TEST(Lexer, Number) {
   auto types = {
-    TokenType::Number,
-    TokenType::Number,
-    TokenType::Number,
+    TokenType::Float,
+    TokenType::Float,
+    TokenType::Integer,
   };
 
   auto lexemes = {
@@ -122,7 +102,7 @@ TEST(Lexer, Identifier) {
 TEST(Lexer, ReservedKeywords) {
   auto types = {
     TokenType::Function,
-    TokenType::Mut,
+    TokenType::Mutable,
     TokenType::Break,
     TokenType::Class,
     TokenType::For,
@@ -133,6 +113,9 @@ TEST(Lexer, ReservedKeywords) {
     TokenType::And,
     TokenType::Or,
     TokenType::Impl,
+    TokenType::True,
+    TokenType::False,
+    TokenType::Return,
   };
 
   auto lexemes = {
@@ -147,10 +130,13 @@ TEST(Lexer, ReservedKeywords) {
     "not",
     "and",
     "or",
-    "impl"
+    "impl",
+    "true",
+    "false",
+    "return",
   };
 
-  verifyTokens("fn mut break class for if else while not and or impl", lexemes, types);
+  verifyTokens("fn mut break class for if else while not and or impl true false return", lexemes, types);
 }
 
 TEST(Lexer, String) {
@@ -178,5 +164,49 @@ TEST(Lexer, SkipComments) {
     "if"
   };
 
-  verifyTokens("// this should be ignored\n fn if", lexemes, types);
+  verifyTokens("// this should be ignored\nfn if", lexemes, types);
+}
+
+TEST(Lexer, Indentation) {
+
+  const auto types = {
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+
+    TokenType::Indent,
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+
+    TokenType::Indent,
+    TokenType::Return,
+    TokenType::Integer,
+
+    TokenType::Dedent,
+    TokenType::Return,
+    TokenType::Integer,
+  };
+
+  // FIXME: we're not parsing statements like this
+  // fn add(
+  //  a: i32,
+  //  b: i32
+  // ) -> i32
+  // yet
+
+  const std::string_view source = \
+R"(
+if num == 5:
+  if num == 10:
+    return 10
+return 5
+)";
+
+
+  verifyTokens(source, types);
 }

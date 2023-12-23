@@ -27,8 +27,10 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
 
 
   switch (c) {
-    case '"':
-      lexString();
+
+    case '\t':
+    case '\r':
+    case ' ':
       break;
 
     case ',':
@@ -42,6 +44,7 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
     case '\n':
       mLineStart = mCurrent;
       mLine += 1;
+      lexIndent();
       break;
 
     case ':':
@@ -118,6 +121,10 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
       }
       break;
 
+    case '"':
+      lexString();
+      break;
+
     default:
       if (std::isdigit(c)) {
         lexNumber();
@@ -147,7 +154,7 @@ auto Lexer::lexNumber() -> std::expected<void, LexError> {
     advance();
   }
 
-  buildToken(TokenType::Number);
+  buildToken(didVisitPoint ? TokenType::Float : TokenType::Integer);
   return {};
 }
 
@@ -159,7 +166,8 @@ auto Lexer::lexIdentifier() -> std::expected<void, LexError> {
     {"while", TokenType::While},
     {"if", TokenType::If},
     {"else", TokenType::Else},
-    {"mut", TokenType::Mut},
+    {"mut", TokenType::Mutable},
+    {"impl", TokenType::Impl},
     {"and", TokenType::And},
     {"or", TokenType::Or},
     {"impl", TokenType::Impl},
@@ -167,7 +175,11 @@ auto Lexer::lexIdentifier() -> std::expected<void, LexError> {
     {"not", TokenType::Not},
     {"or", TokenType::Or},
     {"and", TokenType::And},
-    {"let", TokenType::Let}
+    {"return", TokenType::Return},
+    {"let", TokenType::Let},
+
+    {"true", TokenType::True},
+    {"false", TokenType::False},
   };
 
   while (std::isalnum(peek()) or peek() == '_') {
@@ -196,6 +208,32 @@ auto Lexer::lexString() -> std::expected<void, LexError> {
   advance();
   buildToken(TokenType::String);
 
+  return {};
+}
+
+auto Lexer::lexIndent() -> std::expected<void, LexError> {
+  size_t indentation = 0;
+
+  while (check(' ') or check('\t')) {
+    if (match('\t')) {
+      indentation += 4;
+    }
+    if (match(' ')) {
+      indentation += 1;
+    }
+  }
+
+  if (indentation > mIndentationStack.top()) {
+    mIndentationStack.push(indentation);
+    buildToken(TokenType::Indent);
+  } else if (indentation < mIndentationStack.top()) {
+    while (indentation < mIndentationStack.top()) {
+      mIndentationStack.pop();
+    }
+    buildToken(TokenType::Dedent);
+  } else {
+    return std::unexpected(LexError::UnexpectedCharacter(peek(), getCurrentLocation()));
+  }
   return {};
 }
 
