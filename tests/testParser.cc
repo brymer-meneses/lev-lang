@@ -35,11 +35,7 @@ TEST(Parser, FunctionDeclaration) {
     )
   );
   block.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "num", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))
-    )
+    Stmt::Return(Expr::Literal(Token(TokenType::Integer, "0", TEST_LOCATION)))
   );
 
   verifyStatement(
