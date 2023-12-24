@@ -7,6 +7,29 @@
 
 using namespace lev;
 
+TEST(Parser, BinaryExpression) {
+  auto source = "let num: i32 = 1 + 3 + 2 * 2";
+
+  auto lhs = Expr::Binary(
+      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
+      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
+      Token(TokenType::Plus, "+", TEST_LOCATION)
+  );
+  auto rhs = Expr::Binary(
+      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
+      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
+      Token(TokenType::Star, "*", TEST_LOCATION)
+  );
+
+  auto expected = Stmt::VariableDeclaration(
+    Token(TokenType::Identifier, "num", TEST_LOCATION),
+    LevType::Builtin::i32(),
+    Expr::Binary( std::move(lhs), std::move(rhs), Token(TokenType::Plus, "+", TEST_LOCATION))
+  );
+
+  verifyStatement(source, std::move(expected));
+}
+
 TEST(Parser, VariableDeclaration) {
   verifyStatement(
       "let variable: i32 = 5",
