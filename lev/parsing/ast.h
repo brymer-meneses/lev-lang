@@ -3,6 +3,7 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <optional>
 
 #include <lev/parsing/token.h>
 #include <lev/parsing/type.h>
@@ -82,8 +83,9 @@ struct Stmt {
   };
 
   struct Return {
-    Expr expr;
+    std::optional<Expr> expr = std::nullopt;
     explicit Return(Expr expr);
+    explicit Return() {};
   };
 
   using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return>;

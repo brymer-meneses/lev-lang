@@ -59,6 +59,7 @@ enum class TokenType {
   Semicolon,
   Comma,
 
+  Endline,
   Indent,
   Dedent,
 
@@ -80,6 +81,8 @@ struct Token {
     switch (type) {
     case TokenType::LeftParen:
       return "(";
+    case TokenType::Endline:
+      return "\\n";
     case TokenType::RightParen:
       return ")";
     case TokenType::LeftBracket:

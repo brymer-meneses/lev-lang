@@ -38,9 +38,11 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
       break;
 
     case '(':
+      mJoinLines = true;
       buildToken(TokenType::LeftParen);
       break;
     case ')':
+      mJoinLines = false;
       buildToken(TokenType::RightParen);
       break;
     case '{':
@@ -63,7 +65,9 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
     case '\n':
       mLineStart = mCurrent;
       mLine += 1;
-      lexIndent();
+      if (not mJoinLines) {
+        lexIndent();
+      }
       break;
 
     case ':':
@@ -250,6 +254,12 @@ auto Lexer::lexIndent() -> std::expected<void, LexError> {
       mIndentationStack.pop();
     }
     buildToken(TokenType::Dedent);
+  } else if (indentation == mIndentationStack.top()) {
+
+    if (indentation != 0) { 
+      buildToken(TokenType::Endline); 
+    }
+
   } else {
     return std::unexpected(LexError::UnexpectedCharacter(peek(), getCurrentLocation()));
   }

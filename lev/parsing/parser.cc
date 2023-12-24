@@ -70,16 +70,19 @@ auto Parser::parseBlockStmt() -> std::expected<Stmt, ParseError> {
   CONSUME(TokenType::Indent);
   auto statements = std::vector<Stmt>{};
   while (not match(TokenType::Dedent) and not isAtEnd()) {
-    auto stmt = parseStatement();
-    if (not stmt) {
-      return stmt;
+    if (check(TokenType::Endline)) {
+      CONSUME(TokenType::Endline);
     }
-    statements.push_back(std::move(*stmt));
+    auto stmt = TRY(parseStatement());
+    statements.push_back(std::move(stmt));
   }
   return Stmt::Block(std::move(statements));
 }
 
 auto Parser::parseReturnStmt() -> std::expected<Stmt, ParseError> {
+  if (match(TokenType::Endline)) {
+    return Stmt::Return();
+  }
   auto expr = TRY(parseExpression());
   return Stmt::Return(std::move(expr));
 }

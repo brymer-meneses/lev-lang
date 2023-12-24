@@ -24,6 +24,7 @@ class Lexer {
     size_t mLineStart = 0;
 
     std::stack<size_t> mIndentationStack;
+    bool mJoinLines = false;
 
     std::vector<Token> mTokens;
 

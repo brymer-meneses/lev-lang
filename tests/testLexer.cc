@@ -171,54 +171,129 @@ TEST(Lexer, SkipComments) {
     TokenType::If,
   };
 
-  auto lexemes = {
-    "fn",
-    "if"
-  };
-
-  verifyTokens("// this should be ignored\nfn if", lexemes, types);
+  verifyTokens("// this should be ignored\nfn if", types);
 }
 
 TEST(Lexer, Indentation) {
 
-  const auto types = {
-    TokenType::If,
-    TokenType::Identifier,
-    TokenType::EqualEqual,
-    TokenType::Integer,
-    TokenType::Colon,
-
-    TokenType::Indent,
-    TokenType::If,
-    TokenType::Identifier,
-    TokenType::EqualEqual,
-    TokenType::Integer,
-    TokenType::Colon,
-
-    TokenType::Indent,
-    TokenType::Return,
-    TokenType::Integer,
-
-    TokenType::Dedent,
-    TokenType::Return,
-    TokenType::Integer,
-  };
-
-  // FIXME: we're not parsing statements like this
-  // fn add(
-  //  a: i32,
-  //  b: i32
-  // ) -> i32
-  // yet
-
-  const std::string_view source = \
+  auto source = 
 R"(
-if num == 5:
-  if num == 10:
+fn main(
+  a: i32,
+  b: i32
+) -> i32:
+  let num: i32 = 5
+  if num == 5:
+    if num == 10:
+      return 10
+    else:
+      return 15
+    return 5
+  else if num == 10:
     return 10
-return 5
+  else:
+    return 15
+  return 5
 )";
 
+  const auto types = {
+    // fn main(
+    TokenType::Function,
+    TokenType::Identifier,
+    TokenType::LeftParen,
+
+    // a: i32,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+    TokenType::Comma,
+
+    // b: i32
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+
+    // ) -> i32: \n\t
+    TokenType::RightParen,
+    TokenType::RightArrow,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Indent,
+    
+    // let num: i32 = 5 \n
+    TokenType::Let,
+    TokenType::Identifier,
+    TokenType::Colon,
+    TokenType::Identifier,
+    TokenType::Equal,
+    TokenType::Integer,
+    TokenType::Endline,
+
+    // if num == 5: \n\t
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // if num == 10: \n\t
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // return 10 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else: \n\t
+    TokenType::Else,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    // return 15 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // return 5 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else if num == 10: \n\t
+    TokenType::Else,
+    TokenType::If,
+    TokenType::Identifier,
+    TokenType::EqualEqual,
+    TokenType::Integer,
+    TokenType::Colon,
+    TokenType::Indent,
+    
+    //   return 10 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+
+    // else: \n\t
+    TokenType::Else,
+    TokenType::Colon,
+    TokenType::Indent,
+
+    //   return 15 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+  
+    // return 5 \n << \t
+    TokenType::Return,
+    TokenType::Integer,
+    TokenType::Dedent,
+  };
 
   verifyTokens(source, types);
 }
