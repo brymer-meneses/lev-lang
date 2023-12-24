@@ -55,6 +55,10 @@ constexpr auto operator==(const Stmt::VariableDeclaration& s1, const Stmt::Varia
   return s1.type == s2.type and s1.identifier == s2.identifier and s1.value == s1.value;
 }
 
+constexpr auto operator==(const Stmt::Assignment& e1, const Stmt::Assignment& e2) -> bool {
+  return e1.identifier == e2.identifier and e1.value == e2.value;
+}
+
 constexpr auto operator==(const Stmt::Control& e1, const Stmt::Control& e2) -> bool {
   if (e1.elseBody and not e2.elseBody) return false;
   if (not e1.elseBody and e2.elseBody) return false;

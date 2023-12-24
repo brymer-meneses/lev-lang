@@ -26,6 +26,7 @@ class Parser {
     auto parseBlockStmt() -> std::expected<Stmt, ParseError>;
     auto parseReturnStmt() -> std::expected<Stmt, ParseError>;
     auto parseControlStmt() -> std::expected<Stmt, ParseError>;
+    auto parseAssignmentStmt() -> std::expected<Stmt, ParseError>;
 
     auto parseDeclaration() -> std::expected<Stmt, ParseError>;
     auto parseVariableDeclaration() -> std::expected<Stmt, ParseError>;

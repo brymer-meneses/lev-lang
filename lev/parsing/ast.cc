@@ -47,6 +47,11 @@ Stmt::Control::Control(Branch ifBranch,
   }
 }
 
+Stmt::Assignment::Assignment(Token identifier, Expr value) 
+  : identifier(identifier),
+    value(std::move(value)) {}
+
+
 FunctionArgument::FunctionArgument(Token identifier, LevType type) 
   : identifier(identifier)
   , type(type) {}

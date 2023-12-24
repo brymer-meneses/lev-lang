@@ -79,6 +79,17 @@ fn main(a: i32, b: i32) -> i32:
   );
 }
 
+TEST(Parser, Assignment) {
+  auto source = "variable = 5";
+
+  auto expected = Stmt::Assignment(
+    Token(TokenType::Identifier, "variable", TEST_LOCATION),
+    Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))
+  );
+
+  verifyStatement(source, std::move(expected));
+}
+
 TEST(Parser, ControlStatement) {
 
   auto source = 

@@ -36,7 +36,18 @@ auto Parser::parseDeclaration() -> std::expected<Stmt, ParseError> {
     return parseControlStmt();
   }
 
+  if (match(TokenType::Identifier)) {
+    return parseAssignmentStmt();
+  }
+
   return parseStatement();
+}
+
+auto Parser::parseAssignmentStmt() -> std::expected<Stmt, ParseError> {
+  const auto identifier = peekPrev();
+  CONSUME(TokenType::Equal);
+  auto value = TRY(parseExpression());
+  return Stmt::Assignment(identifier, std::move(value));
 }
 
 auto Parser::parseFunctionArgument() -> std::expected<FunctionArgument, ParseError> {

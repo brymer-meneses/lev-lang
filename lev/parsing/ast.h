@@ -93,6 +93,13 @@ struct Stmt {
     Control(Branch ifBranch, std::vector<Branch> elseIfBranches, std::optional<Stmt> elseBody);
   };
 
+  struct Assignment {
+    Token identifier;
+    Expr value;
+
+    Assignment(Token identifier, Expr value);
+  };
+
   struct Block {
     std::vector<Stmt> statements;
     explicit Block(std::vector<Stmt> statements);
@@ -104,7 +111,7 @@ struct Stmt {
     explicit Return() {};
   };
 
-  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return, Control>;
+  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return, Control, Assignment>;
 
   public:
     constexpr auto accept(auto visitor) -> decltype(auto) {
