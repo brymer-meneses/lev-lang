@@ -25,13 +25,14 @@ class Parser {
     auto parseStatement() -> std::expected<Stmt, ParseError>;
     auto parseBlockStmt() -> std::expected<Stmt, ParseError>;
     auto parseReturnStmt() -> std::expected<Stmt, ParseError>;
+    auto parseControlStmt() -> std::expected<Stmt, ParseError>;
 
     auto parseDeclaration() -> std::expected<Stmt, ParseError>;
     auto parseVariableDeclaration() -> std::expected<Stmt, ParseError>;
     auto parseFunctionDeclaration() -> std::expected<Stmt, ParseError>;
 
     auto parseExpression() -> std::expected<Expr, ParseError>;
-    auto parseBinaryExpr() -> std::expected<Expr, ParseError>;
+    auto parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, ParseError>;
     auto parseLiteralExpr() -> std::expected<Expr, ParseError>;
     auto parseUnaryExpr() -> std::expected<Expr, ParseError>;
 
@@ -46,6 +47,7 @@ class Parser {
     auto expect(TokenType type) -> std::expected<Token, ParseError>;
 
     auto getCurrentLocation() -> SourceLocation;
+    auto advance() -> const Token&;
     auto peek() const -> const Token&;
     auto peekPrev() const -> const Token&;
     auto isAtEnd() const -> bool;

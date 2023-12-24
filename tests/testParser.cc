@@ -55,3 +55,91 @@ fn main(a: i32, b: i32) -> i32:
     )
   );
 }
+
+TEST(Parser, ControlStatement) {
+
+  auto source = 
+R"(
+if num == 1:
+  let variable: i32 = 1
+else if num == 2:
+  let variable: i32 = 2
+else if num == 3:
+  let variable: i32 = 3
+else:
+  let variable: i32 = 4
+)";
+
+  auto ifBlock = Stmt::Block({});
+  ifBlock.statements.push_back(
+    Stmt::VariableDeclaration(
+      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
+      LevType::Builtin::i32(),
+      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION))
+    )
+  );
+
+  auto elseIfBlock1 = Stmt::Block({});
+  elseIfBlock1.statements.push_back(
+    Stmt::VariableDeclaration(
+      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
+      LevType::Builtin::i32(),
+      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION))
+    )
+  );
+
+  auto elseIfBlock2 = Stmt::Block({});
+  elseIfBlock2.statements.push_back(
+    Stmt::VariableDeclaration(
+      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
+      LevType::Builtin::i32(),
+      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION))
+    )
+  );
+
+  auto elseBlock = Stmt::Block({});
+  elseBlock.statements.push_back(
+    Stmt::VariableDeclaration(
+      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
+      LevType::Builtin::i32(),
+      Expr::Literal(Token(TokenType::Integer, "4", TEST_LOCATION))
+    )
+  );
+
+  auto elseIfBranches = std::vector<Branch> {};
+  elseIfBranches.push_back(
+    Branch(
+      Expr::Binary(
+        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
+        Token(TokenType::EqualEqual, "==", TEST_LOCATION)
+      ),
+      std::move(elseIfBlock1)
+    )
+  );
+  elseIfBranches.push_back(
+    Branch(
+      Expr::Binary(
+        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
+        Token(TokenType::EqualEqual, "==", TEST_LOCATION)
+      ),
+      std::move(elseIfBlock2)
+    )
+  );
+
+  auto statement = Stmt::Control(
+    Branch(
+      Expr::Binary(
+        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
+        Token(TokenType::EqualEqual, "==", TEST_LOCATION)),
+      std::move(ifBlock)
+    ),
+    std::move(elseIfBranches),
+    std::move(elseBlock)
+  );
+
+
+  verifyStatement(source, std::move(statement));
+}

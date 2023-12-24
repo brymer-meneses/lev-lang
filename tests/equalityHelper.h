@@ -31,6 +31,10 @@ constexpr auto operator==(const FunctionArgument& t1, const FunctionArgument& t2
   return t1.identifier == t2.identifier and t1.type == t2.type;
 }
 
+constexpr auto operator==(const Branch& e1, const Branch& e2) -> bool {
+  return e1.condition == e2.condition and *e1.body == *e2.body;
+}
+
 constexpr auto operator==(const Stmt::Block& s1, const Stmt::Block& s2) -> bool {
   for (const auto& [s1, s2] : std::views::zip(s1.statements, s2.statements)) {
     if (s1 != s2) {
@@ -49,6 +53,20 @@ constexpr auto operator==(const Stmt::Return& s1, const Stmt::Return& s2) -> boo
 
 constexpr auto operator==(const Stmt::VariableDeclaration& s1, const Stmt::VariableDeclaration& s2) -> bool {
   return s1.type == s2.type and s1.identifier == s2.identifier and s1.value == s1.value;
+}
+
+constexpr auto operator==(const Stmt::Control& e1, const Stmt::Control& e2) -> bool {
+  if (e1.elseBody and not e2.elseBody) return false;
+  if (not e1.elseBody and e2.elseBody) return false;
+
+  if (e1.elseBody and e2.elseBody) {
+    if (*e1.elseBody.value() != *e2.elseBody.value()) {
+      std::println(stderr, "REACHED HERE!!");
+      return false;
+    }
+  }
+
+  return e1.ifBranch == e2.ifBranch and e1.elseIfBranches == e2.elseIfBranches;
 }
 
 constexpr auto operator==(const Expr::Binary& e1, const Expr::Binary& e2) -> bool {

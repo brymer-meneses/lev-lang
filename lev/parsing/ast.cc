@@ -35,6 +35,22 @@ Stmt::Block::Block(std::vector<Stmt> statements)
 Stmt::Return::Return(Expr expr) 
   : expr(std::move(expr)) {} 
 
+Stmt::Control::Control(Branch ifBranch, 
+               std::vector<Branch> elseIfBranches,
+               std::optional<Stmt> elseBody)
+    : ifBranch(std::move(ifBranch)), 
+      elseIfBranches(std::move(elseIfBranches)) {
+  if (elseBody.has_value()) {
+    this->elseBody = std::make_unique<Stmt>(std::move(elseBody.value()));
+  } else {
+    this->elseBody = std::nullopt;
+  }
+}
+
 FunctionArgument::FunctionArgument(Token identifier, LevType type) 
   : identifier(identifier)
   , type(type) {}
+
+Branch::Branch(Expr condition, Stmt then)
+    : condition(std::move(condition)), 
+      body(std::make_unique<Stmt>(std::move(then))) {}

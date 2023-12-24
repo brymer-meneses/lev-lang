@@ -41,7 +41,7 @@ struct Expr {
 
     template <typename T>
     requires std::is_constructible_v<ValueType, T>
-    constexpr Expr(T value) : value(value) {}
+    constexpr Expr(T value) : value(std::move(value)) {}
 
   private:
     ValueType value;
@@ -57,6 +57,15 @@ struct FunctionArgument {
   explicit FunctionArgument(Token identifier, LevType type);
 };
 
+struct Stmt;
+
+struct Branch {
+  Expr condition;
+  std::unique_ptr<Stmt> body;
+
+  Branch(Expr condition, Stmt stmt);
+};
+
 struct Stmt {
 
   struct VariableDeclaration {
@@ -67,7 +76,6 @@ struct Stmt {
     explicit VariableDeclaration(Token identifier, LevType type, Expr value);
   };
 
-
   struct FunctionDeclaration {
     Token identifier;
     std::vector<FunctionArgument> arguments;
@@ -75,6 +83,14 @@ struct Stmt {
     std::unique_ptr<Stmt> body;
 
     explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type, Stmt body);
+  };
+
+  struct Control {
+    Branch ifBranch;
+    std::vector<Branch> elseIfBranches;
+    std::optional<std::unique_ptr<Stmt>> elseBody;
+
+    Control(Branch ifBranch, std::vector<Branch> elseIfBranches, std::optional<Stmt> elseBody);
   };
 
   struct Block {
@@ -88,7 +104,7 @@ struct Stmt {
     explicit Return() {};
   };
 
-  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return>;
+  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return, Control>;
 
   public:
     constexpr auto accept(auto visitor) -> decltype(auto) {

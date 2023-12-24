@@ -32,6 +32,10 @@ auto Parser::parseDeclaration() -> std::expected<Stmt, ParseError> {
     return parseVariableDeclaration();
   }
 
+  if (match(TokenType::If)) {
+    return parseControlStmt();
+  }
+
   return parseStatement();
 }
 
@@ -85,6 +89,31 @@ auto Parser::parseReturnStmt() -> std::expected<Stmt, ParseError> {
   }
   auto expr = TRY(parseExpression());
   return Stmt::Return(std::move(expr));
+}
+
+auto Parser::parseControlStmt() -> std::expected<Stmt, ParseError> {
+  auto condition = TRY(parseExpression());
+
+  CONSUME(TokenType::Colon);
+  auto body = TRY(parseBlockStmt());
+
+  auto ifBranch = Branch(std::move(condition), std::move(body));
+  std::vector<Branch> elseIfBranches;
+  while (match(TokenType::Else) and match(TokenType::If)) {
+    auto condition = TRY(parseExpression());
+    CONSUME(TokenType::Colon)
+    auto body = TRY(parseBlockStmt());
+    elseIfBranches.push_back(Branch(std::move(condition), std::move(body)));
+  }
+
+  std::optional<Stmt> elseBody = std::nullopt;
+  if (peekPrev().type == TokenType::Else) {
+    CONSUME(TokenType::Colon);
+    auto body = TRY(parseBlockStmt());
+    elseBody = std::move(body);
+  }
+
+  return Stmt::Control(std::move(ifBranch), std::move(elseIfBranches), std::move(elseBody));
 }
 
 auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
@@ -141,8 +170,52 @@ auto Parser::parseStatement() -> std::expected<Stmt, ParseError> {
   return std::unexpected(ParseError::Unimplemented());
 }
 
+auto Parser::parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, ParseError> {
+  static constexpr auto getTokenPrecedence = [](TokenType tokenType) -> int {
+    switch (tokenType) {
+      case TokenType::Less:
+      case TokenType::LessEqual:
+      case TokenType::Greater:
+      case TokenType::GreaterEqual:
+      case TokenType::EqualEqual:
+      case TokenType::BangEqual:
+        return 10;
+      case TokenType::Plus:
+      case TokenType::PlusEqual:
+      case TokenType::Minus:
+      case TokenType::MinusEqual:
+        return 20;
+      case TokenType::Star:
+      case TokenType::StarEqual:
+      case TokenType::Slash:
+      case TokenType::SlashEqual:
+        return 40;
+      default:
+        return -1;
+    }
+  };
+
+  while (true) {
+    int tokenPrec = getTokenPrecedence(peek().type);
+    if (tokenPrec < exprPrec) {
+      return lhs;
+    }
+    auto binOp = advance();
+    auto rhs = TRY(parseLiteralExpr());
+
+    int nextPrec = getTokenPrecedence(peek().type);
+    if (tokenPrec < nextPrec) {
+      rhs = TRY(parseBinaryExprRHS(tokenPrec + 1, std::move(rhs)));
+
+    }
+
+    lhs = Expr::Binary(std::move(lhs), std::move(rhs), binOp);
+  }
+}
+
 auto Parser::parseExpression() -> std::expected<Expr, ParseError> {
-  return parseLiteralExpr();
+  auto lhs = TRY(parseLiteralExpr());
+  return parseBinaryExprRHS(0, std::move(lhs));
 }
 
 auto Parser::parseLiteralExpr() -> std::expected<Expr, ParseError> {
@@ -203,6 +276,14 @@ auto Parser::peek() const -> const Token& {
   }
 
   return mTokens[mCurrent];
+}
+
+auto Parser::advance() -> const Token& {
+  mCurrent += 1;
+  if (isAtEnd()) {
+    return mTokens.back();
+  }
+  return mTokens.at(mCurrent-1);
 }
 
 auto Parser::peekPrev() const -> const Token& {
