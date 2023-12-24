@@ -3,7 +3,7 @@
 #include <format>
 #include <source_location>
 
-#include <lev/sourceLocation.h>
+#include <lev/diagnostics/sourceLocation.h>
 #include <lev/parsing/token.h>
 
 namespace lev {

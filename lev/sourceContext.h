@@ -2,7 +2,7 @@
 #include <vector>
 #include <map>
 
-#include <lev/sourceLocation.h>
+#include <lev/diagnostics/sourceLocation.h>
 
 namespace lev {
 

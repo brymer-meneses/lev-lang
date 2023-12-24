@@ -9,6 +9,7 @@
 #include <format>
 
 #include <lev/diagnostics/errors.h>
+#include <lev/diagnostics/sourceLocation.h>
 #include <lev/parsing/token.h>
 
 namespace lev {

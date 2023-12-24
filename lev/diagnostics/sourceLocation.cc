@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <lev/misc/macros.h>
-#include <lev/sourceLocation.h>
+#include <lev/diagnostics/sourceLocation.h>
 
 auto operator+(const SourceLocation& l1, const SourceLocation& l2) -> SourceLocation {
   if (l1.filename != l2.filename) {

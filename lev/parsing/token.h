@@ -1,5 +1,5 @@
 #pragma once
-#include "../sourceLocation.h"
+#include <lev/diagnostics/sourceLocation.h>
 
 namespace lev {
 

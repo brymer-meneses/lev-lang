@@ -2,7 +2,7 @@
 
 #include <lev/parsing/token.h>
 #include <lev/parsing/ast.h>
-#include <lev/sourceLocation.h>
+#include <lev/diagnostics/sourceLocation.h>
 
 static SourceLocation TEST_LOCATION("testing.lev", 0, 0, 1);
 

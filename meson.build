@@ -8,8 +8,8 @@ sources = [
   'lev/diagnostics/reporter.cc',
   'lev/diagnostics/errors.cc',
 
+  'lev/diagnostics/sourceLocation.cc',
   'lev/sourceContext.cc',
-  'lev/sourceLocation.cc',
   'lev/lev.cc',
 ]
 

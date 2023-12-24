@@ -5,6 +5,7 @@
 #include <lev/parsing/token.h>
 #include <lev/parsing/lexer.h>
 #include <lev/diagnostics/reporter.h>
+#include <lev/diagnostics/sourceLocation.h>
 #include <lev/sourceContext.h>
 
 namespace lev {
