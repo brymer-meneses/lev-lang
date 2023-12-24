@@ -19,10 +19,6 @@ Stmt::VariableDeclaration::VariableDeclaration(Token identifier, LevType type, E
   , type(type)
   , value(std::move(value)) {}
 
-Stmt::FunctionArgument::FunctionArgument(Token identifier, LevType type) 
-  : identifier(identifier)
-  , type(type) {}
-
 Stmt::FunctionDeclaration::FunctionDeclaration(
     Token identifier, 
     std::vector<FunctionArgument> arguments, 
@@ -32,3 +28,13 @@ Stmt::FunctionDeclaration::FunctionDeclaration(
   , arguments(std::move(arguments))
   , returnType(type) 
   , body(std::make_unique<Stmt>(std::move(body))) {}
+
+Stmt::Block::Block(std::vector<Stmt> statements) 
+  : statements(std::move(statements)) {} 
+
+Stmt::Return::Return(Expr expr) 
+  : expr(std::move(expr)) {} 
+
+FunctionArgument::FunctionArgument(Token identifier, LevType type) 
+  : identifier(identifier)
+  , type(type) {}

@@ -35,38 +35,59 @@ auto Parser::parseDeclaration() -> std::expected<Stmt, ParseError> {
   return parseStatement();
 }
 
+auto Parser::parseFunctionArgument() -> std::expected<FunctionArgument, ParseError> {
+  auto argName = TRY(expect(TokenType::Identifier));
+  CONSUME(TokenType::Colon);
+  auto type = TRY(parseType());
+  return FunctionArgument(argName, type);
+}
+
 auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParseError> {
   auto identifier = TRY(expect(TokenType::Identifier));
   CONSUME(TokenType::LeftParen);
 
-  auto arguments = std::vector<Stmt::FunctionArgument>{};
+  auto arguments = std::vector<FunctionArgument>{};
 
   while (not match(TokenType::RightParen)) {
-    auto argName = TRY(expect(TokenType::Identifier));
-
-    CONSUME(TokenType::Colon);
-
-    auto type = TRY(parseType());
-
-    arguments.push_back(Stmt::FunctionArgument(argName, type));
+    auto argument = TRY(parseFunctionArgument());
 
     if (not check(TokenType::RightParen)) {
       CONSUME(TokenType::Comma);
     }
+
+    arguments.push_back(argument);
   }
 
   CONSUME(TokenType::RightArrow);
-  auto returnType = parseType();
-  auto body = TRY(parseStatement());
+  auto returnType = TRY(parseType());
 
-  return Stmt::FunctionDeclaration(identifier, std::move(arguments), *returnType, std::move(body));
+  CONSUME(TokenType::Colon);
+  auto body = TRY(parseBlockStmt());
+  return Stmt::FunctionDeclaration(identifier, std::move(arguments), returnType, std::move(body));
 }
 
+auto Parser::parseBlockStmt() -> std::expected<Stmt, ParseError> {
+  CONSUME(TokenType::Indent);
+  auto statements = std::vector<Stmt>{};
+  while (not match(TokenType::Dedent) and not isAtEnd()) {
+    auto stmt = parseStatement();
+    if (not stmt) {
+      return stmt;
+    }
+    statements.push_back(std::move(*stmt));
+  }
+  return Stmt::Block(std::move(statements));
+}
+
+auto Parser::parseReturnStmt() -> std::expected<Stmt, ParseError> {
+  auto expr = TRY(parseExpression());
+  return Stmt::Return(std::move(expr));
+}
 
 auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
   auto identifier = TRY(expect(TokenType::Identifier));
 
-  std::expected<LevType, ParseError> type = LevType::Inferred();
+  LevType type = LevType::Inferred();
 
   if (match(TokenType::Colon)) {
     type = TRY(parseType());
@@ -76,7 +97,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
 
   auto value = TRY(parseExpression());
 
-  return Stmt::VariableDeclaration(identifier, *type, std::move(value));
+  return Stmt::VariableDeclaration(identifier, type, std::move(value));
 }
 
 auto Parser::parseType() -> std::expected<LevType, ParseError> {
@@ -110,6 +131,10 @@ auto Parser::parseStatement() -> std::expected<Stmt, ParseError> {
     return parseVariableDeclaration();
   }
 
+  if (match(TokenType::Return)) {
+    return parseReturnStmt();
+  }
+
   return std::unexpected(ParseError::Unimplemented());
 }
 
@@ -118,7 +143,7 @@ auto Parser::parseExpression() -> std::expected<Expr, ParseError> {
 }
 
 auto Parser::parseLiteralExpr() -> std::expected<Expr, ParseError> {
-  if (match({TokenType::Number, TokenType::String, TokenType::Identifier, TokenType::Boolean})) {
+  if (match({TokenType::Integer, TokenType::String, TokenType::Identifier, TokenType::True, TokenType::False})) {
     return Expr::Literal(peekPrev());
   }
 
@@ -133,11 +158,11 @@ auto Parser::setTokens(std::vector<Token> tokens) -> void {
   mTokens = std::move(tokens);
 }
 
-auto Parser::expect(TokenType type) -> std::expected<Token, ParseError> {
-  if (match(type)) {
+auto Parser::expect(TokenType expected) -> std::expected<Token, ParseError> {
+  if (match(expected)) {
     return peekPrev();
   }
-  return std::unexpected(ParseError::UnexpectedToken(type, peek().type, getCurrentLocation()));
+  return std::unexpected(ParseError::UnexpectedToken(peek().type, expected, getCurrentLocation()));
 }
 
 auto Parser::match(TokenType type) -> bool {

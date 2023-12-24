@@ -37,6 +37,25 @@ auto Lexer::lexNextToken() -> std::expected<void, LexError> {
       buildToken(TokenType::Comma);
       break;
 
+    case '(':
+      buildToken(TokenType::LeftParen);
+      break;
+    case ')':
+      buildToken(TokenType::RightParen);
+      break;
+    case '{':
+      buildToken(TokenType::LeftBrace);
+      break;
+    case '}':
+      buildToken(TokenType::RightBrace);
+      break;
+    case '[':
+      buildToken(TokenType::LeftBracket);
+      break;
+    case ']':
+      buildToken(TokenType::RightBracket);
+      break;
+
     case ';':
       buildToken(TokenType::Semicolon);
       break;

@@ -1,4 +1,6 @@
 #include "testHelpers.h"
+#include "equalityHelper.h"
+
 #include <lev/parsing/lexer.h>
 #include <lev/parsing/parser.h>
 

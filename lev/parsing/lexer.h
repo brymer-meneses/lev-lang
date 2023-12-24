@@ -22,11 +22,20 @@ class Lexer {
     size_t mStart = 0;
     size_t mLine = 1;
     size_t mLineStart = 0;
+
+    std::stack<size_t> mIndentationStack;
+
     std::vector<Token> mTokens;
 
   public:
-    Lexer(std::string_view source, std::string_view filename) : mSource(source), mFilename(filename) { }
-    Lexer() = default;
+    Lexer(std::string_view source, std::string_view filename) 
+      : mSource(source), mFilename(filename) {
+      mIndentationStack.push(0);
+    }
+
+    Lexer() {
+      mIndentationStack.push(0);
+    }
 
     auto setSource(std::string_view) -> void;
     auto setFilename(std::string_view) -> void;
@@ -39,6 +48,8 @@ class Lexer {
     auto lexNumber() -> std::expected<void, LexError>;
     auto lexString() -> std::expected<void, LexError>;
     auto lexIdentifier() -> std::expected<void, LexError>;
+
+    auto lexIndent() -> std::expected<void, LexError>;
 
     auto getCurrentLocation() -> SourceLocation;
     auto getPrevCharLocation() -> SourceLocation;

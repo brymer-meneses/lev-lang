@@ -19,6 +19,12 @@ TEST(Lexer, SingleCharacterTokens) {
     TokenType::Star,
     TokenType::Colon,
     TokenType::Semicolon,
+    TokenType::LeftParen,
+    TokenType::RightParen,
+    TokenType::LeftBracket,
+    TokenType::RightBracket,
+    TokenType::LeftBrace,
+    TokenType::RightBrace,
   };
 
   auto lexemes = {
@@ -30,10 +36,16 @@ TEST(Lexer, SingleCharacterTokens) {
     "<",
     "*",
     ":",
-    ";"
+    ";",
+    "(",
+    ")",
+    "[",
+    "]",
+    "{",
+    "}",
   };
 
-  verifyTokens("= + - ! > < * : ;", lexemes, types);
+  verifyTokens("= + - ! > < * : ; ( ) [ ] { }", lexemes, types);
 }
 
 TEST(Lexer, MultipleCharacterTokens) {

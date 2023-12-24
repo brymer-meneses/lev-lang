@@ -1,6 +1,7 @@
 #pragma once
 #include <variant>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include <lev/parsing/token.h>
@@ -8,19 +9,7 @@
 
 namespace lev {
 
-struct Node {
-  Node* parent = nullptr;
-
-  constexpr auto setParent(Node* parent) -> void {
-    this->parent = parent;
-  }
-
-  constexpr auto getParent() const -> Node* {
-    return parent;
-  }
-};
-
-struct Expr : Node {
+struct Expr {
 
   struct Binary {
     std::unique_ptr<Expr> left;
@@ -60,7 +49,14 @@ struct Expr : Node {
 };
 
 
-struct Stmt : Node {
+struct FunctionArgument {
+  Token identifier;
+  LevType type;
+
+  explicit FunctionArgument(Token identifier, LevType type);
+};
+
+struct Stmt {
 
   struct VariableDeclaration {
     Token identifier;
@@ -70,12 +66,6 @@ struct Stmt : Node {
     explicit VariableDeclaration(Token identifier, LevType type, Expr value);
   };
 
-  struct FunctionArgument {
-    Token identifier;
-    LevType type;
-
-    explicit FunctionArgument(Token identifier, LevType type);
-  };
 
   struct FunctionDeclaration {
     Token identifier;
@@ -91,7 +81,12 @@ struct Stmt : Node {
     explicit Block(std::vector<Stmt> statements);
   };
 
-  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block>;
+  struct Return {
+    Expr expr;
+    explicit Return(Expr expr);
+  };
+
+  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return>;
 
   public:
     constexpr auto accept(auto visitor) -> decltype(auto) {

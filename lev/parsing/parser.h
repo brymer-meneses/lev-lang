@@ -24,8 +24,9 @@ class Parser {
   private:
     auto parseStatement() -> std::expected<Stmt, ParseError>;
     auto parseBlockStmt() -> std::expected<Stmt, ParseError>;
-    auto parseDeclaration() -> std::expected<Stmt, ParseError>;
+    auto parseReturnStmt() -> std::expected<Stmt, ParseError>;
 
+    auto parseDeclaration() -> std::expected<Stmt, ParseError>;
     auto parseVariableDeclaration() -> std::expected<Stmt, ParseError>;
     auto parseFunctionDeclaration() -> std::expected<Stmt, ParseError>;
 
@@ -34,6 +35,7 @@ class Parser {
     auto parseLiteralExpr() -> std::expected<Expr, ParseError>;
     auto parseUnaryExpr() -> std::expected<Expr, ParseError>;
 
+    auto parseFunctionArgument() -> std::expected<FunctionArgument, ParseError>;
     auto parseType() -> std::expected<LevType, ParseError>;
 
     auto match(TokenType type) -> bool;

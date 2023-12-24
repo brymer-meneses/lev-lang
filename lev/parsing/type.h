@@ -8,58 +8,55 @@ namespace lev {
 
 class LevType {
   public:
-    class Builtin {
-      public:
-        enum class Types {
-          i8,
-          u8,
-          i16,
-          u16,
-          i32,
-          u32,
-          i64,
-          u64,
-          f32,
-          f64,
-        };
+    struct Builtin {
+      enum class Types {
+        i8,
+        u8,
+        i16,
+        u16,
+        i32,
+        u32,
+        i64,
+        u64,
+        f32,
+        f64,
+      };
 
-        Types type;
+      Types type;
 
-      public:
-        static constexpr auto i8() -> Builtin {
-          return Builtin(Types::i8);
-        }
-        static constexpr auto i16() -> Builtin {
-          return Builtin(Types::i16);
-        }
-        static constexpr auto i32() -> Builtin {
-          return Builtin(Types::i32);
-        }
-        static constexpr auto i64() -> Builtin {
-          return Builtin(Types::i64);
-        }
+      static constexpr auto i8() -> Builtin {
+        return Builtin(Types::i8);
+      }
+      static constexpr auto i16() -> Builtin {
+        return Builtin(Types::i16);
+      }
+      static constexpr auto i32() -> Builtin {
+        return Builtin(Types::i32);
+      }
+      static constexpr auto i64() -> Builtin {
+        return Builtin(Types::i64);
+      }
 
-        static constexpr auto u8() -> Builtin {
-          return Builtin(Types::u8);
-        }
-        static constexpr auto u16() -> Builtin {
-          return Builtin(Types::u16);
-        }
-        static constexpr auto u32() -> Builtin {
-          return Builtin(Types::u32);
-        }
-        static constexpr auto u64() -> Builtin {
-          return Builtin(Types::u64);
-        }
+      static constexpr auto u8() -> Builtin {
+        return Builtin(Types::u8);
+      }
+      static constexpr auto u16() -> Builtin {
+        return Builtin(Types::u16);
+      }
+      static constexpr auto u32() -> Builtin {
+        return Builtin(Types::u32);
+      }
+      static constexpr auto u64() -> Builtin {
+        return Builtin(Types::u64);
+      }
 
-        static constexpr auto f32() -> Builtin {
-          return Builtin(Types::f32);
-        }
-        static constexpr auto f64() -> Builtin {
-          return Builtin(Types::f64);
-        }
-
-      private:
+      static constexpr auto f32() -> Builtin {
+        return Builtin(Types::f32);
+      }
+      static constexpr auto f64() -> Builtin {
+        return Builtin(Types::f64);
+      }
+    private:
         constexpr Builtin(Types type) : type(type) {};
     };
 

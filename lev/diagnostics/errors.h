@@ -71,7 +71,7 @@ class ParseError {
         , location(location) {}
 
       auto format() const -> std::string {
-        return std::format("Unexpected token");
+        return std::format("Unexpected token `{}`, expected: `{}`", Token::typeToString(got), Token::typeToString(expected));
       }
     };
 
