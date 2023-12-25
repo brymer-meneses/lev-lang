@@ -120,8 +120,7 @@ auto Parser::parseControlStmt() -> std::expected<Stmt, ParseError> {
   std::optional<Stmt> elseBody = std::nullopt;
   if (peekPrev().type == TokenType::Else) {
     CONSUME(TokenType::Colon);
-    auto body = TRY(parseBlockStmt());
-    elseBody = std::move(body);
+    elseBody = TRY(parseBlockStmt());
   }
 
   return Stmt::Control(std::move(ifBranch), std::move(elseIfBranches), std::move(elseBody));

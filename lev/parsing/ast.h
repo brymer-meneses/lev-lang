@@ -35,7 +35,7 @@ struct Expr {
   using ValueType = std::variant<Binary, Unary, Literal>;
 
   public:
-    auto accept(auto visitor) -> decltype(auto) {
+    auto accept(auto visitor) const -> decltype(auto) {
       return std::visit(visitor, value);
     }
 
@@ -114,9 +114,14 @@ struct Stmt {
   using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return, Control, Assignment>;
 
   public:
-    constexpr auto accept(auto visitor) -> decltype(auto) {
+    constexpr auto accept(auto visitor) const -> decltype(auto) {
       return std::visit(visitor, value);
     };
+
+    template <typename T>
+    constexpr auto is() const -> bool {
+      return std::holds_alternative<T>(value);
+    }
 
     template <typename T>
     requires std::is_constructible_v<ValueType, T>

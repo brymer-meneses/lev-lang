@@ -9,7 +9,7 @@
   std::println(stderr, "[{}:{}]: {}", location.file_name(), location.line(), location.function_name()); \
   std::println(stderr, "INTERNAL ERROR: " __VA_ARGS__); \
   exit(1); \
-} \
+}
 
 #define TRY(expr)                                                              \
   ({                                                                           \
@@ -19,3 +19,10 @@
     };                                                                         \
     std::move(*temp);                                                          \
   });
+
+#define TODO() \
+{ \
+  const auto location = std::source_location::current(); \
+  std::println(stderr, "TODO code reached at [{}:{}:{}]", location.file_name(), location.line(), location.function_name()); \
+  exit(1); \
+} \

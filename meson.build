@@ -7,9 +7,14 @@ sources = [
 
   'lev/diagnostics/reporter.cc',
   'lev/diagnostics/errors.cc',
-
   'lev/diagnostics/sourceLocation.cc',
-  'lev/sourceContext.cc',
+
+  'lev/codegen/compiler.cc',
+  'lev/codegen/context.cc',
+  'lev/codegen/scope.cc',
+
+  'lev/module.cc',
+  'lev/executable.cc',
   'lev/lev.cc',
 ]
 

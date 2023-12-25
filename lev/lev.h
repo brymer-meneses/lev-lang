@@ -6,7 +6,7 @@
 #include <lev/parsing/lexer.h>
 #include <lev/diagnostics/reporter.h>
 #include <lev/diagnostics/sourceLocation.h>
-#include <lev/sourceContext.h>
+#include <lev/executable.h>
 
 namespace lev {
 
@@ -22,7 +22,7 @@ public:
 private:
   Lexer mLexer;
   Reporter mReporter;
-  SourceContext mSourceContext;
+  Executable mExecutable;
   
 private:
   auto processCommandLineArgs(const char**) -> void;
