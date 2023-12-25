@@ -8,8 +8,12 @@ class Context {
 private:
   
   std::stack<Scope> mScopes;
+  std::shared_ptr<llvm::IRBuilder<>> mBuilder;
 
 public:
+  Context(std::shared_ptr<llvm::IRBuilder<>> builder) : mBuilder(builder) {}
+  Context() = default;
+
   auto createScope() -> Scope&;
   auto getCurrentScope() -> Scope&;
   auto popCurrentScope() -> void;

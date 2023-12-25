@@ -36,9 +36,9 @@ private:
   auto convertType(const LevType&) const -> llvm::Type*;
 
 private:
-  std::unique_ptr<llvm::LLVMContext> mContext;
-  std::unique_ptr<llvm::Module> mModule;
-  std::unique_ptr<llvm::IRBuilder<>> mBuilder;
+  std::shared_ptr<llvm::LLVMContext> mContext;
+  std::shared_ptr<llvm::Module> mModule;
+  std::shared_ptr<llvm::IRBuilder<>> mBuilder;
   std::vector<Stmt> mStatements;
 
   Context mSemanticContext;

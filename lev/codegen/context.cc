@@ -8,7 +8,7 @@ auto Context::getCurrentScope() -> Scope& {
 }
 
 auto Context::createScope() -> Scope& {
-  mScopes.push(Scope());
+  mScopes.push(Scope(mBuilder));
   return mScopes.top();
 }
 

@@ -5,9 +5,11 @@
 using namespace lev;
 
 Compiler::Compiler(std::vector<Stmt> statements) {
-  mContext = std::make_unique<llvm::LLVMContext>();
-  mModule = std::make_unique<llvm::Module>("lev", *mContext);
-  mBuilder = std::make_unique<llvm::IRBuilder<>>(*mContext);
+  mContext = std::make_shared<llvm::LLVMContext>();
+  mModule = std::make_shared<llvm::Module>("lev", *mContext);
+  mBuilder = std::make_shared<llvm::IRBuilder<>>(*mContext);
+
+  mSemanticContext = Context(mBuilder);
 }
 
 auto Compiler::codegen(const Stmt& s) -> std::expected<void, CodegenError> {
@@ -31,17 +33,14 @@ auto Compiler::codegen(const Stmt::Return& s) -> std::expected<void, CodegenErro
 
 auto Compiler::codegen(const Stmt::VariableDeclaration& s) -> std::expected<void, CodegenError> {
   const auto type = convertType(s.type);
+  auto scope = mSemanticContext.getCurrentScope();
 
   if (mBuilder->GetInsertBlock() == nullptr) {
     TODO();
   }
 
-  auto* variable = mBuilder->CreateAlloca(type, nullptr, s.identifier.lexeme);
   auto* value = TRY(codegen(s.value));
-  auto scope = mSemanticContext.getCurrentScope();
-
-  mBuilder->CreateStore(value, variable);
-  scope.defineVariable(s.identifier.lexeme, variable);
+  scope.assignVariable(s.identifier.lexeme, type, value);
   return {};
 }
 
@@ -85,11 +84,7 @@ auto Compiler::codegen(const Stmt::FunctionDeclaration& s) -> std::expected<void
     auto type = functionArg.type;
 
     arg.setName(name);
-
-    auto* variable = mBuilder->CreateAlloca(convertType(type), nullptr, name);
-
-    mBuilder->CreateStore(&arg, variable);
-    scope.defineVariable(name, variable);
+    scope.assignVariable(name, convertType(type), &arg);
   }
 
   auto* block = llvm::BasicBlock::Create(*mContext, "entry", function);

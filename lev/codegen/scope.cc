@@ -3,8 +3,16 @@
 
 using namespace lev;
 
-auto Scope::defineVariable(std::string_view name, llvm::AllocaInst* allocation) -> void {
-  variables[std::string(name)] = allocation;
+auto Scope::declareVariable(std::string_view name, llvm::Type* type) -> void {
+  variables[std::string(name)] = builder->CreateAlloca(type, nullptr, name);
+}
+
+auto Scope::assignVariable(std::string_view name, llvm::Type* type, llvm::Value* value) -> void {
+  auto name_ = std::string(name);
+  if (not variables.contains(name_)) {
+    declareVariable(name_, type);
+  }
+  builder->CreateStore(value, variables.at(name_));
 }
 
 auto Scope::readVariable(std::string_view name) -> std::optional<llvm::AllocaInst*> {
