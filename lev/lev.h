@@ -16,12 +16,7 @@ public:
   Lev(const char** argv);
   auto compile() -> void;
 
-  auto lex() -> std::vector<Token>;
-  auto reset() -> void;
-
 private:
-  Lexer mLexer;
-  Reporter mReporter;
   Executable mExecutable;
   
 private:

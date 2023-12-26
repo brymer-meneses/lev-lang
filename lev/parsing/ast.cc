@@ -14,6 +14,9 @@ Expr::Unary::Unary(Expr right, Token op)
 Expr::Literal::Literal(Token value) 
   : value(value) {}
 
+Expr::Identifier::Identifier(Token identifier) 
+  : identifier(identifier) {}
+
 Stmt::VariableDeclaration::VariableDeclaration(Token identifier, LevType type, Expr value, bool isMutable) 
   : identifier(identifier)
   , type(type)

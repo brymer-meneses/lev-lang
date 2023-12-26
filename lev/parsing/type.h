@@ -91,6 +91,11 @@ public:
     return std::holds_alternative<T>(value);
   }
 
+  template <typename T>
+  constexpr auto as() const -> const T& {
+    return std::get<T>(value);
+  }
+
   constexpr auto accept(auto visitor) const -> decltype(auto) {
     return std::visit(visitor, value);
   };

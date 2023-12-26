@@ -3,6 +3,7 @@
 #include <lev/parsing/token.h>
 #include <lev/parsing/ast.h>
 #include <lev/diagnostics/sourceLocation.h>
+#include <llvm/ExecutionEngine/GenericValue.h>
 
 static SourceLocation TEST_LOCATION("testing.lev", 0, 0, 1);
 
@@ -14,6 +15,8 @@ auto verifyTokens(std::string_view source,
                   const std::initializer_list<lev::TokenType> types) -> void;
 
 auto verifyStatement(std::string_view source, const lev::Stmt& expectedStatement) -> void;
+
+auto verifyResult(std::string_view source, int result) -> void;
 
 namespace lev {
 

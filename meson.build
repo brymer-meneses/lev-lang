@@ -63,6 +63,8 @@ test_sources = [
   'tests/testRunner.cc',
   'tests/testLexer.cc',
   'tests/testParser.cc',
+  'tests/testCodegen.cc',
+
   'tests/testHelpers.cc',
 ]
 
@@ -72,6 +74,7 @@ test_runner = executable(
   dependencies: [
     gtest_dep,
     gmock_dep,
+    llvm_dep,
   ],
   cpp_args: cpp_args,
   link_with: liblev,

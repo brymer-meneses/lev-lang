@@ -4,6 +4,7 @@
 #include <source_location>
 
 #include <lev/diagnostics/sourceLocation.h>
+#include <lev/parsing/type.h>
 #include <lev/parsing/token.h>
 
 namespace lev {
@@ -123,6 +124,23 @@ struct CodegenError {
     }
   };
 
+  struct TypeMismatch {
+    std::string_view variable;
+    std::string_view type;
+    SourceLocation location;
+
+    TypeMismatch(std::string_view variable, 
+                 std::string_view type, 
+                 SourceLocation location) 
+      : variable(variable)
+      , type(type)
+      , location(location) {}
+
+    constexpr auto format() const -> std::string {
+      return std::format("Expression of type {} cannot be assigned to {}", type, variable);
+    }
+  };
+
   struct AssignmentToImmutableVariable {
     std::string_view variable;
     SourceLocation location;
@@ -137,7 +155,7 @@ struct CodegenError {
   };
 
 private:
-  using Error = std::variant<UndefinedVariable, AssignmentToImmutableVariable>;
+  using Error = std::variant<UndefinedVariable, AssignmentToImmutableVariable, TypeMismatch>;
   Error mError;
 
 public:

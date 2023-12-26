@@ -2,6 +2,7 @@
 #include <lev/misc/match.h>
 
 #include <ranges>
+#include <print>
 
 using namespace lev;
 
@@ -28,6 +29,13 @@ auto Context::getAppropriateExprType() -> std::optional<LevType> {
     [](const Stmt::VariableDeclaration& s) -> std::optional<LevType> {
       return s.type;
     },
+    [this](const Stmt::Return& s) -> std::optional<LevType> {
+      auto statement = getFirstStatementWithType<Stmt::FunctionDeclaration>();
+      if (not statement) {
+        return std::nullopt;
+      }
+      return statement.value()->returnType;
+    },
     [](const auto& s) -> std::optional<LevType> {
       return std::nullopt;
     },
@@ -52,5 +60,43 @@ auto Context::getVariableDeclaration(std::string_view name) const -> std::option
     }
   }
   return std::nullopt;
+}
+
+auto Context::typeIsFloat(const LevType& type) -> bool {
+  if (not type.is<LevType::Builtin>()) {
+    return false;
+  }
+
+  auto typeValue = type.as<LevType::Builtin>();
+
+  switch (typeValue.type) {
+    case LevType::Builtin::Types::f32:
+    case LevType::Builtin::Types::f64:
+      return true;
+    default:
+      return false;
+  }
+}
+
+auto Context::typeIsInteger(const LevType& type) -> bool {
+  if (not type.is<LevType::Builtin>()) {
+    return false;
+  }
+
+  auto typeValue = type.as<LevType::Builtin>();
+
+  switch (typeValue.type) {
+    case LevType::Builtin::Types::i8:
+    case LevType::Builtin::Types::i16:
+    case LevType::Builtin::Types::i32:
+    case LevType::Builtin::Types::i64:
+    case LevType::Builtin::Types::u8:
+    case LevType::Builtin::Types::u16:
+    case LevType::Builtin::Types::u32:
+    case LevType::Builtin::Types::u64:
+      return true;
+    default:
+      return false;
+  }
 }
 

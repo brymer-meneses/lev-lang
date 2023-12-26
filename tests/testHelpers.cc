@@ -1,4 +1,5 @@
 #include "testHelpers.h"
+#include "codegen/compiler.h"
 #include "equalityHelper.h"
 
 #include <lev/parsing/lexer.h>
@@ -61,6 +62,26 @@ auto verifyStatement(std::string_view source, const Stmt& expectedStatement) -> 
   ASSERT_EQ(statements->size(), 1);
   
   EXPECT_EQ(statements->at(0), expectedStatement);
+}
+
+auto verifyResult(std::string_view source, int result) -> void {
+  Lexer lexer(source, "test.lev");
+  auto tokens = lexer.lex();
+
+  ASSERT_TRUE(tokens.has_value()) << tokens.error().message();
+
+  Parser parser;
+  parser.setTokens(std::move(*tokens));
+
+  auto statements = parser.parse();
+
+  ASSERT_TRUE(statements) << statements.error().message();
+  ASSERT_EQ(statements->size(), 1);
+
+  Compiler compiler(std::move(*statements));
+  compiler.compile();
+  
+  std::println("{}", compiler.dump());
 }
 
 auto lev::operator<<(std::ostream& stream, const lev::TokenType& tokenType) -> std::ostream& {

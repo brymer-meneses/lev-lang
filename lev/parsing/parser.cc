@@ -212,7 +212,7 @@ auto Parser::parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, P
       return lhs;
     }
     auto binOp = advance();
-    auto rhs = TRY(parseLiteralExpr());
+    auto rhs = TRY(parsePrimaryExpr());
 
     int nextPrec = getTokenPrecedence(peek().type);
     if (tokenPrec < nextPrec) {
@@ -225,13 +225,17 @@ auto Parser::parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, P
 }
 
 auto Parser::parseExpression() -> std::expected<Expr, ParseError> {
-  auto lhs = TRY(parseLiteralExpr());
+  auto lhs = TRY(parsePrimaryExpr());
   return parseBinaryExprRHS(0, std::move(lhs));
 }
 
-auto Parser::parseLiteralExpr() -> std::expected<Expr, ParseError> {
-  if (match({TokenType::Integer, TokenType::String, TokenType::Identifier, TokenType::True, TokenType::False})) {
+auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParseError> {
+  if (match({TokenType::Integer, TokenType::String, TokenType::True, TokenType::False})) {
     return Expr::Literal(peekPrev());
+  }
+
+  if (match(TokenType::Identifier)) {
+    return Expr::Identifier(peekPrev());
   }
 
   return std::unexpected(ParseError::Unimplemented());

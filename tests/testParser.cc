@@ -64,14 +64,14 @@ TEST(Parser, FunctionDeclaration) {
     )
   );
   block.statements.push_back(
-    Stmt::Return(Expr::Literal(Token(TokenType::Integer, "0", TEST_LOCATION)))
+    Stmt::Return(Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)))
   );
 
   verifyStatement(
 R"(
 fn main(a: i32, b: i32) -> i32:
     let num: i32 = 5
-    return 0
+    return num
 )",
   Stmt::FunctionDeclaration(
       Token(TokenType::Identifier, "main", TEST_LOCATION),
@@ -154,7 +154,7 @@ else:
   elseIfBranches.push_back(
     Branch(
       Expr::Binary(
-        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
         Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
         Token(TokenType::EqualEqual, "==", TEST_LOCATION)
       ),
@@ -164,7 +164,7 @@ else:
   elseIfBranches.push_back(
     Branch(
       Expr::Binary(
-        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
         Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
         Token(TokenType::EqualEqual, "==", TEST_LOCATION)
       ),
@@ -175,7 +175,7 @@ else:
   auto statement = Stmt::Control(
     Branch(
       Expr::Binary(
-        Expr::Literal(Token(TokenType::Identifier, "num", TEST_LOCATION)),
+        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
         Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
         Token(TokenType::EqualEqual, "==", TEST_LOCATION)),
       std::move(ifBlock)

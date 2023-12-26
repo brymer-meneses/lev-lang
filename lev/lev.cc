@@ -32,25 +32,6 @@ auto Lev::processCommandLineArgs(const char** argv) -> void {
   }
 }
 
-auto Lev::reset() -> void {
-  mLexer.reset();
-}
-
 auto Lev::compile() -> void {
-
 }
 
-auto Lev::lex() -> std::vector<Token> {
-  auto tokens = mLexer.lex();
-  if (not tokens) {
-    auto error = tokens.error();
-    auto sourceLine = mExecutable.getSourceLineFromLocation(error.location());
-
-    if (not sourceLine) {
-      RAISE_INTERNAL_ERROR("Error getting source line from location");
-    }
-
-    mReporter.report({error, *sourceLine});
-  }
-  return *tokens;
-}

@@ -27,12 +27,17 @@ struct Expr {
     explicit Unary(Expr right, Token op);
   };
 
+  struct Identifier {
+    Token identifier;
+    explicit Identifier(Token identifier);
+  };
+
   struct Literal {
     Token value;
     explicit Literal(Token value);
   };
 
-  using ValueType = std::variant<Binary, Unary, Literal>;
+  using ValueType = std::variant<Binary, Unary, Literal, Identifier>;
 
   public:
     constexpr auto accept(auto visitor) const -> decltype(auto) {

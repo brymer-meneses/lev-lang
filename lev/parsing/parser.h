@@ -34,7 +34,7 @@ class Parser {
 
     auto parseExpression() -> std::expected<Expr, ParseError>;
     auto parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, ParseError>;
-    auto parseLiteralExpr() -> std::expected<Expr, ParseError>;
+    auto parsePrimaryExpr() -> std::expected<Expr, ParseError>;
     auto parseUnaryExpr() -> std::expected<Expr, ParseError>;
 
     auto parseFunctionArgument() -> std::expected<FunctionArgument, ParseError>;

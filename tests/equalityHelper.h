@@ -77,6 +77,10 @@ constexpr auto operator==(const Expr::Binary& e1, const Expr::Binary& e2) -> boo
   return e1.op == e2.op and *e1.left == *e2.left and *e1.right == *e2.right;
 }
 
+constexpr auto operator==(const Expr::Identifier& e1, const Expr::Identifier& e2) -> bool {
+  return e1.identifier == e2.identifier;
+}
+
 constexpr auto operator==(const Expr::Unary& e1, const Expr::Unary& e2) -> bool {
   return e1.op == e2.op and e1.right == e2.right;
 }

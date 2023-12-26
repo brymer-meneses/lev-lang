@@ -18,6 +18,9 @@ class Compiler {
 public:
   Compiler(std::vector<Stmt> statements);
 
+  auto dump() const -> std::string;
+  auto compile() -> std::expected<void, CodegenError>;
+
 private:
   auto codegen(const Stmt::Block&) -> std::expected<void, CodegenError>;
   auto codegen(const Stmt::Return&) -> std::expected<void, CodegenError>;
@@ -26,6 +29,7 @@ private:
   auto codegen(const Stmt::Assignment&) -> std::expected<void, CodegenError>;
   auto codegen(const Stmt::Control&) -> std::expected<void ,CodegenError>;
 
+  auto codegen(const Expr::Identifier&) -> std::expected<llvm::Value*, CodegenError>;
   auto codegen(const Expr::Binary&) -> std::expected<llvm::Value*, CodegenError>;
   auto codegen(const Expr::Unary&) -> std::expected<llvm::Value*, CodegenError>;
   auto codegen(const Expr::Literal&) -> std::expected<llvm::Value*, CodegenError>;

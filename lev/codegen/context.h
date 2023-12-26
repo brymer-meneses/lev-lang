@@ -1,7 +1,9 @@
 #pragma once
-
 #include "codegen/scope.h"
+
+#include <ranges>
 #include <vector>
+
 namespace lev {
 
 class Context {
@@ -27,6 +29,21 @@ public:
   auto getVariableDeclaration(std::string_view) const -> std::optional<const Stmt::VariableDeclaration*>;
 
   auto getAppropriateExprType() -> std::optional<LevType>;
+
+  template <typename T>
+  auto getFirstStatementWithType() -> std::optional<const T*> {
+    for (const auto& scope : std::views::reverse(mScopes)) {
+      for (const auto& statement : std::views::reverse(scope.statements)) {
+        if (statement->is<T>()) {
+          return &statement->as<T>();
+        }
+      }
+    }
+    return std::nullopt;
+  }
+
+  static auto typeIsFloat(const LevType&) -> bool;
+  static auto typeIsInteger(const LevType&) -> bool;
 };
 
 }

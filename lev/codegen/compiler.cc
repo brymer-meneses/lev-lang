@@ -4,12 +4,33 @@
 
 using namespace lev;
 
-Compiler::Compiler(std::vector<Stmt> statements) {
+Compiler::Compiler(std::vector<Stmt> statements) : mStatements(std::move(statements)) {
   mContext = std::make_shared<llvm::LLVMContext>();
   mModule = std::make_shared<llvm::Module>("lev", *mContext);
   mBuilder = std::make_shared<llvm::IRBuilder<>>(*mContext);
 
   mSemanticContext = Context(mBuilder);
+}
+
+auto Compiler::dump() const -> std::string {
+  std::string str;
+  llvm::raw_string_ostream OS(str);
+
+  OS << *mModule;
+  OS.flush();
+  return str;
+}
+
+auto Compiler::compile() -> std::expected<void, CodegenError> {
+  auto& globalScope = mSemanticContext.createScope();
+  for (const auto& statement : mStatements) {
+    globalScope.addContext(&statement);
+    auto status = codegen(statement);
+    if (not status) {
+      return std::unexpected(status.error());
+    }
+  }
+  return {};
 }
 
 auto Compiler::codegen(const Stmt& s) -> std::expected<void, CodegenError> {
@@ -45,7 +66,9 @@ auto Compiler::codegen(const Stmt::VariableDeclaration& s) -> std::expected<void
 }
 
 auto Compiler::codegen(const Stmt::Block& s) -> std::expected<void, CodegenError> {
-  auto scope = mSemanticContext.createScope();
+  // I had a bug here once, when I put `auto` instead of `auto&`. The latter
+  // pretty much copies the `Scope` object, instead of referencing it. That's why I got a segfault.
+  auto& scope = mSemanticContext.createScope();
 
   for (const auto& statement : s.statements) {
     scope.addContext(&statement);
@@ -121,6 +144,16 @@ auto Compiler::codegen(const Expr::Unary&) -> std::expected<llvm::Value*, Codege
   TODO();
 }
 
+auto Compiler::codegen(const Expr::Identifier& e) -> std::expected<llvm::Value*, CodegenError> {
+  auto variable = mSemanticContext.getFirstStatementWithType<Stmt::VariableDeclaration>();
+  if (not variable) {
+    return std::unexpected(CodegenError::UndefinedVariable(e.identifier.lexeme, e.identifier.location));
+  }
+
+  auto instruction = *mSemanticContext.getVariableInstruction(e.identifier.lexeme);
+  return mBuilder->CreateLoad(instruction->getAllocatedType(), instruction, e.identifier.lexeme);
+}
+
 auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, CodegenError> {
 
   auto type = mSemanticContext.getAppropriateExprType();
@@ -142,8 +175,19 @@ auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, Co
       default:
         TODO();
     }
-  } else if (type->is<LevType::Builtin>()) {
-      TODO();
+  } 
+
+  if (type->is<LevType::Builtin>()) {
+    auto llvmType = convertType(*type);
+
+    switch (e.value.type) {
+      case TokenType::Integer:
+        return llvm::ConstantInt::get(llvmType, std::stoi(std::string(e.value.lexeme)));
+      case TokenType::Float:
+        return llvm::ConstantFP::get(llvmType, std::stod(std::string(e.value.lexeme)));
+      default:
+        TODO();
+    }
   }
 }
 
