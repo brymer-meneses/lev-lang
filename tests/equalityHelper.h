@@ -52,7 +52,7 @@ constexpr auto operator==(const Stmt::Return& s1, const Stmt::Return& s2) -> boo
 }
 
 constexpr auto operator==(const Stmt::VariableDeclaration& s1, const Stmt::VariableDeclaration& s2) -> bool {
-  return s1.type == s2.type and s1.identifier == s2.identifier and s1.value == s1.value;
+  return s1.type == s2.type and s1.identifier == s2.identifier and s1.value == s1.value and s1.isMutable == s2.isMutable;
 }
 
 constexpr auto operator==(const Stmt::Assignment& e1, const Stmt::Assignment& e2) -> bool {

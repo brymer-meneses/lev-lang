@@ -14,10 +14,11 @@ Expr::Unary::Unary(Expr right, Token op)
 Expr::Literal::Literal(Token value) 
   : value(value) {}
 
-Stmt::VariableDeclaration::VariableDeclaration(Token identifier, LevType type, Expr value) 
+Stmt::VariableDeclaration::VariableDeclaration(Token identifier, LevType type, Expr value, bool isMutable) 
   : identifier(identifier)
   , type(type)
-  , value(std::move(value)) {}
+  , value(std::move(value))
+  , isMutable(isMutable) {}
 
 Stmt::FunctionDeclaration::FunctionDeclaration(
     Token identifier, 

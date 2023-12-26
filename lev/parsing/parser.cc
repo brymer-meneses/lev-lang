@@ -127,6 +127,7 @@ auto Parser::parseControlStmt() -> std::expected<Stmt, ParseError> {
 }
 
 auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
+  auto isMutable = match(TokenType::Mutable);
   auto identifier = TRY(expect(TokenType::Identifier));
 
   LevType type = LevType::Inferred();
@@ -139,7 +140,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
 
   auto value = TRY(parseExpression());
 
-  return Stmt::VariableDeclaration(identifier, type, std::move(value));
+  return Stmt::VariableDeclaration(identifier, type, std::move(value), isMutable);
 }
 
 auto Parser::parseType() -> std::expected<LevType, ParseError> {

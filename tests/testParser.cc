@@ -24,7 +24,8 @@ TEST(Parser, BinaryExpression) {
   auto expected = Stmt::VariableDeclaration(
     Token(TokenType::Identifier, "num", TEST_LOCATION),
     LevType::Builtin::i32(),
-    Expr::Binary( std::move(lhs), std::move(rhs), Token(TokenType::Plus, "+", TEST_LOCATION))
+    Expr::Binary( std::move(lhs), std::move(rhs), Token(TokenType::Plus, "+", TEST_LOCATION)),
+    false
   );
 
   verifyStatement(source, std::move(expected));
@@ -32,18 +33,22 @@ TEST(Parser, BinaryExpression) {
 
 TEST(Parser, VariableDeclaration) {
   verifyStatement(
-      "let variable: i32 = 5",
+      "let mut variable: i32 = 5",
       Stmt::VariableDeclaration(
           Token(TokenType::Identifier, "variable", TEST_LOCATION),
           LevType::Builtin::i32(),
-          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))));
+          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
+          true
+    ));
 
   verifyStatement(
       "let variable = 5",
       Stmt::VariableDeclaration(
           Token(TokenType::Identifier, "variable", TEST_LOCATION),
           LevType::Inferred(),
-          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))));
+          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
+          false
+    ));
 }
 
 TEST(Parser, FunctionDeclaration) {
@@ -54,7 +59,8 @@ TEST(Parser, FunctionDeclaration) {
     Stmt::VariableDeclaration(
       Token(TokenType::Identifier, "num", TEST_LOCATION), 
       LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))
+      Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
+      false
     )
   );
   block.statements.push_back(
@@ -109,7 +115,8 @@ else:
     Stmt::VariableDeclaration(
       Token(TokenType::Identifier, "variable", TEST_LOCATION), 
       LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION))
+      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
+      false
     )
   );
 
@@ -118,7 +125,8 @@ else:
     Stmt::VariableDeclaration(
       Token(TokenType::Identifier, "variable", TEST_LOCATION), 
       LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION))
+      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
+      false
     )
   );
 
@@ -127,7 +135,8 @@ else:
     Stmt::VariableDeclaration(
       Token(TokenType::Identifier, "variable", TEST_LOCATION), 
       LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION))
+      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
+      false
     )
   );
 
@@ -136,7 +145,8 @@ else:
     Stmt::VariableDeclaration(
       Token(TokenType::Identifier, "variable", TEST_LOCATION), 
       LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "4", TEST_LOCATION))
+      Expr::Literal(Token(TokenType::Integer, "4", TEST_LOCATION)),
+      false
     )
   );
 

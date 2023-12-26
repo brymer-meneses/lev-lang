@@ -72,8 +72,9 @@ struct Stmt {
     Token identifier;
     LevType type;
     Expr value;
+    bool isMutable;
 
-    explicit VariableDeclaration(Token identifier, LevType type, Expr value);
+    explicit VariableDeclaration(Token identifier, LevType type, Expr value, bool isMutable);
   };
 
   struct FunctionDeclaration {
