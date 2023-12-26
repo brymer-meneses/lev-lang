@@ -148,7 +148,7 @@ auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, Co
 }
 
 auto Compiler::convertType(const LevType& type) const -> llvm::Type* {
-  type.accept(match {
+  return type.accept(match {
     [this](const LevType::Builtin& s) -> llvm::Type* {
       switch (s.type) {
         case LevType::Builtin::Types::i8:
