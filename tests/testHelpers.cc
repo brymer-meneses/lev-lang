@@ -1,9 +1,11 @@
-#include "testHelpers.h"
-#include "codegen/compiler.h"
-#include "equalityHelper.h"
+#include <tests/equalityHelper.h>
+#include <tests/testHelpers.h>
 
+#include <lev/codegen/compiler.h>
 #include <lev/parsing/lexer.h>
 #include <lev/parsing/parser.h>
+
+#include <llvm/ExecutionEngine/Interpreter.h>
 
 #include <gtest/gtest.h>
 #include <ranges>
@@ -80,12 +82,21 @@ auto verifyResult(std::string_view source, int result) -> void {
 
   Compiler compiler(std::move(*statements));
   auto status = compiler.compile();
-
   if (not status) {
     FAIL() << status.error().message();
   }
-  
-  std::println("{}", compiler.dump());
+
+  auto ir = compiler.dump();
+  auto module = compiler.getModule();
+  llvm::Function* func = module->getFunction("main");
+
+  std::unique_ptr<llvm::ExecutionEngine> executionEngine (
+    llvm::EngineBuilder(std::move(module)).create()
+  );
+
+  int gotResult = executionEngine->runFunctionAsMain(func, {}, nullptr);
+
+  EXPECT_EQ(result, gotResult) << ir;
 }
 
 auto lev::operator<<(std::ostream& stream, const lev::TokenType& tokenType) -> std::ostream& {

@@ -20,6 +20,7 @@ public:
 
   auto dump() const -> std::string;
   auto compile() -> std::expected<void, CodegenError>;
+  auto getModule() -> std::unique_ptr<llvm::Module>;
 
 private:
   auto codegen(const Stmt::Block&) -> std::expected<void, CodegenError>;
@@ -41,7 +42,7 @@ private:
 
 private:
   std::shared_ptr<llvm::LLVMContext> mContext;
-  std::shared_ptr<llvm::Module> mModule;
+  std::unique_ptr<llvm::Module> mModule;
   std::shared_ptr<llvm::IRBuilder<>> mBuilder;
   std::vector<Stmt> mStatements;
 

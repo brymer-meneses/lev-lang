@@ -6,7 +6,7 @@ using namespace lev;
 
 Compiler::Compiler(std::vector<Stmt> statements) : mStatements(std::move(statements)) {
   mContext = std::make_shared<llvm::LLVMContext>();
-  mModule = std::make_shared<llvm::Module>("lev", *mContext);
+  mModule = std::make_unique<llvm::Module>("lev", *mContext);
   mBuilder = std::make_shared<llvm::IRBuilder<>>(*mContext);
 
   mSemanticContext = Context(mBuilder);
@@ -19,6 +19,10 @@ auto Compiler::dump() const -> std::string {
   OS << *mModule;
   OS.flush();
   return str;
+}
+
+auto Compiler::getModule() -> std::unique_ptr<llvm::Module> {
+  return std::move(mModule);
 }
 
 auto Compiler::compile() -> std::expected<void, CodegenError> {
