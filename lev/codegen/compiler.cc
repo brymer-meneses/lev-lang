@@ -93,28 +93,32 @@ auto Compiler::codegen(const Stmt::FunctionDeclaration& s) -> std::expected<void
 }
 
 auto Compiler::codegen(const Stmt::Assignment& s) -> std::expected<void, CodegenError> {
-  auto scope = mSemanticContext.getCurrentScope();
-  auto variable = scope.readVariable(s.identifier.lexeme);
 
-  if (not variable) {
-    return std::unexpected(CodegenError{});
+  auto variableDeclaration = mSemanticContext.getVariableDeclaration(s.identifier.lexeme);
+  if (not variableDeclaration) {
+    return std::unexpected(CodegenError::UndefinedVariable(s.identifier.lexeme, s.identifier.location));
   }
 
+  if (not variableDeclaration.value()->isMutable) {
+    return std::unexpected(CodegenError::AssignmentToImmutableVariable(s.identifier.lexeme, s.identifier.location));
+  }
+
+  auto variable = mSemanticContext.getVariableInstruction(s.identifier.lexeme);
   auto* newValue = TRY(codegen(s.value));
   mBuilder->CreateStore(newValue, *variable);
   return {};
 }
 
 auto Compiler::codegen(const Stmt::Control&) -> std::expected<void, CodegenError> {
-
+  TODO();
 }
 
 auto Compiler::codegen(const Expr::Binary&) -> std::expected<llvm::Value*, CodegenError> {
-
+  TODO();
 }
 
 auto Compiler::codegen(const Expr::Unary&) -> std::expected<llvm::Value*, CodegenError> {
-
+  TODO();
 }
 
 auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, CodegenError> {

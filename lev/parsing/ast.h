@@ -35,8 +35,13 @@ struct Expr {
   using ValueType = std::variant<Binary, Unary, Literal>;
 
   public:
-    auto accept(auto visitor) const -> decltype(auto) {
+    constexpr auto accept(auto visitor) const -> decltype(auto) {
       return std::visit(visitor, value);
+    }
+
+    template <typename T>
+    constexpr auto as() const -> const T& {
+      return std::get<T>(value);
     }
 
     template <typename T>
@@ -122,6 +127,11 @@ struct Stmt {
     template <typename T>
     constexpr auto is() const -> bool {
       return std::holds_alternative<T>(value);
+    }
+
+    template <typename T>
+    constexpr auto as() const -> const T& {
+      return std::get<T>(value);
     }
 
     template <typename T>

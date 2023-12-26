@@ -1,5 +1,7 @@
 
 #include <print>
+#include <ranges>
+
 #include <fstream>
 
 #include <lev/misc/macros.h>
@@ -38,8 +40,8 @@ auto Executable::findModuleFromFilename(std::string_view filename) const -> std:
     return m.filename == filename;
   };
 
-  auto it = std::find_if(modules.begin(), modules.end(), condition);
-  if (it != modules.end()) {
+  auto it = std::ranges::find_if(modules, condition);
+  if (it == modules.end()) {
     return std::nullopt;
   }
   return *it;

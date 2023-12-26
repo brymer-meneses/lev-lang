@@ -111,11 +111,52 @@ public:
 
 struct CodegenError {
 
+  struct UndefinedVariable {
+    std::string_view variable;
+    SourceLocation location;
+
+    UndefinedVariable(std::string_view variable, SourceLocation location) 
+      : variable(variable), location(location) {}
+
+    constexpr auto format() const -> std::string {
+      return std::format("Undefined variable {}", variable);
+    }
+  };
+
+  struct AssignmentToImmutableVariable {
+    std::string_view variable;
+    SourceLocation location;
+
+    AssignmentToImmutableVariable(std::string_view variable, SourceLocation location) 
+      : variable(variable), location(location) {}
+
+    constexpr auto format() const -> std::string {
+      return std::format("The variable {} is not marked mutable but was reassigned a value.", variable);
+    }
+
+  };
+
+private:
+  using Error = std::variant<UndefinedVariable, AssignmentToImmutableVariable>;
+  Error mError;
+
+public:
+  template <class T>
+  requires std::is_constructible_v<Error, T>
+  CodegenError(T error) : mError(error) {}
+
+  constexpr auto location() const -> SourceLocation {
+    return std::visit([](const auto& e) { return e.location; }, mError);
+  }
+
+  constexpr auto message() const -> std::string {
+    return std::visit([](const auto& e) { return e.format(); }, mError);
+  }
 };
 
 
 struct LevError {
-  using Error = std::variant<LexError, ParseError>;
+  using Error = std::variant<LexError, ParseError, CodegenError>;
 
   Error error;
   std::string_view line;

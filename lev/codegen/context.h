@@ -1,13 +1,13 @@
 #pragma once
 
 #include "codegen/scope.h"
-#include <stack>
+#include <vector>
 namespace lev {
 
 class Context {
 private:
   
-  std::stack<Scope> mScopes;
+  std::vector<Scope> mScopes;
   std::shared_ptr<llvm::IRBuilder<>> mBuilder;
 
 public:
@@ -19,6 +19,12 @@ public:
   auto popCurrentScope() -> void;
 
   auto getCurrentStatement() -> const Stmt*;
+
+  /// Iterates through the current scope to the root scope and gets the `llvm::AllocaInst` for that variable
+  auto getVariableInstruction(std::string_view) const -> std::optional<llvm::AllocaInst*>;
+
+  /// Iterates through the current scope to the root scope and gets the `Stmt::VariableDeclaration` for that variable
+  auto getVariableDeclaration(std::string_view) const -> std::optional<const Stmt::VariableDeclaration*>;
 
   auto getAppropriateExprType() -> std::optional<LevType>;
 };
