@@ -54,7 +54,9 @@ auto Compiler::codegen(const Stmt::Return& s) -> std::expected<void, CodegenErro
 
 auto Compiler::codegen(const Stmt::VariableDeclaration& s) -> std::expected<void, CodegenError> {
   const auto type = convertType(s.type);
-  auto scope = mSemanticContext.getCurrentScope();
+  // I had a bug here once, when I put `auto` instead of `auto&`. The latter
+  // pretty much copies the `Scope` object, instead of referencing it. That's why I got a segfault.
+  auto& scope = mSemanticContext.getCurrentScope();
 
   if (mBuilder->GetInsertBlock() == nullptr) {
     TODO();
@@ -145,13 +147,11 @@ auto Compiler::codegen(const Expr::Unary&) -> std::expected<llvm::Value*, Codege
 }
 
 auto Compiler::codegen(const Expr::Identifier& e) -> std::expected<llvm::Value*, CodegenError> {
-  auto variable = mSemanticContext.getFirstStatementWithType<Stmt::VariableDeclaration>();
-  if (not variable) {
+  auto instruction = mSemanticContext.getVariableInstruction(e.identifier.lexeme);
+  if (not instruction) {
     return std::unexpected(CodegenError::UndefinedVariable(e.identifier.lexeme, e.identifier.location));
   }
-
-  auto instruction = *mSemanticContext.getVariableInstruction(e.identifier.lexeme);
-  return mBuilder->CreateLoad(instruction->getAllocatedType(), instruction, e.identifier.lexeme);
+  return mBuilder->CreateLoad(instruction.value()->getAllocatedType(), instruction.value(), e.identifier.lexeme);
 }
 
 auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, CodegenError> {

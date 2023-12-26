@@ -79,7 +79,11 @@ auto verifyResult(std::string_view source, int result) -> void {
   ASSERT_EQ(statements->size(), 1);
 
   Compiler compiler(std::move(*statements));
-  compiler.compile();
+  auto status = compiler.compile();
+
+  if (not status) {
+    FAIL() << status.error().message();
+  }
   
   std::println("{}", compiler.dump());
 }

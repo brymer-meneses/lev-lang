@@ -20,7 +20,7 @@ auto Scope::readVariable(std::string_view name) const -> std::optional<llvm::All
   if (not variables.contains(name_)) {
     return std::nullopt;
   }
-  return variables.at(std::string(name));
+  return variables.at(name_);
 }
 
 auto Scope::addContext(const Stmt* statement) -> void {
