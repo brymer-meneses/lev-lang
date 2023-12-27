@@ -100,3 +100,22 @@ auto Context::typeIsInteger(const LevType& type) -> bool {
   }
 }
 
+
+auto Context::typeIsSigned(const LevType& type) -> bool {
+  if (not type.is<LevType::Builtin>()) {
+    return false;
+  }
+
+  auto typeValue = type.as<LevType::Builtin>();
+
+  switch (typeValue.type) {
+    case LevType::Builtin::Types::i8:
+    case LevType::Builtin::Types::i16:
+    case LevType::Builtin::Types::i32:
+    case LevType::Builtin::Types::i64:
+      return true;
+    default:
+      return false;
+  }
+}
+

@@ -1,6 +1,8 @@
-#include "misc/match.h"
 #include <lev/codegen/compiler.h>
+#include <lev/misc/match.h>
 #include <lev/misc/macros.h>
+
+#include <utility>
 
 using namespace lev;
 
@@ -142,8 +144,136 @@ auto Compiler::codegen(const Stmt::Control&) -> std::expected<void, CodegenError
   TODO();
 }
 
-auto Compiler::codegen(const Expr::Binary&) -> std::expected<llvm::Value*, CodegenError> {
-  TODO();
+auto Compiler::codegen(const Expr::Binary& e) -> std::expected<llvm::Value*, CodegenError> {
+  const auto left = TRY(codegen(*e.left));
+  const auto right = TRY(codegen(*e.right));
+
+  const auto type = mSemanticContext.getAppropriateExprType();
+  if (not type) {
+    TODO();
+  }
+
+  const auto isFloat = mSemanticContext.typeIsFloat(*type);
+  const auto isInteger = mSemanticContext.typeIsInteger(*type);
+  const auto isSigned = mSemanticContext.typeIsSigned(*type);
+
+  switch (e.op.type) {
+    case TokenType::Plus:
+      // TODO: create type is integer/ type is unsigned
+      if (isInteger) {
+        return mBuilder->CreateAdd(left, right, "addtmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFAdd(left, right, "addtmp");
+      } else {
+        std::unreachable();
+      }
+
+    case TokenType::Minus:
+      if (isInteger) {
+        return mBuilder->CreateSub(left, right, "subtmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFSub(left, right, "subtmp");
+      } else {
+        std::unreachable();
+      }
+
+    case TokenType::Star:
+      if (isInteger) {
+        return mBuilder->CreateMul(left, right, "multmp");
+      } else if (isFloat) {
+        return mBuilder->CreateFMul(left, right, "multmp");
+      } else {
+        std::unreachable();
+      }
+
+    case TokenType::Slash:
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateSDiv(left, right, "divtmp");
+        } else {
+          return mBuilder->CreateUDiv(left, right, "divtmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFDiv(left, right, "divtmp");
+      } else {
+        std::unreachable();
+      }
+
+    case TokenType::Greater: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSGT(left, right, "getmp");
+        } else {
+          return mBuilder->CreateICmpUGT(left, right, "getmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUGT(left, right, "getmp");
+      } else {
+        std::unreachable();
+      }
+    }
+    case TokenType::GreaterEqual: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSGE(left, right, "getmp");
+        } else {
+          return mBuilder->CreateICmpUGE(left, right, "getmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUEQ(left, right, "getmp");
+      } else {
+        std::unreachable();
+      }
+    }
+    case TokenType::Less: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSLT(left, right, "ltmp");
+        } else {
+          return mBuilder->CreateICmpULT(left, right, "ltmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpULT(left, right, "ltmp");
+      } else {
+        std::unreachable();
+      }
+    }
+    case TokenType::LessEqual: {
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpSLE(left, right, "letmp");
+        } else {
+          return mBuilder->CreateICmpULE(left, right, "letmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpULE(left, right, "letmp");
+      } else {
+        std::unreachable();
+      }
+    }
+    case TokenType::BangEqual:
+      if (isInteger) {
+        if (isSigned) {
+          return mBuilder->CreateICmpNE(left, right, "netmp");
+        } else {
+          return mBuilder->CreateICmpNE(left, right, "netmp");
+        }
+      } else if (isFloat) {
+        return mBuilder->CreateFCmpUNE(left, right, "netmp");
+      } else {
+        std::unreachable();
+      }
+    case TokenType::EqualEqual:
+      if (isInteger) {
+        return mBuilder->CreateICmpEQ(left, right, "eetmp");
+      } else if (isFloat) {
+        return mBuilder->CreateICmpEQ(left, right, "eetmp");
+      } else {
+        std::unreachable();
+      }
+    default:
+      std::unreachable();
+  }
 }
 
 auto Compiler::codegen(const Expr::Unary&) -> std::expected<llvm::Value*, CodegenError> {
@@ -193,6 +323,8 @@ auto Compiler::codegen(const Expr::Literal& e) -> std::expected<llvm::Value*, Co
         TODO();
     }
   }
+
+  TODO();
 }
 
 auto Compiler::convertType(const LevType& type) const -> llvm::Type* {

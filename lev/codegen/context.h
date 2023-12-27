@@ -44,6 +44,7 @@ public:
 
   static auto typeIsFloat(const LevType&) -> bool;
   static auto typeIsInteger(const LevType&) -> bool;
+  static auto typeIsSigned(const LevType&) -> bool;
 };
 
 }
