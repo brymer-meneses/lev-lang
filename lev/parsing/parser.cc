@@ -17,6 +17,9 @@ using namespace lev;
 auto Parser::parse() -> std::expected<std::vector<Stmt>, ParseError> {
   std::vector<Stmt> statements;
   while (not isAtEnd()) {
+    while (match(TokenType::Indent)) { 
+      continue;
+    }
     auto statement = TRY(parseDeclaration());
     statements.push_back(std::move(statement));
   };
@@ -47,7 +50,7 @@ auto Parser::parseAssignmentStmt() -> std::expected<Stmt, ParseError> {
   const auto identifier = peekPrev();
   CONSUME(TokenType::Equal);
   auto value = TRY(parseExpression());
-  return Stmt::Assignment(identifier, std::move(value));
+  return std::make_unique<AssignmentStmt>(identifier, std::move(value));
 }
 
 auto Parser::parseFunctionArgument() -> std::expected<FunctionArgument, ParseError> {
@@ -78,7 +81,7 @@ auto Parser::parseFunctionDeclaration() -> std::expected<Stmt, ParseError> {
 
   CONSUME(TokenType::Colon);
   auto body = TRY(parseBlockStmt());
-  return Stmt::FunctionDeclaration(identifier, std::move(arguments), returnType, std::move(body));
+  return std::make_unique<FunctionDeclaration>(identifier, std::move(arguments), returnType, std::move(body));
 }
 
 auto Parser::parseBlockStmt() -> std::expected<Stmt, ParseError> {
@@ -91,15 +94,15 @@ auto Parser::parseBlockStmt() -> std::expected<Stmt, ParseError> {
     auto stmt = TRY(parseStatement());
     statements.push_back(std::move(stmt));
   }
-  return Stmt::Block(std::move(statements));
+  return std::make_unique<BlockStmt>(std::move(statements));
 }
 
 auto Parser::parseReturnStmt() -> std::expected<Stmt, ParseError> {
   if (match(TokenType::Endline)) {
-    return Stmt::Return();
+    return std::make_unique<ReturnStmt>();
   }
   auto expr = TRY(parseExpression());
-  return Stmt::Return(std::move(expr));
+  return std::make_unique<ReturnStmt>(std::move(expr));
 }
 
 auto Parser::parseControlStmt() -> std::expected<Stmt, ParseError> {
@@ -114,16 +117,16 @@ auto Parser::parseControlStmt() -> std::expected<Stmt, ParseError> {
     auto condition = TRY(parseExpression());
     CONSUME(TokenType::Colon)
     auto body = TRY(parseBlockStmt());
-    elseIfBranches.push_back(Branch(std::move(condition), std::move(body)));
+    elseIfBranches.emplace_back(std::move(condition), std::move(body));
   }
 
-  std::optional<Stmt> elseBody = std::nullopt;
+  Stmt elseBody = nullptr;
   if (peekPrev().type == TokenType::Else) {
     CONSUME(TokenType::Colon);
     elseBody = TRY(parseBlockStmt());
   }
 
-  return Stmt::Control(std::move(ifBranch), std::move(elseIfBranches), std::move(elseBody));
+  return std::make_unique<ControlStmt>(std::move(ifBranch), std::move(elseBody), std::move(elseIfBranches));
 }
 
 auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
@@ -140,7 +143,7 @@ auto Parser::parseVariableDeclaration() -> std::expected<Stmt, ParseError> {
 
   auto value = TRY(parseExpression());
 
-  return Stmt::VariableDeclaration(identifier, type, std::move(value), isMutable);
+  return std::make_unique<VariableDeclaration>(identifier, type, std::move(value), isMutable);
 }
 
 auto Parser::parseType() -> std::expected<LevType, ParseError> {
@@ -228,7 +231,7 @@ auto Parser::parseBinaryExprRHS(int exprPrec, Expr lhs) -> std::expected<Expr, P
 
     }
 
-    lhs = Expr::Binary(std::move(lhs), std::move(rhs), binOp);
+    lhs = std::make_unique<BinaryExpr>(std::move(lhs), std::move(rhs), binOp);
   }
 }
 
@@ -239,11 +242,11 @@ auto Parser::parseExpression() -> std::expected<Expr, ParseError> {
 
 auto Parser::parsePrimaryExpr() -> std::expected<Expr, ParseError> {
   if (match({TokenType::Integer, TokenType::String, TokenType::True, TokenType::False})) {
-    return Expr::Literal(peekPrev());
+    return std::make_unique<LiteralExpr>(peekPrev());
   }
 
   if (match(TokenType::Identifier)) {
-    return Expr::Identifier(peekPrev());
+    return std::make_unique<IdentifierExpr>(peekPrev());
   }
 
   return std::unexpected(ParseError::Unimplemented());

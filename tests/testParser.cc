@@ -7,93 +7,91 @@
 
 using namespace lev;
 
+#define NODE(type, ...) \
+  std::make_unique<type>(__VA_ARGS__) \
+
+#define TOKEN(type, lexeme) \
+  Token(TokenType::type, lexeme, TEST_LOCATION)
+  
 TEST(Parser, BinaryExpression) {
   auto source = "let num: i32 = 1 + 3 + 2 * 2";
 
-  auto lhs = Expr::Binary(
-      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
-      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
-      Token(TokenType::Plus, "+", TEST_LOCATION)
-  );
-  auto rhs = Expr::Binary(
-      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
-      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
-      Token(TokenType::Star, "*", TEST_LOCATION)
-  );
+  auto lhs = NODE(BinaryExpr, 
+      NODE(LiteralExpr, TOKEN(Integer, "1")),
+      NODE(LiteralExpr, TOKEN(Integer, "3")),
+      TOKEN(Plus, "+"));
 
-  auto expected = Stmt::VariableDeclaration(
-    Token(TokenType::Identifier, "num", TEST_LOCATION),
+  auto rhs = NODE(BinaryExpr,
+      NODE(LiteralExpr, TOKEN(Integer, "2")),
+      NODE(LiteralExpr, TOKEN(Integer, "2")),
+      TOKEN(Star, "*"));
+
+  auto expected = NODE(VariableDeclaration,
+    TOKEN(Identifier, "num"),
     LevType::Builtin::i32(),
-    Expr::Binary( std::move(lhs), std::move(rhs), Token(TokenType::Plus, "+", TEST_LOCATION)),
+    NODE(BinaryExpr, std::move(lhs), std::move(rhs), TOKEN(Plus, "+")),
     false
   );
 
-  verifyStatement(source, std::move(expected));
+  verifyStatement(source, *expected);
 }
 
 TEST(Parser, VariableDeclaration) {
   verifyStatement(
       "let mut variable: i32 = 5",
-      Stmt::VariableDeclaration(
-          Token(TokenType::Identifier, "variable", TEST_LOCATION),
+      *NODE(VariableDeclaration,
+          TOKEN(Identifier, "variable"),
           LevType::Builtin::i32(),
-          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
+          NODE(LiteralExpr, TOKEN(Integer, "5")),
           true
     ));
 
   verifyStatement(
       "let variable = 5",
-      Stmt::VariableDeclaration(
-          Token(TokenType::Identifier, "variable", TEST_LOCATION),
+      *NODE(VariableDeclaration,
+          TOKEN(Identifier, "variable"),
           LevType::Inferred(),
-          Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
+          NODE(LiteralExpr, TOKEN(Integer, "5")),
           false
     ));
 }
 
 TEST(Parser, FunctionDeclaration) {
 
-  auto block = Stmt::Block({});
-
-  block.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "num", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION)),
-      false
-    )
-  );
-  block.statements.push_back(
-    Stmt::Return(Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)))
-  );
+  auto statement = NODE(
+      FunctionDeclaration,
+      TOKEN(Identifier, "main"),
+      std::vector<FunctionArgument> {
+          FunctionArgument(TOKEN(Identifier, "a"), LevType::Builtin::i32()),
+          FunctionArgument(TOKEN(Identifier, "b"), LevType::Builtin::i32()),
+      },
+      LevType::Builtin::i32(), 
+      NODE(BlockStmt, 
+            NODE(VariableDeclaration,
+              TOKEN(Identifier, "num"),
+              LevType::Inferred(),
+              NODE(LiteralExpr, TOKEN(Integer, "5")),
+              false
+            ),
+            NODE(ReturnStmt, NODE(IdentifierExpr, TOKEN(Identifier, "num")))
+    ));
 
   verifyStatement(
 R"(
-fn main(a: i32, b: i32) -> i32:
-    let num: i32 = 5
-    return num
-)",
-  Stmt::FunctionDeclaration(
-      Token(TokenType::Identifier, "main", TEST_LOCATION),
-      { 
-        FunctionArgument(Token(TokenType::Identifier, "a", TEST_LOCATION), LevType::Builtin::i32()), 
-        FunctionArgument(Token(TokenType::Identifier, "b", TEST_LOCATION), LevType::Builtin::i32()), 
-      },
-      LevType::Builtin::i32(),
-      std::move(block)
-    )
-  );
+  fn main(a: i32, b: i32) -> i32:
+      let num: i32 = 5
+      return num
+  )", *statement);
 }
 
 TEST(Parser, Assignment) {
   auto source = "variable = 5";
 
-  auto expected = Stmt::Assignment(
-    Token(TokenType::Identifier, "variable", TEST_LOCATION),
-    Expr::Literal(Token(TokenType::Integer, "5", TEST_LOCATION))
-  );
+  auto expected = NODE(AssignmentStmt,
+    TOKEN(Identifier, "variable"),
+    NODE(LiteralExpr, TOKEN(Integer, "5")));
 
-  verifyStatement(source, std::move(expected));
+  verifyStatement(source, *expected);
 }
 
 TEST(Parser, ControlStatement) {
@@ -110,80 +108,60 @@ else:
   let variable: i32 = 4
 )";
 
-  auto ifBlock = Stmt::Block({});
-  ifBlock.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
-      false
-    )
-  );
-
-  auto elseIfBlock1 = Stmt::Block({});
-  elseIfBlock1.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
-      false
-    )
-  );
-
-  auto elseIfBlock2 = Stmt::Block({});
-  elseIfBlock2.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
-      false
-    )
-  );
-
-  auto elseBlock = Stmt::Block({});
-  elseBlock.statements.push_back(
-    Stmt::VariableDeclaration(
-      Token(TokenType::Identifier, "variable", TEST_LOCATION), 
-      LevType::Builtin::i32(),
-      Expr::Literal(Token(TokenType::Integer, "4", TEST_LOCATION)),
-      false
-    )
-  );
-
-  auto elseIfBranches = std::vector<Branch> {};
-  elseIfBranches.push_back(
-    Branch(
-      Expr::Binary(
-        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
-        Expr::Literal(Token(TokenType::Integer, "2", TEST_LOCATION)),
-        Token(TokenType::EqualEqual, "==", TEST_LOCATION)
+  auto statement = 
+    NODE(ControlStmt,
+      Branch(
+        NODE(BinaryExpr, 
+           NODE(IdentifierExpr, TOKEN(Identifier, "num")),
+           NODE(LiteralExpr, TOKEN(Integer, "1")),
+           TOKEN(EqualEqual, "==")
+        ),
+        NODE(BlockStmt, 
+             NODE(VariableDeclaration,
+                TOKEN(Identifier, "variable"),
+                LevType::Builtin::i32(),
+                NODE(LiteralExpr, TOKEN(Integer, "1")),
+                false
+              )
+        )
       ),
-      std::move(elseIfBlock1)
-    )
-  );
-  elseIfBranches.push_back(
-    Branch(
-      Expr::Binary(
-        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
-        Expr::Literal(Token(TokenType::Integer, "3", TEST_LOCATION)),
-        Token(TokenType::EqualEqual, "==", TEST_LOCATION)
+      NODE(BlockStmt, 
+         NODE(VariableDeclaration,
+            TOKEN(Identifier, "variable"),
+            LevType::Builtin::i32(),
+            NODE(LiteralExpr, TOKEN(Integer, "4")),
+            false
+          )
       ),
-      std::move(elseIfBlock2)
-    )
+     Branch(
+        NODE(BinaryExpr, 
+             NODE(IdentifierExpr, TOKEN(Identifier, "num")),
+             NODE(LiteralExpr, TOKEN(Integer, "2")),
+             TOKEN(EqualEqual, "==")),
+        NODE(BlockStmt, 
+             NODE(VariableDeclaration,
+                TOKEN(Identifier, "variable"),
+                LevType::Builtin::i32(),
+                NODE(LiteralExpr, TOKEN(Integer, "2")),
+                false
+              )
+        )
+     ),
+     Branch(
+        NODE(BinaryExpr, 
+             NODE(IdentifierExpr, TOKEN(Identifier, "num")),
+             NODE(LiteralExpr, TOKEN(Integer, "3")),
+             TOKEN(EqualEqual, "==")),
+        NODE(BlockStmt, 
+             NODE(VariableDeclaration,
+                TOKEN(Identifier, "variable"),
+                LevType::Builtin::i32(),
+                NODE(LiteralExpr, TOKEN(Integer, "3")),
+                false
+              )
+        )
+     )
   );
 
-  auto statement = Stmt::Control(
-    Branch(
-      Expr::Binary(
-        Expr::Identifier(Token(TokenType::Identifier, "num", TEST_LOCATION)),
-        Expr::Literal(Token(TokenType::Integer, "1", TEST_LOCATION)),
-        Token(TokenType::EqualEqual, "==", TEST_LOCATION)),
-      std::move(ifBlock)
-    ),
-    std::move(elseIfBranches),
-    std::move(elseBlock)
-  );
-
-
-  verifyStatement(source, std::move(statement));
+  verifyStatement(source, *statement);
 }

@@ -17,7 +17,7 @@
     if (not temp.has_value()) {                                                \
       return std::unexpected(temp.error());                                    \
     };                                                                         \
-    std::move(*temp);                                                          \
+   std::move(*temp);                                                          \
   });
 
 #define TODO() \

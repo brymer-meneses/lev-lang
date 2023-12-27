@@ -3,150 +3,153 @@
 #include <memory>
 #include <span>
 #include <vector>
-#include <optional>
 
 #include <lev/parsing/token.h>
 #include <lev/parsing/type.h>
 
 namespace lev {
 
-struct Expr {
+struct Stmt;
+struct Expr;
 
-  struct Binary {
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
-    Token op;
+struct Node {
+  const Node* parent = nullptr;
+  virtual ~Node() = default;
 
-    explicit Binary(Expr left, Expr right, Token op);
-  };
-
-  struct Unary {
-    std::unique_ptr<Expr> right;
-    Token op;
-
-    explicit Unary(Expr right, Token op);
-  };
-
-  struct Identifier {
-    Token identifier;
-    explicit Identifier(Token identifier);
-  };
-
-  struct Literal {
-    Token value;
-    explicit Literal(Token value);
-  };
-
-  using ValueType = std::variant<Binary, Unary, Literal, Identifier>;
-
-  public:
-    constexpr auto accept(auto visitor) const -> decltype(auto) {
-      return std::visit(visitor, value);
-    }
-
-    template <typename T>
-    constexpr auto as() const -> const T& {
-      return std::get<T>(value);
-    }
-
-    template <typename T>
-    requires std::is_constructible_v<ValueType, T>
-    constexpr Expr(T value) : value(std::move(value)) {}
-
-  private:
-    ValueType value;
-
-    friend constexpr auto operator==(const Expr& s1, const Expr& s2) -> bool;
+  constexpr auto setParent(Node* node) -> void {
+    parent = node;
+  }
 };
 
+struct Expr : Node {
+  virtual auto operator==(const Expr& s1) const -> bool = 0;
+};
 
-struct FunctionArgument {
+struct Stmt : Node {
+  virtual auto operator==(const Stmt& s1) const -> bool = 0;
+};
+
+struct Branch : Node {
+  std::unique_ptr<Expr> condition;
+  std::unique_ptr<Stmt> body;
+
+  explicit Branch(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> stmt);
+
+  auto operator==(const Branch&) const -> bool;
+};
+
+struct FunctionArgument : Node {
   Token identifier;
   LevType type;
 
   explicit FunctionArgument(Token identifier, LevType type);
+
+  auto operator==(const FunctionArgument&) const -> bool;
 };
 
-struct Stmt;
+struct BinaryExpr : Expr {
+  std::unique_ptr<Expr> left;
+  std::unique_ptr<Expr> right;
+  Token op;
 
-struct Branch {
-  Expr condition;
+  explicit BinaryExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, Token op);
+
+  auto operator==(const Expr&) const -> bool override final;
+};
+
+struct UnaryExpr : Expr {
+  std::unique_ptr<Expr> right;
+  Token op;
+
+  explicit UnaryExpr(std::unique_ptr<Expr> right, Token op);
+
+  auto operator==(const Expr&) const -> bool override final;
+};
+
+struct IdentifierExpr : Expr {
+  Token identifier;
+  explicit IdentifierExpr(Token identifier);
+
+  auto operator==(const Expr&) const -> bool override final;
+};
+
+struct LiteralExpr : Expr {
+  Token value;
+  explicit LiteralExpr(Token value);
+
+  auto operator==(const Expr&) const -> bool override final;
+};
+
+
+struct VariableDeclaration : Stmt {
+  Token identifier;
+  LevType type;
+  std::unique_ptr<Expr> value;
+  bool isMutable;
+
+  explicit VariableDeclaration(Token identifier, LevType type, std::unique_ptr<Expr> value, bool isMutable);
+
+  auto operator==(const Stmt&) const -> bool override final;
+};
+
+struct FunctionDeclaration : Stmt {
+  Token identifier;
+  std::vector<FunctionArgument> arguments;
+  LevType returnType;
   std::unique_ptr<Stmt> body;
 
-  Branch(Expr condition, Stmt stmt);
+  explicit FunctionDeclaration(Token identifier, 
+                               std::vector<FunctionArgument> arguments, 
+                               LevType type, 
+                               std::unique_ptr<Stmt> body);
+
+  auto operator==(const Stmt&) const -> bool override final;
 };
 
-struct Stmt {
+struct ControlStmt : Stmt {
+  Branch ifBranch;
+  std::vector<Branch> elseIfBranches;
+  std::unique_ptr<Stmt> elseBody = nullptr;
 
-  struct VariableDeclaration {
-    Token identifier;
-    LevType type;
-    Expr value;
-    bool isMutable;
+  explicit ControlStmt(Branch ifBranch, std::unique_ptr<Stmt> elseBody, std::vector<Branch> elseIFBranches);
 
-    explicit VariableDeclaration(Token identifier, LevType type, Expr value, bool isMutable);
-  };
+  template<typename... Args>
+  explicit ControlStmt(Branch ifBranch, std::unique_ptr<Stmt> elseBody, Args&&... branches) 
+    : ifBranch(std::move(ifBranch))
+    , elseBody(std::move(elseBody)) { 
+    (elseIfBranches.push_back(std::move(branches)), ...);
+  }
 
-  struct FunctionDeclaration {
-    Token identifier;
-    std::vector<FunctionArgument> arguments;
-    LevType returnType;
-    std::unique_ptr<Stmt> body;
+  auto operator==(const Stmt&) const -> bool override final;
+};
 
-    explicit FunctionDeclaration(Token identifier, std::vector<FunctionArgument> arguments, LevType type, Stmt body);
-  };
+struct AssignmentStmt : Stmt {
+  Token identifier;
+  std::unique_ptr<Expr> value;
 
-  struct Control {
-    Branch ifBranch;
-    std::vector<Branch> elseIfBranches;
-    std::optional<std::unique_ptr<Stmt>> elseBody;
+  AssignmentStmt(Token identifier, std::unique_ptr<Expr> value);
 
-    Control(Branch ifBranch, std::vector<Branch> elseIfBranches, std::optional<Stmt> elseBody);
-  };
+  auto operator==(const Stmt&) const -> bool override final;
+};
 
-  struct Assignment {
-    Token identifier;
-    Expr value;
+struct BlockStmt : Stmt {
+  std::vector<std::unique_ptr<Stmt>> statements;
 
-    Assignment(Token identifier, Expr value);
-  };
+  explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> statements);
 
-  struct Block {
-    std::vector<Stmt> statements;
-    explicit Block(std::vector<Stmt> statements);
-  };
+  template<typename... Args>
+  explicit BlockStmt(Args&&... args) {
+      (statements.push_back(std::move(args)), ...);
+  }
 
-  struct Return {
-    std::optional<Expr> expr = std::nullopt;
-    explicit Return(Expr expr);
-    explicit Return() {};
-  };
+  auto operator==(const Stmt&) const -> bool override final;
+};
 
-  using ValueType = std::variant<VariableDeclaration, FunctionDeclaration, Block, Return, Control, Assignment>;
+struct ReturnStmt : Stmt {
+  std::unique_ptr<Expr> expr = nullptr;
+  explicit ReturnStmt(std::unique_ptr<Expr> expr = nullptr);
 
-  public:
-    constexpr auto accept(auto visitor) const -> decltype(auto) {
-      return std::visit(visitor, value);
-    };
-
-    template <typename T>
-    constexpr auto is() const -> bool {
-      return std::holds_alternative<T>(value);
-    }
-
-    template <typename T>
-    constexpr auto as() const -> const T& {
-      return std::get<T>(value);
-    }
-
-    template <typename T>
-    requires std::is_constructible_v<ValueType, T>
-    constexpr Stmt(T value) : value(std::move(value)) {}
-
-  private:
-    ValueType value;
-
-    friend constexpr auto operator==(const Stmt& s1, const Stmt& s2) -> bool;
+  auto operator==(const Stmt&) const -> bool override final;
 };
 
 };

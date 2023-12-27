@@ -12,6 +12,9 @@ namespace lev {
 
 class Parser {
 
+  using Stmt = std::unique_ptr<Stmt>;
+  using Expr = std::unique_ptr<Expr>;
+
   private:
     std::vector<Token> mTokens;
     size_t mCurrent = 0;

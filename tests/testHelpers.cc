@@ -1,9 +1,8 @@
-#include <tests/equalityHelper.h>
-#include <tests/testHelpers.h>
 
-#include <lev/codegen/compiler.h>
 #include <lev/parsing/lexer.h>
 #include <lev/parsing/parser.h>
+
+#include <tests/printers.h>
 
 #include <llvm/ExecutionEngine/Interpreter.h>
 
@@ -63,42 +62,38 @@ auto verifyStatement(std::string_view source, const Stmt& expectedStatement) -> 
   ASSERT_TRUE(statements) << statements.error().message();
   ASSERT_EQ(statements->size(), 1);
   
-  EXPECT_EQ(statements->at(0), expectedStatement);
+  EXPECT_EQ(*statements->at(0), expectedStatement);
 }
 
-auto verifyResult(std::string_view source, int result) -> void {
-  Lexer lexer(source, "test.lev");
-  auto tokens = lexer.lex();
-
-  ASSERT_TRUE(tokens.has_value()) << tokens.error().message();
-
-  Parser parser;
-  parser.setTokens(std::move(*tokens));
-
-  auto statements = parser.parse();
-
-  ASSERT_TRUE(statements) << statements.error().message();
-  ASSERT_EQ(statements->size(), 1);
-
-  Compiler compiler(std::move(*statements));
-  auto status = compiler.compile();
-  if (not status) {
-    FAIL() << status.error().message();
-  }
-
-  auto ir = compiler.dump();
-  auto module = compiler.getModule();
-  llvm::Function* func = module->getFunction("main");
-
-  std::unique_ptr<llvm::ExecutionEngine> executionEngine (
-    llvm::EngineBuilder(std::move(module)).create()
-  );
-
-  int gotResult = executionEngine->runFunctionAsMain(func, {}, nullptr);
-
-  EXPECT_EQ(result, gotResult) << ir;
-}
-
-auto lev::operator<<(std::ostream& stream, const lev::TokenType& tokenType) -> std::ostream& {
-  return stream << Token::typeToString(tokenType);
-}
+// auto verifyResult(std::string_view source, int result) -> void {
+//   Lexer lexer(source, "test.lev");
+//   auto tokens = lexer.lex();
+//
+//   ASSERT_TRUE(tokens.has_value()) << tokens.error().message();
+//
+//   Parser parser;
+//   parser.setTokens(std::move(*tokens));
+//
+//   auto statements = parser.parse();
+//
+//   ASSERT_TRUE(statements) << statements.error().message();
+//   ASSERT_EQ(statements->size(), 1);
+//
+//   Compiler compiler(std::move(*statements));
+//   auto status = compiler.compile();
+//   if (not status) {
+//     FAIL() << status.error().message();
+//   }
+//
+//   auto ir = compiler.dump();
+//   auto module = compiler.getModule();
+//   llvm::Function* func = module->getFunction("main");
+//
+//   std::unique_ptr<llvm::ExecutionEngine> executionEngine (
+//     llvm::EngineBuilder(std::move(module)).create()
+//   );
+//
+//   int gotResult = executionEngine->runFunctionAsMain(func, {}, nullptr);
+//
+//   EXPECT_EQ(result, gotResult) << ir;
+// }

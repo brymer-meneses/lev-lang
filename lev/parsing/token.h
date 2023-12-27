@@ -77,6 +77,10 @@ struct Token {
                   SourceLocation location)
       : type(type), lexeme(lexeme), location(location) {}
 
+  constexpr auto operator==(const Token& t) const -> bool {
+    return this->type == t.type and this->lexeme == t.lexeme;
+  }
+
   static constexpr auto typeToString(TokenType type) -> std::string_view {
     switch (type) {
     case TokenType::LeftParen:

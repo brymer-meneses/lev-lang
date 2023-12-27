@@ -9,9 +9,9 @@ sources = [
   'lev/diagnostics/errors.cc',
   'lev/diagnostics/sourceLocation.cc',
 
-  'lev/codegen/compiler.cc',
-  'lev/codegen/context.cc',
-  'lev/codegen/scope.cc',
+  # 'lev/codegen/compiler.cc',
+  # 'lev/codegen/context.cc',
+  # 'lev/codegen/scope.cc',
 
   'lev/module.cc',
   'lev/executable.cc',
@@ -22,7 +22,6 @@ cpp_args = [
   '-std=c++2b',
   '-Wpedantic',
   '-fno-exceptions',
-  '-fno-rtti',
   '-Wno-gnu-statement-expression'
 ]
 
@@ -63,9 +62,9 @@ test_sources = [
   'tests/testRunner.cc',
   'tests/testLexer.cc',
   'tests/testParser.cc',
-  'tests/testCodegen.cc',
-
+  # 'tests/testCodegen.cc',
   'tests/testHelpers.cc',
+  'tests/printers.cc'
 ]
 
 test_runner = executable(

@@ -1,7 +1,9 @@
 #pragma once
 #include <variant>
 #include <concepts>
-#include "token.h"
+
+#include <lev/parsing/token.h>
+#include <lev/misc/match.h>
 
 namespace lev {
 
@@ -100,10 +102,19 @@ public:
     return std::visit(visitor, value);
   };
 
+  constexpr auto operator==(const LevType& other) const -> bool {
+    return std::visit(match {
+      [](const Builtin& t1, const Builtin& t2) {
+        return t1.type == t2.type;
+      },
+      [](const auto&, const auto&) {
+        return true;
+      },
+    }, value, other.value);
+  }
+
 private:
   ValueType value;
-
-friend constexpr auto operator==(const LevType&, const LevType&) -> bool;
 };
 
 };
