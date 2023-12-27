@@ -178,6 +178,14 @@ auto Parser::parseStatement() -> std::expected<Stmt, ParseError> {
     return parseReturnStmt();
   }
 
+  if (match(TokenType::Identifier)) {
+    return parseAssignmentStmt();
+  }
+
+  if (match(TokenType::If)) {
+    return parseControlStmt();
+  }
+
   return std::unexpected(ParseError::Unimplemented());
 }
 

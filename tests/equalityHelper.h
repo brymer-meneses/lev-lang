@@ -65,7 +65,6 @@ constexpr auto operator==(const Stmt::Control& e1, const Stmt::Control& e2) -> b
 
   if (e1.elseBody and e2.elseBody) {
     if (*e1.elseBody.value() != *e2.elseBody.value()) {
-      std::println(stderr, "REACHED HERE!!");
       return false;
     }
   }

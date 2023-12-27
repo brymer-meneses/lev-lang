@@ -140,8 +140,46 @@ auto Compiler::codegen(const Stmt::Assignment& s) -> std::expected<void, Codegen
   return {};
 }
 
-auto Compiler::codegen(const Stmt::Control&) -> std::expected<void, CodegenError> {
-  TODO();
+auto Compiler::codegen(const Stmt::Control& e) -> std::expected<void, CodegenError> {
+  auto* function = mBuilder->GetInsertBlock()->getParent();
+  if (function == nullptr) {
+    std::unreachable();
+  }
+
+  auto* mergeBB = llvm::BasicBlock::Create(*mContext, "ifend", function);
+  static const auto codegenBranch = 
+    [this, &function, &mergeBB] (const Branch& branch) -> std::expected<llvm::BasicBlock*, CodegenError> {
+    auto condition = TRY(codegen(branch.condition));
+
+    condition = mBuilder->CreateICmpEQ(condition, mBuilder->getTrue(), "ifcond");
+    
+    auto* thenBB = llvm::BasicBlock::Create(*mContext, "then", function);
+    auto* elseBB = llvm::BasicBlock::Create(*mContext, "else", function);
+
+    mBuilder->CreateCondBr(condition, thenBB, elseBB);
+    mBuilder->SetInsertPoint(thenBB);
+
+    // codegen the then body
+    codegen(*branch.body);
+    mBuilder->CreateBr(mergeBB);
+    mBuilder->SetInsertPoint(elseBB);
+    return elseBB;
+  };
+
+  auto lastBB = TRY(codegenBranch(e.ifBranch));
+
+  for (auto i = 0; i < e.elseIfBranches.size(); i++) {
+    lastBB = TRY(codegenBranch(e.elseIfBranches[i]));
+  }
+
+  if (e.elseBody) {
+    codegen(**e.elseBody);
+    mBuilder->CreateBr(mergeBB);
+  }
+
+  mergeBB->moveAfter(lastBB);
+  mBuilder->SetInsertPoint(mergeBB);
+  return {};
 }
 
 auto Compiler::codegen(const Expr::Binary& e) -> std::expected<llvm::Value*, CodegenError> {
