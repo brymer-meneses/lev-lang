@@ -1,0 +1,71 @@
+
+
+#ifndef LEV_SYMBOL_TOKEN
+#define LEV_SYMBOL_TOKEN(X, Y)
+#endif
+
+#ifndef LEV_KEYWORD_TOKEN
+#define LEV_KEYWORD_TOKEN(X, Y)
+#endif
+
+#ifndef LEV_LITERAL_TOKEN
+#define LEV_LITERAL_TOKEN(X, Y)
+#endif
+
+#ifndef LEV_META_TOKEN
+#define LEV_META_TOKEN(X, Y)
+#endif
+
+// clang-format off
+
+LEV_SYMBOL_TOKEN(Dot,                 ".")
+LEV_SYMBOL_TOKEN(Comma,               ",")
+LEV_SYMBOL_TOKEN(Star,                "*")
+LEV_SYMBOL_TOKEN(Plus,                "+")
+LEV_SYMBOL_TOKEN(Minus,               "-")
+LEV_SYMBOL_TOKEN(Slash,               "-")
+LEV_SYMBOL_TOKEN(Greater,             ">")
+LEV_SYMBOL_TOKEN(Lesser,              "<")
+LEV_SYMBOL_TOKEN(Equal,               "=")
+LEV_SYMBOL_TOKEN(LeftBrace,           "{")
+LEV_SYMBOL_TOKEN(RightBrace,          "}")
+LEV_SYMBOL_TOKEN(LeftBracket,         "[")
+LEV_SYMBOL_TOKEN(RightBracket,        "]")
+LEV_SYMBOL_TOKEN(LeftParen,           "(")
+LEV_SYMBOL_TOKEN(RightParen,          ")")
+
+LEV_SYMBOL_TOKEN(StarEqual,           "*=")
+LEV_SYMBOL_TOKEN(PlusEqual,           "+=")
+LEV_SYMBOL_TOKEN(MinusEqual,          "-=")
+LEV_SYMBOL_TOKEN(SlashEqual,          "/=")
+LEV_SYMBOL_TOKEN(GreaterEqual,        ">=")
+LEV_SYMBOL_TOKEN(LesserEqual,         "<=")
+LEV_SYMBOL_TOKEN(EqualEqual,          "==")
+
+LEV_SYMBOL_TOKEN(LeftArrow,           "->")
+
+LEV_KEYWORD_TOKEN(Fn,                 "fn")
+LEV_KEYWORD_TOKEN(Let,                "let")
+LEV_KEYWORD_TOKEN(Mut,                "mut")
+LEV_KEYWORD_TOKEN(Const,              "const")
+LEV_KEYWORD_TOKEN(If,                 "if")
+LEV_KEYWORD_TOKEN(Else,               "else")
+LEV_KEYWORD_TOKEN(While,              "while")
+LEV_KEYWORD_TOKEN(For,                "for")
+LEV_KEYWORD_TOKEN(Return,             "return")
+LEV_KEYWORD_TOKEN(Import,             "import")
+
+LEV_LITERAL_TOKEN(Identifier,         "identifier")
+LEV_LITERAL_TOKEN(StringLiteral,      "StringLiteral")
+LEV_LITERAL_TOKEN(IntegerLiteral,     "IntegerLiteral")
+LEV_LITERAL_TOKEN(FloatLiteral,       "FloatLiteral")
+
+LEV_META_TOKEN(FileStart,             "FileStart")
+LEV_META_TOKEN(FileEnd,               "FileEnd")
+
+// clang-format on
+
+#undef LEV_SYMBOL_TOKEN
+#undef LEV_KEYWORD_TOKEN
+#undef LEV_LITERAL_TOKEN
+#undef LEV_META_TOKEN

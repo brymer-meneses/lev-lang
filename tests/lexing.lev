@@ -1,0 +1,8 @@
+// RUN-ARGS: compile --phase=lex --dump-tokens
+
++ * / - < = , . ;
++= -= /= *= >= <= ==
+
+fn return while if else let mut const
+
+_var123 

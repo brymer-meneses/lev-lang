@@ -1,8 +1,6 @@
 .vscode
-
 .cache
-build
-builddir
 
-subprojects/*
-!subprojects/*.wrap
+**/__pycache__
+build
+

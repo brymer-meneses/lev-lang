@@ -1,19 +1,10 @@
-.PHONY: clean setup compile run test
-all: run
+BUILD_TYPE ?= Debug
+BUILD_DIR ?= build
 
-setup:
-	@if [ ! -e build/compile_commands.json ]; then \
-		CXX=$(CXX) meson setup --wipe build; \
-  fi
+.PHONY: build
 
-clean:
-	$(RM) -r build
+build:
+	cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	$(MAKE) -C $(BUILD_DIR)
 
-compile: setup
-	meson compile -C build
 
-run: compile
-	./build/lev
-
-test: compile
-	./build/lev-tester
