@@ -1,5 +1,7 @@
 #include <lev/source.h>
 
+#include <iterator>
+
 auto Source::line_offsets() const -> LineOffsets { return LineOffsets(*this); }
 
 using LineOffsets = Source::LineOffsets;
@@ -36,25 +38,26 @@ auto LineOffsets::GetLineOffset(const u32 line_number) const
 }
 
 auto LineOffsets::GetLine(const u32 x) const -> std::optional<u32> {
-  for (auto [i, line_offset] : llvm::enumerate(line_offsets_)) {
-    if (line_offset >= x) {
-      return i;
-    }
+  if (line_offsets_.empty() || x < line_offsets_.front()) {
+    return x;
   }
 
-  return std::nullopt;
+  auto it = std::ranges::lower_bound(line_offsets_, x);
+  return std::distance(line_offsets_.begin(), it);
 }
 
 auto LineOffsets::GetColumn(const u32 x) const -> std::optional<u32> {
-  auto last = 0;
-
-  for (auto [i, line_offset] : llvm::enumerate(line_offsets_)) {
-    if (line_offset >= x) {
-      return x - last;
-    }
-
-    last = line_offset;
+  if (line_offsets_.empty() || x < line_offsets_.front()) {
+    return x;
   }
 
-  return std::nullopt;
+  auto it = std::ranges::lower_bound(line_offsets_, x);
+  if (it == line_offsets_.end()) {
+    return std::nullopt;
+  }
+
+  auto index = std::distance(line_offsets_.begin(), it);
+  auto last = (index > 0) ? line_offsets_[index - 1] : 0;
+
+  return x - last - 1;
 }

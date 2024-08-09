@@ -19,8 +19,11 @@ enum class TokenKind : u16 {
 
 };
 
+auto operator<<(llvm::raw_ostream& OS,
+                const TokenKind obj) -> llvm::raw_ostream&;
+
 struct Token {
-  explicit Token(TokenKind kind, u64 start, u64 end)
+  explicit Token(TokenKind kind, u32 start, u32 end)
       : kind(kind), start(start), end(end){};
 
   auto lexeme(llvm::StringRef source) const -> llvm::StringRef;

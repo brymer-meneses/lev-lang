@@ -2,11 +2,10 @@
 #include <lev/diagnostic_buffer.h>
 #include <lev/lex/lex.h>
 #include <lev/lex/token.h>
+#include <lev/source.h>
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/MemoryBuffer.h>
-
-#include <expected>
 
 namespace Lev {
 
@@ -28,15 +27,6 @@ struct Lexer {
     return tokens_;
   }
 
-  auto ClassifyKeyword(llvm::StringRef source) -> TokenKind {
-#define LEV_KEYWORD_TOKEN(kind, str) \
-  if (source == str) {               \
-    return TokenKind::kind;          \
-  }
-#include <lev/lex/token_kind.def>
-    return TokenKind::Identifier;
-  }
-
   auto LexToken() -> void {
     auto c = Advance();
 
@@ -44,17 +34,58 @@ struct Lexer {
       case '\n': {
         line_ += 1;
         column_ = 0;
-        last_line = current_ - 1;
+        last_line_ = current_ - 1;
         break;
       }
 
       case ' ':
       case '\t':
-      case '\r':
+      case '\r': {
         break;
+      }
 
       case '"': {
         LexString();
+        break;
+      }
+
+      case ',': {
+        CreateToken(TokenKind::Comma);
+        break;
+      }
+
+      case '(': {
+        CreateToken(TokenKind::LeftParen);
+        break;
+      }
+
+      case ')': {
+        CreateToken(TokenKind::RightParen);
+        break;
+      }
+
+      case '[': {
+        CreateToken(TokenKind::LeftBracket);
+        break;
+      }
+
+      case ']': {
+        CreateToken(TokenKind::RightBracket);
+        break;
+      }
+
+      case '{': {
+        CreateToken(TokenKind::LeftBrace);
+        break;
+      }
+
+      case '}': {
+        CreateToken(TokenKind::RightBrace);
+        break;
+      }
+
+      case ';': {
+        CreateToken(TokenKind::Semicolon);
         break;
       }
 
@@ -78,9 +109,10 @@ struct Lexer {
 
       case '/': {
         if (Match('/')) {
-          while (Advance() != '\n') {
-            continue;
+          while (not Match('\n')) {
+            Advance();
           }
+
           column_ = 0;
 
         } else if (Match('=')) {
@@ -128,15 +160,23 @@ struct Lexer {
       }
 
       default: {
-        if (llvm::isAlnum(c) or c == '_') {
-          while (llvm::isAlnum(Peek())) {
-            Advance();
+        if (llvm::isAlpha(c) or c == '_') {
+          LexKeyword();
+
+        } else if (llvm::isDigit(c) or c == '.') {
+          auto next = Peek();
+
+          if (llvm::isDigit(next) or next == '.') {
+            LexNumber();
+          } else {
+            CreateToken(TokenKind::Dot);
           }
 
-          auto kind = ClassifyKeyword(source_.slice(start_, current_));
-          CreateToken(kind);
         } else {
-          auto position = GetLinePosition();
+          auto position =
+              Source::LinePosition(/*column_start*/ column_,
+                                   /*column_end*/ column_, /*line*/ line_);
+
           diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
             os << "Invalid character: " << "\"" << c << "\"";
           });
@@ -145,11 +185,13 @@ struct Lexer {
     }
   }
 
-  auto GetLinePosition() const -> Source::LinePosition {
-    return {
-        .column = {.start = column_, .end = 0},
-        .line = line_,
-    };
+  auto LexKeyword() -> void {
+    while (llvm::isAlnum(Peek())) {
+      Advance();
+    }
+
+    auto kind = ClassifyKeyword(source_.slice(start_, current_));
+    CreateToken(kind);
   }
 
   auto LexString() -> void {
@@ -157,8 +199,60 @@ struct Lexer {
       Advance();
     }
 
-    if (IsAtEnd()) {
+    if (Peek() != '"' and IsAtEnd()) {
+      auto position =
+          Source::LinePosition(/*column_start*/ column_,
+                               /*column_end*/ column_, /*line*/ line_);
+
+      diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
+        os << "Unterminated string";
+      });
+      return;
     }
+
+    // Consume the last "
+    Advance();
+    CreateToken(TokenKind::StringLiteral);
+  }
+
+  auto LexNumber() -> void {
+    auto did_visit_dot = false;
+
+    auto IsPossibleNumber = [](const char c) {
+      return llvm::isDigit(c) or c == '.';
+    };
+
+    while (not IsAtEnd() and IsPossibleNumber(Peek())) {
+      auto c = Advance();
+
+      if (did_visit_dot and c == '.') {
+        auto position =
+            Source::LinePosition(/*column_start*/ column_,
+                                 /*column_end*/ column_, /*line*/ line_);
+
+        diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
+          os << "Unexpected symbol: `.`, a number can't have more than one "
+                "decimal point.";
+        });
+        return;
+      }
+
+      if (c == '.') {
+        did_visit_dot = true;
+      }
+    }
+
+    CreateToken(did_visit_dot ? TokenKind::RealLiteral
+                              : TokenKind::IntegerLiteral);
+  }
+
+  auto ClassifyKeyword(llvm::StringRef source) -> TokenKind {
+#define LEV_KEYWORD_TOKEN(kind, str) \
+  if (source == str) {               \
+    return TokenKind::kind;          \
+  }
+#include <lev/lex/token_kind.def>
+    return TokenKind::Identifier;
   }
 
   auto Advance() -> char {
@@ -198,7 +292,7 @@ struct Lexer {
   u32 start_ = 0;
   u32 column_ = 0;
   u32 current_ = 0;
-  u32 last_line = 0;
+  u32 last_line_ = 0;
 
   DiagnosticBuffer& diagnostics_;
   std::vector<Token> tokens_;

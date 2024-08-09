@@ -26,13 +26,13 @@ auto Diagnostic::Report(llvm::raw_ostream& stream, const Source& source,
   const auto line =
       source.contents().slice(line_offsets.first + 1, line_offsets.second);
 
-  stream << " " << position_.line + 1 << " | " << line << "\n";
+  stream << " " << position_.line << " | " << line << "\n";
   HighlightPosition(stream, position_);
 
   stream << "ERROR: ";
   writer_(stream);
 
-  stream << "\n";
+  stream << "\n\n";
 }
 
 }  // namespace Lev

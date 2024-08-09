@@ -23,7 +23,8 @@ auto CompilationUnit::DumpTokens() const -> void {
 
     auto lexeme = token.lexeme(source_.contents());
 
-    llvm::outs() << "{" << " lexeme: " << '\"' << lexeme << "\""
+    llvm::outs() << "{" << " kind: " << '\'' << token.kind << '\''
+                 << " lexeme: " << '\'' << lexeme << '\''
                  << ", line: " << *line + 1 << ", column_start: " << *col_start
                  << ", column_end: " << *col_end << " }" << "\n";
   }

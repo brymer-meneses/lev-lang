@@ -48,10 +48,15 @@ struct Source::LinePosition {
   struct Column {
     u32 start;
     u32 end;
+
+    Column(u32 start, u32 end) : start(start), end(end){};
   };
 
   Column column;
   u32 line;
+
+  LinePosition(u32 col_start, u32 col_end, u32 line)
+      : column(col_start, col_end), line(line) {}
 };
 
 #endif  // !LEV_SOURCE_H

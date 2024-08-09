@@ -1,8 +1,52 @@
 // RUN-ARGS: compile --phase=lex --dump-tokens
 
-+ * / - < = , . ;
++ * / - < = , . ; ( ) [ ] { }
 += -= /= *= >= <= ==
 
-fn return while if else let mut const
+fn return while if else let mut const and or not
 
 _var123 
+
+"the quick brown fox jumped over the lazy cat"
+
+123 0.133
+
+// CHECK-STDOUT: { kind: 'FileStart' lexeme: '', line: 1, column_start: 0, column_end: 0 }
+// CHECK-STDOUT: { kind: 'Plus' lexeme: '+', line: 3, column_start: 0, column_end: 1 }
+// CHECK-STDOUT: { kind: 'Star' lexeme: '*', line: 3, column_start: 2, column_end: 3 }
+// CHECK-STDOUT: { kind: 'Slash' lexeme: '-', line: 3, column_start: 4, column_end: 5 }
+// CHECK-STDOUT: { kind: 'Minus' lexeme: '-', line: 3, column_start: 6, column_end: 7 }
+// CHECK-STDOUT: { kind: 'Lesser' lexeme: '<', line: 3, column_start: 8, column_end: 9 }
+// CHECK-STDOUT: { kind: 'Equal' lexeme: '=', line: 3, column_start: 10, column_end: 11 }
+// CHECK-STDOUT: { kind: 'Comma' lexeme: ',', line: 3, column_start: 12, column_end: 13 }
+// CHECK-STDOUT: { kind: 'Dot' lexeme: '.', line: 3, column_start: 14, column_end: 15 }
+// CHECK-STDOUT: { kind: 'Semicolon' lexeme: ';', line: 3, column_start: 16, column_end: 17 }
+// CHECK-STDOUT: { kind: 'LeftParen' lexeme: '(', line: 3, column_start: 18, column_end: 19 }
+// CHECK-STDOUT: { kind: 'RightParen' lexeme: ')', line: 3, column_start: 20, column_end: 21 }
+// CHECK-STDOUT: { kind: 'LeftBracket' lexeme: '[', line: 3, column_start: 22, column_end: 23 }
+// CHECK-STDOUT: { kind: 'RightBracket' lexeme: ']', line: 3, column_start: 24, column_end: 25 }
+// CHECK-STDOUT: { kind: 'LeftBrace' lexeme: '{', line: 3, column_start: 26, column_end: 27 }
+// CHECK-STDOUT: { kind: 'RightBrace' lexeme: '}', line: 3, column_start: 28, column_end: 29 }
+// CHECK-STDOUT: { kind: 'PlusEqual' lexeme: '+=', line: 4, column_start: 0, column_end: 2 }
+// CHECK-STDOUT: { kind: 'MinusEqual' lexeme: '-=', line: 4, column_start: 3, column_end: 5 }
+// CHECK-STDOUT: { kind: 'SlashEqual' lexeme: '/=', line: 4, column_start: 6, column_end: 8 }
+// CHECK-STDOUT: { kind: 'StarEqual' lexeme: '*=', line: 4, column_start: 9, column_end: 11 }
+// CHECK-STDOUT: { kind: 'GreaterEqual' lexeme: '>=', line: 4, column_start: 12, column_end: 14 }
+// CHECK-STDOUT: { kind: 'LesserEqual' lexeme: '<=', line: 4, column_start: 15, column_end: 17 }
+// CHECK-STDOUT: { kind: 'EqualEqual' lexeme: '==', line: 4, column_start: 18, column_end: 20 }
+// CHECK-STDOUT: { kind: 'Fn' lexeme: 'fn', line: 6, column_start: 0, column_end: 2 }
+// CHECK-STDOUT: { kind: 'Return' lexeme: 'return', line: 6, column_start: 3, column_end: 9 }
+// CHECK-STDOUT: { kind: 'While' lexeme: 'while', line: 6, column_start: 10, column_end: 15 }
+// CHECK-STDOUT: { kind: 'If' lexeme: 'if', line: 6, column_start: 16, column_end: 18 }
+// CHECK-STDOUT: { kind: 'Else' lexeme: 'else', line: 6, column_start: 19, column_end: 23 }
+// CHECK-STDOUT: { kind: 'Let' lexeme: 'let', line: 6, column_start: 24, column_end: 27 }
+// CHECK-STDOUT: { kind: 'Mut' lexeme: 'mut', line: 6, column_start: 28, column_end: 31 }
+// CHECK-STDOUT: { kind: 'Const' lexeme: 'const', line: 6, column_start: 32, column_end: 37 }
+// CHECK-STDOUT: { kind: 'And' lexeme: 'and', line: 6, column_start: 38, column_end: 41 }
+// CHECK-STDOUT: { kind: 'Or' lexeme: 'or', line: 6, column_start: 42, column_end: 44 }
+// CHECK-STDOUT: { kind: 'Not' lexeme: 'not', line: 6, column_start: 45, column_end: 48 }
+// CHECK-STDOUT: { kind: 'Identifier' lexeme: '_var123', line: 8, column_start: 0, column_end: 7 }
+// CHECK-STDOUT: { kind: 'StringLiteral' lexeme: '"the quick brown fox jumped over the lazy cat"', line: 10, column_start: 0, column_end: 46 }
+// CHECK-STDOUT: { kind: 'IntegerLiteral' lexeme: '123', line: 12, column_start: 0, column_end: 3 }
+// CHECK-STDOUT: { kind: 'RealLiteral' lexeme: '0.133', line: 12, column_start: 4, column_end: 9 }
+// CHECK-STDOUT: { kind: 'FileEnd' lexeme: '', line: 14, column_start: 0, column_end: 0 }
