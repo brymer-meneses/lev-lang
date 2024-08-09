@@ -1,13 +1,14 @@
 
-import os
 import subprocess
+import os
 
+from typing import List, Optional, Tuple
+from difflib import SequenceMatcher
 from pathlib import Path
-from sys import get_coroutine_origin_tracking_depth, stdout
-from typing import List, Optional
 
 RUN_ARGS_DELIM = r"// RUN-ARGS:"
 CHECK_STDOUT_DELIM = r"// CHECK-STDOUT:"
+
 
 class TestFile:
     path: str
@@ -24,17 +25,28 @@ class TestFile:
         except OSError:
             raise RuntimeError("Could not open file")
 
-    def run(self) -> bool:
+    def run_test(self) -> bool:
         got_lines = self.get_output_lines()
         expected_lines = self.parse_expected_lines()
+        line_start = self.get_source_end_line()
 
-        if len(expected_lines) != len(got_lines):
-            return False
+        did_succeed = True
+        diff = None
 
-        for (expected, got) in zip(expected_lines, got_lines):
-            if expected != got:
-                return False
-        return True
+        for (got, expected) in zip(got_lines, expected_lines):
+            if got != expected:
+                did_succeed = False
+                diff = check_diff(got, expected)
+                break
+            line_start += 1
+
+        if did_succeed:
+            print(f"{self.path} ... [OKAY]")
+        else:
+            print(f"{self.path} ... [ERR]")
+            print(f"{line_start+1} | {diff}")
+
+        return did_succeed
 
     def update_expected_lines(self) -> None:
         got_lines = self.get_output_lines()
@@ -44,7 +56,7 @@ class TestFile:
             got_lines[i] = f"{CHECK_STDOUT_DELIM} {line}\n"
 
         lines = self.lines
-        lines = lines[0:(source_end+1)] + got_lines
+        lines = lines[0:(source_end)] + got_lines
         
         with open(self.path, 'w') as f:
             f.writelines(lines)
@@ -63,7 +75,7 @@ class TestFile:
 
         for line in self.lines:
             if line.startswith(CHECK_STDOUT_DELIM):
-                expected_lines.append(line[len(CHECK_STDOUT_DELIM):])
+                expected_lines.append(line[len(CHECK_STDOUT_DELIM):].strip())
 
         return expected_lines
 
@@ -83,3 +95,23 @@ class TestFile:
         return i
 
 
+def check_diff(a: str, b: str) -> str:
+    output = []
+    matcher = SequenceMatcher(None, a, b)
+
+    green = '\x1b[38;5;16;48;5;2m'
+    red = '\x1b[38;5;16;48;5;1m'
+    reset = '\x1b[0m'
+
+    for opcode, a0, a1, b0, b1 in matcher.get_opcodes():
+        if opcode == 'equal':
+            output.append(a[a0:a1])
+        elif opcode == 'insert':
+            output.append(f'{green}{b[b0:b1]}{reset}')
+        elif opcode == 'delete':
+            output.append(f'{red}{a[a0:a1]}{reset}')
+        elif opcode == 'replace':
+            output.append(f'{green}{b[b0:b1]}{reset}')
+            output.append(f'{red}{a[a0:a1]}{reset}')
+
+    return ''.join(output)

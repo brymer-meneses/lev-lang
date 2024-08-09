@@ -54,6 +54,11 @@ struct Lexer {
         break;
       }
 
+      case ':': {
+        CreateToken(TokenKind::Colon);
+        break;
+      }
+
       case '(': {
         CreateToken(TokenKind::LeftParen);
         break;

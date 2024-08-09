@@ -1,6 +1,6 @@
 // RUN-ARGS: compile --phase=lex --dump-tokens
 
-+ * / - < = , . ; ( ) [ ] { }
++ * / - < = , . : ; ( ) [ ] { }
 += -= /= *= >= <= ==
 
 fn return while if else let mut const and or not
@@ -9,7 +9,7 @@ _var123
 
 "the quick brown fox jumped over the lazy cat"
 
-123 0.133
+123 0.134
 
 // CHECK-STDOUT: { kind: 'FileStart' lexeme: '', line: 1, column_start: 0, column_end: 0 }
 // CHECK-STDOUT: { kind: 'Plus' lexeme: '+', line: 3, column_start: 0, column_end: 1 }
@@ -20,13 +20,13 @@ _var123
 // CHECK-STDOUT: { kind: 'Equal' lexeme: '=', line: 3, column_start: 10, column_end: 11 }
 // CHECK-STDOUT: { kind: 'Comma' lexeme: ',', line: 3, column_start: 12, column_end: 13 }
 // CHECK-STDOUT: { kind: 'Dot' lexeme: '.', line: 3, column_start: 14, column_end: 15 }
-// CHECK-STDOUT: { kind: 'Semicolon' lexeme: ';', line: 3, column_start: 16, column_end: 17 }
-// CHECK-STDOUT: { kind: 'LeftParen' lexeme: '(', line: 3, column_start: 18, column_end: 19 }
-// CHECK-STDOUT: { kind: 'RightParen' lexeme: ')', line: 3, column_start: 20, column_end: 21 }
-// CHECK-STDOUT: { kind: 'LeftBracket' lexeme: '[', line: 3, column_start: 22, column_end: 23 }
-// CHECK-STDOUT: { kind: 'RightBracket' lexeme: ']', line: 3, column_start: 24, column_end: 25 }
-// CHECK-STDOUT: { kind: 'LeftBrace' lexeme: '{', line: 3, column_start: 26, column_end: 27 }
-// CHECK-STDOUT: { kind: 'RightBrace' lexeme: '}', line: 3, column_start: 28, column_end: 29 }
+// CHECK-STDOUT: { kind: 'Semicolon' lexeme: ';', line: 3, column_start: 18, column_end: 19 }
+// CHECK-STDOUT: { kind: 'LeftParen' lexeme: '(', line: 3, column_start: 20, column_end: 21 }
+// CHECK-STDOUT: { kind: 'RightParen' lexeme: ')', line: 3, column_start: 22, column_end: 23 }
+// CHECK-STDOUT: { kind: 'LeftBracket' lexeme: '[', line: 3, column_start: 24, column_end: 25 }
+// CHECK-STDOUT: { kind: 'RightBracket' lexeme: ']', line: 3, column_start: 26, column_end: 27 }
+// CHECK-STDOUT: { kind: 'LeftBrace' lexeme: '{', line: 3, column_start: 28, column_end: 29 }
+// CHECK-STDOUT: { kind: 'RightBrace' lexeme: '}', line: 3, column_start: 30, column_end: 31 }
 // CHECK-STDOUT: { kind: 'PlusEqual' lexeme: '+=', line: 4, column_start: 0, column_end: 2 }
 // CHECK-STDOUT: { kind: 'MinusEqual' lexeme: '-=', line: 4, column_start: 3, column_end: 5 }
 // CHECK-STDOUT: { kind: 'SlashEqual' lexeme: '/=', line: 4, column_start: 6, column_end: 8 }
@@ -49,4 +49,4 @@ _var123
 // CHECK-STDOUT: { kind: 'StringLiteral' lexeme: '"the quick brown fox jumped over the lazy cat"', line: 10, column_start: 0, column_end: 46 }
 // CHECK-STDOUT: { kind: 'IntegerLiteral' lexeme: '123', line: 12, column_start: 0, column_end: 3 }
 // CHECK-STDOUT: { kind: 'RealLiteral' lexeme: '0.133', line: 12, column_start: 4, column_end: 9 }
-// CHECK-STDOUT: { kind: 'FileEnd' lexeme: '', line: 14, column_start: 0, column_end: 0 }
+// CHECK-STDOUT: { kind: 'FileEnd' lexeme: '', line: 53, column_start: 0, column_end: 0 }
