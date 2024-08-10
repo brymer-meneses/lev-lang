@@ -40,10 +40,14 @@ class TestFile:
                 break
             line_start += 1
 
+        green = "\x1b[32m"
+        red = "\x1b[31m"
+        reset = '\x1b[0m'
+
         if did_succeed:
-            print(f"{self.path} ... [OKAY]")
+            print(f"{self.path} ... [{green} OKAY{reset}]")
         else:
-            print(f"{self.path} ... [ERR]")
+            print(f"{self.path} ... [{red}ERROR{reset}]")
             print(f"{line_start+1} | {diff}")
 
         return did_succeed

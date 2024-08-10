@@ -1,7 +1,8 @@
 #ifndef LEV_DIAGNOSTIC_H
 #define LEV_DIAGNOSTIC_H
 
-#include <lev/source.h>
+#include <lev/source/source.h>
+#include <lev/source/source_metadata.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <functional>
@@ -10,15 +11,15 @@ namespace Lev {
 
 class Diagnostic {
  public:
-  Diagnostic(Source::LinePosition position,
+  Diagnostic(LinePosition position,
              std::function<void(llvm::raw_ostream&)> writer)
       : position_(position), writer_(writer) {}
 
   auto Report(llvm::raw_ostream& ostream, const Source& source,
-              const Source::LineOffsets& offsets) const -> void;
+              const SourceMetadata& offsets) const -> void;
 
  private:
-  Source::LinePosition position_;
+  LinePosition position_;
   std::function<void(llvm::raw_ostream&)> writer_;
 };
 

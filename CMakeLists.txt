@@ -13,18 +13,29 @@ add_definitions(${LLVM_DEFINITIONS})
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 add_executable(lev lev/driver.cpp)
+
+target_compile_options(lev 
+  PUBLIC 
+  # -Wall 
+  # -Wextra
+  # -Wpedantic
+  -fno-rtti
+  -fno-exceptions
+)
+
 target_sources(lev 
   PUBLIC
   lev/lex/lex.cpp
-  lev/lex/token.cpp
+  lev/lex/token_buffer.cpp
+  lev/lex/token_kind.cpp
   lev/compilation_unit.cpp
   lev/diagnostic.cpp
   lev/diagnostic_buffer.cpp
-  lev/source.cpp
+  lev/source/source_metadata.cpp
 )
 
 target_include_directories(lev PUBLIC ${LLVM_INCLUDE_DIRS})
 target_include_directories(lev PUBLIC ".")
-# target_compile_options(lev PUBLIC -Wall -Wextra -Wpedantic)
+
 
 target_link_libraries(lev ${llvm_libs})

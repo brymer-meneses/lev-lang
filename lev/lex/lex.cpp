@@ -1,19 +1,25 @@
 #include <lev/diagnostic.h>
 #include <lev/diagnostic_buffer.h>
 #include <lev/lex/lex.h>
-#include <lev/lex/token.h>
-#include <lev/source.h>
+#include <lev/lex/token_buffer.h>
+#include <lev/source/source.h>
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/MemoryBuffer.h>
 
+#include <utility>
+
+#include "lev/source/source_metadata.h"
+
 namespace Lev {
 
 struct Lexer {
-  Lexer(llvm::StringRef source, DiagnosticBuffer& diagnostics)
-      : source_(source), diagnostics_(diagnostics) {}
+  Lexer(const Source& source, DiagnosticBuffer& diagnostics)
+      : diagnostics_(diagnostics),
+        token_buffer_(source),
+        source_(source.contents()) {}
 
-  auto Lex() -> std::vector<Token> {
+  auto Lex() -> std::pair<TokenBuffer, SourceMetadata> {
     CreateToken(TokenKind::FileStart);
 
     while (!IsAtEnd()) {
@@ -24,7 +30,7 @@ struct Lexer {
 
     CreateToken(TokenKind::FileEnd);
 
-    return tokens_;
+    return std::make_pair(token_buffer_, source_metadata_);
   }
 
   auto LexToken() -> void {
@@ -34,7 +40,10 @@ struct Lexer {
       case '\n': {
         line_ += 1;
         column_ = 0;
-        last_line_ = current_ - 1;
+
+        source_metadata_.RegisterLineInfo(line_start_, current_ - 1);
+
+        line_start_ = current_;
         break;
       }
 
@@ -114,11 +123,9 @@ struct Lexer {
 
       case '/': {
         if (Match('/')) {
-          while (not Match('\n')) {
+          while (Peek() != '\n') {
             Advance();
           }
-
-          column_ = 0;
 
         } else if (Match('=')) {
           CreateToken(TokenKind::SlashEqual);
@@ -178,9 +185,8 @@ struct Lexer {
           }
 
         } else {
-          auto position =
-              Source::LinePosition(/*column_start*/ column_,
-                                   /*column_end*/ column_, /*line*/ line_);
+          auto position = LinePosition(/*column_start*/ column_,
+                                       /*column_end*/ column_, /*line*/ line_);
 
           diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
             os << "Invalid character: " << "\"" << c << "\"";
@@ -205,9 +211,8 @@ struct Lexer {
     }
 
     if (Peek() != '"' and IsAtEnd()) {
-      auto position =
-          Source::LinePosition(/*column_start*/ column_,
-                               /*column_end*/ column_, /*line*/ line_);
+      auto position = LinePosition(/*column_start*/ column_,
+                                   /*column_end*/ column_, /*line*/ line_);
 
       diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
         os << "Unterminated string";
@@ -231,9 +236,8 @@ struct Lexer {
       auto c = Advance();
 
       if (did_visit_dot and c == '.') {
-        auto position =
-            Source::LinePosition(/*column_start*/ column_,
-                                 /*column_end*/ column_, /*line*/ line_);
+        auto position = LinePosition(/*column_start*/ column_,
+                                     /*column_end*/ column_, /*line*/ line_);
 
         diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
           os << "Unexpected symbol: `.`, a number can't have more than one "
@@ -290,24 +294,26 @@ struct Lexer {
   auto IsAtEnd() -> bool { return current_ >= source_.size(); }
 
   auto CreateToken(TokenKind kind) -> void {
-    tokens_.push_back(Token(kind, start_, current_));
+    token_buffer_.AppendToken(kind, start_, current_);
   }
 
   u32 line_ = 0;
   u32 start_ = 0;
   u32 column_ = 0;
   u32 current_ = 0;
-  u32 last_line_ = 0;
+
+  u32 line_start_ = 0;
 
   DiagnosticBuffer& diagnostics_;
-  std::vector<Token> tokens_;
+  TokenBuffer token_buffer_;
+  SourceMetadata source_metadata_;
 
   llvm::StringRef source_;
 
 };  // namespace Lev
 
-auto Lex(llvm::StringRef source,
-         DiagnosticBuffer& buffer) -> std::vector<Token> {
+auto Lex(const Source& source,
+         DiagnosticBuffer& buffer) -> std::pair<TokenBuffer, SourceMetadata> {
   auto lexer = Lexer(source, buffer);
   return lexer.Lex();
 }

@@ -1,32 +1,33 @@
 #include <lev/compilation_unit.h>
 #include <lev/lex/lex.h>
-#include <lev/source.h>
+#include <lev/source/source.h>
 #include <llvm/Support/raw_ostream.h>
 
 namespace Lev {
 
 auto CompilationUnit::RunLexer() -> void {
-  tokens_ = Lex(source_.contents(), diagnostics_);
+  auto lex_result = Lex(source_, diagnostics_);
+
+  token_buffer_ = std::move(lex_result.first);
+  source_metadata_ = std::move(lex_result.second);
 
   if (diagnostics_.had_error()) {
-    diagnostics_.ReportEverything(llvm::errs(), source_);
+    diagnostics_.ReportEverything(llvm::errs(), source_, *source_metadata_);
   }
 }
 
 auto CompilationUnit::DumpTokens() const -> void {
-  auto offsets = source_.line_offsets();
+  for (const auto token : *token_buffer_) {
+    auto position = token_buffer_->GetLinePosition(*source_metadata_, token);
+    auto kind = token_buffer_->GetKind(token);
 
-  for (const auto token : *tokens_) {
-    auto line = offsets.GetLine(token.start);
-    auto col_start = offsets.GetColumn(token.start);
-    auto col_end = offsets.GetColumn(token.end);
+    auto lexeme = token_buffer_->GetLexeme(token);
 
-    auto lexeme = token.lexeme(source_.contents());
-
-    llvm::outs() << "{" << " kind: " << '\'' << token.kind << '\''
+    llvm::outs() << "{" << " kind: " << '\'' << kind << '\''
                  << " lexeme: " << '\'' << lexeme << '\''
-                 << ", line: " << *line + 1 << ", column_start: " << *col_start
-                 << ", column_end: " << *col_end << " }" << "\n";
+                 << ", line: " << position.line_number
+                 << ", column_start: " << position.column_start
+                 << ", column_end: " << position.column_end << " }" << "\n";
   }
 }
 

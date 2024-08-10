@@ -3,14 +3,16 @@
 
 #include <lev/diagnostic.h>
 #include <lev/diagnostic_buffer.h>
-#include <lev/lex/token.h>
+#include <lev/lex/token_buffer.h>
+#include <lev/source/source_metadata.h>
 #include <llvm/ADT/StringRef.h>
 
 #include <expected>
 
 namespace Lev {
 
-auto Lex(llvm::StringRef, DiagnosticBuffer&) -> std::vector<Token>;
+auto Lex(const Source&,
+         DiagnosticBuffer&) -> std::pair<TokenBuffer, SourceMetadata>;
 
 }  // namespace Lev
 
