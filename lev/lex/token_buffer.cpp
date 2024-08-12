@@ -1,5 +1,6 @@
-#include <lev/lex/token_buffer.h>
-#include <lev/lex/token_kind.h>
+#include "lev/lex/token_buffer.h"
+
+#include "lev/lex/token_kind.h"
 
 namespace Lev {
 

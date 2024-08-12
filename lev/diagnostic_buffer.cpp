@@ -1,8 +1,9 @@
-#include <lev/diagnostic_buffer.h>
-#include <lev/source/source.h>
-#include <lev/source/source_metadata.h>
+#include "lev/diagnostic_buffer.h"
 
 #include <functional>
+
+#include "lev/source/source.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev {
 

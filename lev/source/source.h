@@ -1,12 +1,11 @@
 #ifndef LEV_SOURCE_H
 #define LEV_SOURCE_H
 
-#include <lev/common.h>
-#include <llvm/Support/MemoryBuffer.h>
-
 #include <memory>
 #include <string>
 #include <utility>
+
+#include "llvm/Support/MemoryBuffer.h"
 
 class Source {
  public:

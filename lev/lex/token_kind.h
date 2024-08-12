@@ -1,16 +1,13 @@
 #ifndef LEV_TOKEN_KIND_H
 #define LEV_TOKEN_KIND_H
 
-#include <lev/common.h>
 #include <llvm/Support/raw_ostream.h>
+
+#include "lev/common/types.h"
 
 enum class TokenKind : u16 {
 
-#define LEV_SYMBOL_TOKEN(kind, _) kind,
-
-#define LEV_META_TOKEN(kind, _) LEV_SYMBOL_TOKEN(kind, _)
-#define LEV_KEYWORD_TOKEN(kind, _) LEV_SYMBOL_TOKEN(kind, _)
-#define LEV_LITERAL_TOKEN(kind, _) LEV_SYMBOL_TOKEN(kind, _)
+#define LEV_SYMBOL_TOKEN(kind, ...) kind,
 
 #include "lev/lex/token_kind.def"
 

@@ -1,13 +1,13 @@
 #ifndef LEV_LEXER_H
 #define LEV_LEXER_H
 
-#include <lev/diagnostic.h>
-#include <lev/diagnostic_buffer.h>
-#include <lev/lex/token_buffer.h>
-#include <lev/source/source_metadata.h>
 #include <llvm/ADT/StringRef.h>
 
 #include <expected>
+
+#include "lev/diagnostic_buffer.h"
+#include "lev/lex/token_buffer.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev {
 

@@ -1,11 +1,12 @@
 #ifndef LEV_DIAGNOSTIC_H
 #define LEV_DIAGNOSTIC_H
 
-#include <lev/source/source.h>
-#include <lev/source/source_metadata.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <functional>
+
+#include "lev/source/source.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev {
 

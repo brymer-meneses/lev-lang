@@ -1,14 +1,15 @@
 #ifndef LEV_TOKEN_BUFFER_H
 #define LEV_TOKEN_BUFFER_H
 
-#include <lev/common.h>
-#include <lev/lex/token_kind.h>
-#include <lev/source/source.h>
-#include <lev/source/source_metadata.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <vector>
+
+#include "lev/common/types.h"
+#include "lev/lex/token_kind.h"
+#include "lev/source/source.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev {
 
@@ -65,6 +66,8 @@ class TokenBuffer {
 
   auto begin() const -> TokenIterator { return TokenIterator(0); }
   auto end() const -> TokenIterator { return TokenIterator(starts_.size()); }
+
+  auto size() const -> u64 { return starts_.size(); }
 
  private:
   const Source* source_;

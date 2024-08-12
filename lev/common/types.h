@@ -1,5 +1,5 @@
-#ifndef LEV_COMMON_H
-#define LEV_COMMON_H
+#ifndef LEV_COMMON_TYPES_H
+#define LEV_COMMON_TYPES_H
 
 #include <cstdint>
 

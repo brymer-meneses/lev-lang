@@ -1,19 +1,19 @@
 
 
 #ifndef LEV_SYMBOL_TOKEN
-#define LEV_SYMBOL_TOKEN(X, Y)
+#error "Must use `LEV_SYMBOL_TOKEN` to use this macro"
 #endif
 
 #ifndef LEV_KEYWORD_TOKEN
-#define LEV_KEYWORD_TOKEN(X, Y)
+#define LEV_KEYWORD_TOKEN(X, Y) LEV_SYMBOL_TOKEN(X, Y)
 #endif
 
 #ifndef LEV_LITERAL_TOKEN
-#define LEV_LITERAL_TOKEN(X, Y)
+#define LEV_LITERAL_TOKEN(X, Y) LEV_SYMBOL_TOKEN(X, Y)
 #endif
 
 #ifndef LEV_META_TOKEN
-#define LEV_META_TOKEN(X, Y)
+#define LEV_META_TOKEN(X, Y) LEV_SYMBOL_TOKEN(X, Y)
 #endif
 
 // clang-format off

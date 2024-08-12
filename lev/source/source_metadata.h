@@ -1,8 +1,9 @@
 #ifndef LEV_SOURCE_METADATA_H
 #define LEV_SOURCE_METADATA_H
 
-#include <lev/common.h>
 #include <llvm/ADT/SmallVector.h>
+
+#include "lev/common/types.h"
 
 namespace Lev {
 

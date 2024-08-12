@@ -1,11 +1,11 @@
 #ifndef LEV_DIAGNOSTIC_BUFFER_H
 #define LEV_DIAGNOSTIC_BUFFER_H
 
-#include <lev/diagnostic.h>
-#include <lev/source/source_metadata.h>
-
 #include <functional>
 #include <vector>
+
+#include "lev/diagnostic.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev {
 

@@ -1,19 +1,21 @@
-#include <lev/diagnostic.h>
-#include <lev/diagnostic_buffer.h>
-#include <lev/lex/lex.h>
-#include <lev/lex/token_buffer.h>
-#include <lev/source/source.h>
+
+#include "lev/lex/lex.h"
+
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/MemoryBuffer.h>
 
 #include <utility>
 
+#include "lev/diagnostic_buffer.h"
+#include "lev/lex/token_buffer.h"
+#include "lev/source/source.h"
 #include "lev/source/source_metadata.h"
 
 namespace Lev {
 
-struct Lexer {
+class [[clang::internal_linkage]] Lexer {
+ public:
   Lexer(const Source& source, DiagnosticBuffer& diagnostics)
       : diagnostics_(diagnostics),
         token_buffer_(source),
@@ -256,6 +258,7 @@ struct Lexer {
   }
 
   auto ClassifyKeyword(llvm::StringRef source) -> TokenKind {
+#define LEV_SYMBOL_TOKEN(...)
 #define LEV_KEYWORD_TOKEN(kind, str) \
   if (source == str) {               \
     return TokenKind::kind;          \
@@ -297,6 +300,7 @@ struct Lexer {
     token_buffer_.AppendToken(kind, start_, current_);
   }
 
+ private:
   u32 line_ = 0;
   u32 start_ = 0;
   u32 column_ = 0;

@@ -1,9 +1,9 @@
 
-#include <lev/compilation_unit.h>
-#include <lev/lex/lex.h>
-#include <lev/source/source.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/MemoryBuffer.h>
+
+#include "lev/compilation_unit.h"
+#include "lev/source/source.h"
 
 auto main(int argc, char** argv) -> int {
   namespace cl = llvm::cl;
