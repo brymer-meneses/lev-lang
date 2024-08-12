@@ -7,6 +7,8 @@
 
 #include "llvm/Support/MemoryBuffer.h"
 
+namespace Lev {
+
 class Source {
  public:
   auto filename() const -> llvm::StringRef { return filename_; }
@@ -20,5 +22,7 @@ class Source {
   std::string filename_;
   std::unique_ptr<llvm::MemoryBuffer> contents_;
 };
+
+}  // namespace Lev
 
 #endif  // !LEV_SOURCE_H

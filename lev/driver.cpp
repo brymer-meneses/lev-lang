@@ -3,7 +3,6 @@
 #include <llvm/Support/MemoryBuffer.h>
 
 #include "lev/compilation_unit.h"
-#include "lev/source/source.h"
 
 auto main(int argc, char** argv) -> int {
   namespace cl = llvm::cl;
@@ -38,7 +37,7 @@ auto main(int argc, char** argv) -> int {
       return 1;
     }
 
-    auto source = Source(input_filename, std::move(*file));
+    auto source = Lev::Source(input_filename, std::move(*file));
     auto unit = Lev::CompilationUnit(std::move(source));
 
     unit.RunLexer();

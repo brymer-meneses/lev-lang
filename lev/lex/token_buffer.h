@@ -11,7 +11,7 @@
 #include "lev/source/source.h"
 #include "lev/source/source_metadata.h"
 
-namespace Lev {
+namespace Lev::Lex {
 
 using TokenId = u32;
 
@@ -77,6 +77,6 @@ class TokenBuffer {
   std::vector<TokenKind> kinds_;
 };
 
-}  // namespace Lev
+}  // namespace Lev::Lex
 
 #endif  // !LEV_TOKEN_BUFFER_H

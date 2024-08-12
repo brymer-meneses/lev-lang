@@ -7,7 +7,7 @@
 namespace Lev {
 
 auto CompilationUnit::RunLexer() -> void {
-  auto lex_result = Lex(source_, diagnostics_);
+  auto lex_result = Lex::Lex(source_, diagnostics_);
 
   token_buffer_ = std::move(lex_result.first);
   source_metadata_ = std::move(lex_result.second);

@@ -24,7 +24,7 @@ class CompilationUnit {
   auto source() const -> llvm::StringRef { return source_.contents(); }
 
  private:
-  std::optional<TokenBuffer> token_buffer_;
+  std::optional<Lex::TokenBuffer> token_buffer_;
   std::optional<SourceMetadata> source_metadata_;
 
   DiagnosticBuffer diagnostics_;

@@ -2,7 +2,7 @@
 
 #include "lev/lex/token_kind.h"
 
-namespace Lev {
+namespace Lev::Lex {
 
 auto TokenBuffer::GetLexeme(TokenId token) const -> llvm::StringRef {
   assert(token < starts_.size());
@@ -45,4 +45,4 @@ auto TokenBuffer::GetLinePosition(const SourceMetadata& source_metadata,
   return LinePosition(column_start, column_end, line);
 }
 
-}  // namespace Lev
+}  // namespace Lev::Lex

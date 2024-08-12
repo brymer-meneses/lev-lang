@@ -12,7 +12,7 @@
 #include "lev/source/source.h"
 #include "lev/source/source_metadata.h"
 
-namespace Lev {
+namespace Lev::Lex {
 
 class [[clang::internal_linkage]] Lexer {
  public:
@@ -322,4 +322,4 @@ auto Lex(const Source& source,
   return lexer.Lex();
 }
 
-}  // namespace Lev
+}  // namespace Lev::Lex

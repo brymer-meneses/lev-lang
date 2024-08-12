@@ -9,11 +9,11 @@
 #include "lev/lex/token_buffer.h"
 #include "lev/source/source_metadata.h"
 
-namespace Lev {
+namespace Lev::Lex {
 
 auto Lex(const Source&,
-         DiagnosticBuffer&) -> std::pair<TokenBuffer, SourceMetadata>;
+         DiagnosticBuffer&) -> std::pair<Lex::TokenBuffer, SourceMetadata>;
 
-}  // namespace Lev
+}  // namespace Lev::Lex
 
 #endif  // !LEV_LEXER_H

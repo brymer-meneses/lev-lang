@@ -5,6 +5,8 @@
 
 #include "lev/common/types.h"
 
+namespace Lev::Lex {
+
 enum class TokenKind : u16 {
 
 #define LEV_SYMBOL_TOKEN(kind, ...) kind,
@@ -13,7 +15,9 @@ enum class TokenKind : u16 {
 
 };
 
+}  // namespace Lev::Lex
+
 auto operator<<(llvm::raw_ostream& OS,
-                const TokenKind obj) -> llvm::raw_ostream&;
+                const Lev::Lex::TokenKind obj) -> llvm::raw_ostream&;
 
 #endif  // !LEV_TOKEN_KIND_H
