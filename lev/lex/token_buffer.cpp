@@ -1,17 +1,19 @@
 #include "lev/lex/token_buffer.h"
 
 #include "lev/lex/token_kind.h"
+#include "lev/source/source_metadata.h"
 
 namespace Lev::Lex {
 
 auto TokenBuffer::GetLexeme(TokenId token) const -> llvm::StringRef {
-  assert(token.value() < starts_.size());
+  assert(token.value() < positions_.size());
+
+  auto position = GetBufferPosition(token);
 
   switch (GetKind(token)) {
-#define LEV_LITERAL_TOKEN(kind, string)                      \
-  case TokenKind::kind:                                      \
-    return source_->contents().slice(starts_[token.value()], \
-                                     ends_[token.value()]);
+#define LEV_LITERAL_TOKEN(kind, string) \
+  case TokenKind::kind:                 \
+    return source_->contents().slice(position.start, position.end);
 #define LEV_SYMBOL_TOKEN(kind, string) \
   case TokenKind::kind:                \
     return string;
@@ -25,8 +27,7 @@ auto TokenBuffer::GetLexeme(TokenId token) const -> llvm::StringRef {
 
 auto TokenBuffer::AppendToken(TokenKind kind, u32 start, u32 end) -> void {
   kinds_.push_back(kind);
-  starts_.push_back(start);
-  ends_.push_back(end);
+  positions_.emplace_back(start, end);
 }
 
 auto TokenBuffer::GetKind(TokenId token) const -> TokenKind {
@@ -35,16 +36,9 @@ auto TokenBuffer::GetKind(TokenId token) const -> TokenKind {
   return kinds_[token.value()];
 }
 
-auto TokenBuffer::GetLinePosition(const SourceMetadata& source_metadata,
-                                  TokenId token) const -> LinePosition {
-  assert(token.value() < starts_.size());
-
-  auto column_start =
-      source_metadata.GetLineColumnOffset(starts_[token.value()]);
-  auto column_end = source_metadata.GetLineColumnOffset(ends_[token.value()]);
-  auto line = source_metadata.GetLineNumber(starts_[token.value()]);
-
-  return LinePosition(column_start, column_end, line);
+auto TokenBuffer::GetBufferPosition(TokenId token) const -> BufferPosition {
+  assert(token.value() < positions_.size());
+  return positions_[token.value()];
 }
 
 }  // namespace Lev::Lex

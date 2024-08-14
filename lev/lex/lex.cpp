@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "lev/diagnostic_buffer.h"
+#include "lev/diagnostics_consumer.h"
 #include "lev/lex/token_buffer.h"
 #include "lev/source/source.h"
 #include "lev/source/source_metadata.h"
@@ -16,7 +16,7 @@ namespace Lev::Lex {
 
 class [[clang::internal_linkage]] Lexer {
  public:
-  Lexer(const Source& source, DiagnosticBuffer& diagnostics)
+  Lexer(const Source& source, DiagnosticsConsumer& diagnostics)
       : diagnostics_(diagnostics),
         token_buffer_(source),
         source_(source.contents()) {}
@@ -31,7 +31,6 @@ class [[clang::internal_linkage]] Lexer {
     }
 
     CreateToken(TokenKind::FileEnd);
-
     return std::make_pair(token_buffer_, source_metadata_);
   }
 
@@ -187,8 +186,8 @@ class [[clang::internal_linkage]] Lexer {
           }
 
         } else {
-          auto position = LinePosition(/*column_start*/ column_,
-                                       /*column_end*/ column_, /*line*/ line_);
+          auto position = BufferPosition(/*column_start*/ current_,
+                                         /*column_end*/ current_);
 
           diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
             os << "Invalid character: " << "\"" << c << "\"";
@@ -213,8 +212,8 @@ class [[clang::internal_linkage]] Lexer {
     }
 
     if (Peek() != '"' and IsAtEnd()) {
-      auto position = LinePosition(/*column_start*/ column_,
-                                   /*column_end*/ column_, /*line*/ line_);
+      auto position = BufferPosition(/*buffer_start*/ current_,
+                                     /*buffer_end*/ current_);
 
       diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
         os << "Unterminated string";
@@ -238,8 +237,8 @@ class [[clang::internal_linkage]] Lexer {
       auto c = Advance();
 
       if (did_visit_dot and c == '.') {
-        auto position = LinePosition(/*column_start*/ column_,
-                                     /*column_end*/ column_, /*line*/ line_);
+        auto position = BufferPosition(/*buffer_start*/ current_,
+                                       /*buffer_end*/ current_);
 
         diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
           os << "Unexpected symbol: `.`, a number can't have more than one "
@@ -308,7 +307,7 @@ class [[clang::internal_linkage]] Lexer {
 
   u32 line_start_ = 0;
 
-  DiagnosticBuffer& diagnostics_;
+  DiagnosticsConsumer& diagnostics_;
   TokenBuffer token_buffer_;
   SourceMetadata source_metadata_;
 
@@ -316,8 +315,8 @@ class [[clang::internal_linkage]] Lexer {
 
 };  // namespace Lev
 
-auto Lex(const Source& source,
-         DiagnosticBuffer& buffer) -> std::pair<TokenBuffer, SourceMetadata> {
+auto Lex(const Source& source, DiagnosticsConsumer& buffer)
+    -> std::pair<TokenBuffer, SourceMetadata> {
   auto lexer = Lexer(source, buffer);
   return lexer.Lex();
 }

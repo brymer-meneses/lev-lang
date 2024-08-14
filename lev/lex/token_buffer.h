@@ -64,21 +64,19 @@ class TokenBuffer {
   auto GetKind(TokenId token) const -> TokenKind;
   auto GetLexeme(TokenId token) const -> llvm::StringRef;
 
-  auto GetLinePosition(const SourceMetadata&,
-                       TokenId token) const -> LinePosition;
+  auto GetBufferPosition(TokenId token) const -> BufferPosition;
 
   auto begin() const -> TokenIterator { return TokenIterator(TokenId(0)); }
   auto end() const -> TokenIterator {
-    return TokenIterator(TokenId(starts_.size()));
+    return TokenIterator(TokenId(positions_.size()));
   }
 
-  auto size() const -> u64 { return starts_.size(); }
+  auto size() const -> u64 { return positions_.size(); }
 
  private:
   const Source* source_;
 
-  std::vector<u32> starts_;
-  std::vector<u32> ends_;
+  std::vector<BufferPosition> positions_;
   std::vector<TokenKind> kinds_;
 };
 

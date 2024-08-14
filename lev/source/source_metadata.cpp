@@ -46,4 +46,13 @@ auto SourceMetadata::GetLineInfo(const u32 line) const -> LineInfo {
   return line_infos_[line];
 }
 
+auto SourceMetadata::ConvertToLinePosition(BufferPosition buffer_position) const
+    -> LinePosition {
+  auto line_number = GetLineNumber(buffer_position.start);
+  auto column_start = GetLineColumnOffset(buffer_position.start);
+  auto column_end = GetLineColumnOffset(buffer_position.end);
+
+  return LinePosition(column_start, column_end, line_number);
+}
+
 }  // namespace Lev

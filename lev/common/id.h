@@ -9,15 +9,18 @@ namespace Lev {
 
 class Id {
  private:
-  i32 value_;
+  i32 value_ = -1;
 
  public:
   constexpr explicit Id(i32 value) : value_(value) {}
+  constexpr explicit Id() {}
 
   constexpr auto value() const -> i32 { return value_; }
 
   constexpr auto operator+=(Id id1) -> void { value_ += id1.value_; }
   constexpr auto operator-=(Id id1) -> void { value_ -= id1.value_; }
+  constexpr auto operator+=(i32 id1) -> void { value_ += id1; }
+  constexpr auto operator-=(i32 id1) -> void { value_ -= id1; }
 };
 
 constexpr auto operator<=>(Id id1, Id id2) -> std::strong_ordering {

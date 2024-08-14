@@ -7,6 +7,9 @@
 
 namespace Lev {
 
+struct BufferPosition;
+struct LinePosition;
+
 class SourceMetadata {
  public:
   struct LineInfo {
@@ -17,6 +20,8 @@ class SourceMetadata {
   };
 
   auto RegisterLineInfo(u32 start, u32 end) -> void;
+
+  auto ConvertToLinePosition(BufferPosition position) const -> LinePosition;
 
   /// Gets the column number of an index to the source file
   auto GetLineColumnOffset(const u32 buffer_offset) const -> u32;
@@ -39,6 +44,14 @@ struct LinePosition {
       : column_start(column_start),
         column_end(column_end),
         line_number(line_number) {}
+};
+
+struct BufferPosition {
+  u32 start;
+  u32 end;
+
+  BufferPosition(u32 buffer_start, u32 buffer_end)
+      : start(buffer_start), end(buffer_end) {}
 };
 
 }  // namespace Lev

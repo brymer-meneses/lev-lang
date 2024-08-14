@@ -28,9 +28,9 @@ target_sources(lev
   lev/lex/lex.cpp
   lev/lex/token_buffer.cpp
   lev/lex/token_kind.cpp
+  lev/parse/parse.cpp
   lev/compilation_unit.cpp
-  lev/diagnostic.cpp
-  lev/diagnostic_buffer.cpp
+  lev/diagnostics_consumer.cpp
   lev/source/source_metadata.cpp
 )
 

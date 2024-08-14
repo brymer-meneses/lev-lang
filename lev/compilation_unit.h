@@ -4,7 +4,7 @@
 
 #include <llvm/Support/MemoryBuffer.h>
 
-#include "lev/diagnostic_buffer.h"
+#include "lev/diagnostics_consumer.h"
 #include "lev/lex/token_buffer.h"
 #include "lev/source/source.h"
 #include "lev/source/source_metadata.h"
@@ -27,7 +27,7 @@ class CompilationUnit {
   std::optional<Lex::TokenBuffer> token_buffer_;
   std::optional<SourceMetadata> source_metadata_;
 
-  DiagnosticBuffer diagnostics_;
+  DiagnosticsConsumer diagnostics_;
   Source source_;
 };
 

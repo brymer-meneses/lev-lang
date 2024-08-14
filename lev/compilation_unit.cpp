@@ -19,7 +19,9 @@ auto CompilationUnit::RunLexer() -> void {
 
 auto CompilationUnit::DumpTokens() const -> void {
   for (const auto token : *token_buffer_) {
-    auto position = token_buffer_->GetLinePosition(*source_metadata_, token);
+    auto position = source_metadata_->ConvertToLinePosition(
+        token_buffer_->GetBufferPosition(token));
+
     auto kind = token_buffer_->GetKind(token);
 
     auto lexeme = token_buffer_->GetLexeme(token);
