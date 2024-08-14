@@ -6,6 +6,7 @@
 
 #include <vector>
 
+#include "lev/common/id.h"
 #include "lev/common/types.h"
 #include "lev/lex/token_kind.h"
 #include "lev/source/source.h"
@@ -13,7 +14,9 @@
 
 namespace Lev::Lex {
 
-using TokenId = u32;
+struct TokenId : public Id {
+  using Id::Id;
+};
 
 class TokenIterator
     : public llvm::iterator_facade_base<
@@ -34,15 +37,15 @@ class TokenIterator
 
   using iterator_facade_base::operator-;
   auto operator-(const TokenIterator& rhs) const -> int {
-    return token_ - rhs.token_;
+    return (token_ - rhs.token_).value();
   }
 
   auto operator+=(int n) -> TokenIterator& {
-    token_ += n;
+    token_ += TokenId(n);
     return *this;
   }
   auto operator-=(int n) -> TokenIterator& {
-    token_ -= n;
+    token_ -= TokenId(n);
     return *this;
   }
 
@@ -64,8 +67,10 @@ class TokenBuffer {
   auto GetLinePosition(const SourceMetadata&,
                        TokenId token) const -> LinePosition;
 
-  auto begin() const -> TokenIterator { return TokenIterator(0); }
-  auto end() const -> TokenIterator { return TokenIterator(starts_.size()); }
+  auto begin() const -> TokenIterator { return TokenIterator(TokenId(0)); }
+  auto end() const -> TokenIterator {
+    return TokenIterator(TokenId(starts_.size()));
+  }
 
   auto size() const -> u64 { return starts_.size(); }
 
