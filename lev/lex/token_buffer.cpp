@@ -20,7 +20,6 @@ auto TokenBuffer::GetLexeme(TokenId token) const -> llvm::StringRef {
 #define LEV_META_TOKEN(kind, string) \
   case TokenKind::kind:              \
     return "";
-#define LEV_KEYWORD_TOKEN(kind, string) LEV_SYMBOL_TOKEN(kind, string)
 #include "lev/lex/token_kind.def"
   }
 }

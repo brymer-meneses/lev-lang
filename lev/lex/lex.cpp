@@ -31,6 +31,7 @@ class [[clang::internal_linkage]] Lexer {
     }
 
     CreateToken(TokenKind::FileEnd);
+    source_metadata_.RegisterLineInfo(BufferPosition(line_start_, current_));
     return std::make_pair(token_buffer_, source_metadata_);
   }
 
@@ -41,9 +42,8 @@ class [[clang::internal_linkage]] Lexer {
       case '\n': {
         line_ += 1;
         column_ = 0;
-
-        source_metadata_.RegisterLineInfo(line_start_, current_ - 1);
-
+        source_metadata_.RegisterLineInfo(
+            BufferPosition(line_start_, current_));
         line_start_ = current_;
         break;
       }
@@ -124,7 +124,7 @@ class [[clang::internal_linkage]] Lexer {
 
       case '/': {
         if (Match('/')) {
-          while (Peek() != '\n') {
+          while (Peek() != '\n' and not IsAtEnd()) {
             Advance();
           }
 
@@ -186,8 +186,8 @@ class [[clang::internal_linkage]] Lexer {
           }
 
         } else {
-          auto position = BufferPosition(/*column_start*/ current_,
-                                         /*column_end*/ current_);
+          auto position = BufferPosition(/*column_start*/ current_ - 1,
+                                         /*column_end*/ current_ - 1);
 
           diagnostics_.Add(position, [=](llvm::raw_ostream& os) {
             os << "Invalid character: " << "\"" << c << "\"";
@@ -212,7 +212,7 @@ class [[clang::internal_linkage]] Lexer {
     }
 
     if (Peek() != '"' and IsAtEnd()) {
-      auto position = BufferPosition(/*buffer_start*/ current_,
+      auto position = BufferPosition(/*buffer_start*/ start_,
                                      /*buffer_end*/ current_);
 
       diagnostics_.Add(position, [=](llvm::raw_ostream& os) {

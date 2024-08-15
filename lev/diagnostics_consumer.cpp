@@ -23,7 +23,7 @@ static auto HighlightPosition(llvm::raw_ostream& stream,
                               LinePosition position) -> void {
   auto line_width = GetNumberWidth(position.line_number);
 
-  stream << std::string(line_width + 3 + position.column_start, ' ') << '^'
+  stream << std::string(line_width + 4 + position.column_start, ' ') << '^'
          << "\n";
 }
 
@@ -45,10 +45,10 @@ auto DiagnosticsConsumer::Add(BufferPosition position,
 auto Diagnostic::Report(llvm::raw_ostream& stream, const Source& source,
                         const SourceMetadata& source_metadata) const -> void {
   const auto line_pos = source_metadata.ConvertToLinePosition(position_);
-
-  const auto line_offsets = source_metadata.GetLineInfo(line_pos.line_number);
+  const auto line_offsets =
+      source_metadata.GetBufferPositionOfLineNumber(line_pos.line_number);
   const auto line =
-      source.contents().slice(line_offsets.start, line_offsets.end);
+      source.contents().slice(line_offsets.start, line_offsets.end - 1);
 
   stream << " " << line_pos.line_number + 1 << " | " << line << "\n";
   HighlightPosition(stream, line_pos);

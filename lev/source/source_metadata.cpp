@@ -7,9 +7,8 @@
 
 namespace Lev {
 
-auto SourceMetadata::RegisterLineInfo(const u32 start,
-                                      const u32 length) -> void {
-  line_infos_.emplace_back(start, length);
+auto SourceMetadata::RegisterLineInfo(BufferPosition position) -> void {
+  line_infos_.push_back(position);
 }
 
 auto SourceMetadata::GetLineColumnOffset(const u32 index) const -> u32 {
@@ -18,8 +17,8 @@ auto SourceMetadata::GetLineColumnOffset(const u32 index) const -> u32 {
   }
 
   auto it =
-      std::ranges::find_if(line_infos_, [index](LineInfo line_info) -> bool {
-        return line_info.start <= index and index < line_info.end;
+      std::ranges::find_if(line_infos_, [index](BufferPosition pos) -> bool {
+        return pos.start <= index and index < pos.end;
       });
 
   if (it == line_infos_.end()) {
@@ -31,16 +30,17 @@ auto SourceMetadata::GetLineColumnOffset(const u32 index) const -> u32 {
 
 auto SourceMetadata::GetLineNumber(const u32 index) const -> u32 {
   auto it =
-      std::ranges::find_if(line_infos_, [index](LineInfo line_info) -> bool {
-        return line_info.start <= index and index < line_info.end;
+      std::ranges::find_if(line_infos_, [index](BufferPosition pos) -> bool {
+        return pos.start <= index and index < pos.end;
       });
 
   return std::distance(line_infos_.begin(), it);
 }
 
-auto SourceMetadata::GetLineInfo(const u32 line) const -> LineInfo {
+auto SourceMetadata::GetBufferPositionOfLineNumber(const u32 line) const
+    -> BufferPosition {
   if (line > line_infos_.size() or line_infos_.empty()) {
-    return LineInfo(0, 0);
+    return BufferPosition(0, 0);
   }
 
   return line_infos_[line];
@@ -49,6 +49,7 @@ auto SourceMetadata::GetLineInfo(const u32 line) const -> LineInfo {
 auto SourceMetadata::ConvertToLinePosition(BufferPosition buffer_position) const
     -> LinePosition {
   auto line_number = GetLineNumber(buffer_position.start);
+
   auto column_start = GetLineColumnOffset(buffer_position.start);
   auto column_end = GetLineColumnOffset(buffer_position.end);
 
